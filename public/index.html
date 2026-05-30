@@ -1,10 +1,496 @@
 <!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><title>América Bot</title></head>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMA Assistente Premium · Centro Médico America</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#0a1628;--navy-mid:#112240;--navy-light:#1a3358;--gold:#c9a84c;--gold-light:#e2c97e;--text-muted:#8fa0b8;--text-body:#d4dce8;--border:#1e3a5f;--border-gold:rgba(201,168,76,0.3);--surface:#0d1e38;--surface2:#132240}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text-body);height:100vh;overflow:hidden}
+.layout{display:grid;grid-template-columns:200px 1fr;grid-template-rows:56px 1fr;height:100vh}
+.sidebar{grid-row:1/3;background:var(--navy-mid);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.logo-area{padding:18px 16px 14px;border-bottom:1px solid var(--border-gold)}
+.logo-cross{width:26px;height:26px;margin-bottom:8px;position:relative}
+.logo-cross::before,.logo-cross::after{content:'';position:absolute;background:var(--gold);border-radius:2px}
+.logo-cross::before{width:3px;height:26px;left:11px;top:0}
+.logo-cross::after{width:26px;height:3px;left:0;top:11px}
+.logo-name{font-family:'Playfair Display',serif;font-size:11px;font-weight:600;color:var(--gold);letter-spacing:1.2px;text-transform:uppercase;line-height:1.3}
+.logo-sub{font-size:9px;color:var(--text-muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
+.nav{padding:10px 0;flex:1}
+.nav-section{padding:6px 14px 3px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:6px;opacity:.6}
+.nav-item{display:flex;align-items:center;gap:8px;padding:9px 14px;cursor:pointer;font-size:12px;color:var(--text-muted);transition:all .2s;border-left:2px solid transparent}
+.nav-item:hover{color:var(--text-body);background:rgba(201,168,76,0.05)}
+.nav-item.active{color:var(--gold);border-left-color:var(--gold);background:rgba(201,168,76,0.08)}
+.nav-item i{font-size:15px;width:16px;text-align:center}
+.status-badge{margin:0 10px 12px;background:rgba(26,122,74,0.15);border:1px solid rgba(26,122,74,0.3);border-radius:6px;padding:8px 10px;display:flex;align-items:center;gap:6px}
+.status-dot{width:6px;height:6px;border-radius:50%;background:#2dbd7a;flex-shrink:0;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between}
+.topbar-title{font-family:'Playfair Display',serif;font-size:14px;color:#f8f6f0;font-weight:500}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.kpi-mini-val{font-size:16px;font-weight:500;color:var(--gold);line-height:1}
+.kpi-mini-lbl{font-size:9px;color:var(--text-muted)}
+.dvv{width:1px;height:24px;background:var(--border)}
+.page{background:var(--navy);overflow-y:auto;display:none;padding:20px 22px}
+.page.active{display:block}
+.chat-page{display:none;grid-template-columns:1fr 260px;gap:16px;height:calc(100vh - 56px);padding:16px 22px;overflow:hidden}
+.chat-page.active{display:grid}
+.agenda-page{display:none;padding:20px 22px;overflow-y:auto;height:calc(100vh - 56px)}
+.agenda-page.active{display:block}
+.ph{font-family:'Playfair Display',serif;font-size:20px;color:#f8f6f0;font-weight:500;margin-bottom:3px}
+.ps{font-size:12px;color:var(--text-muted);margin-bottom:12px}
+.gl{width:30px;height:2px;background:var(--gold);border-radius:1px;margin-bottom:18px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px}
+.card-title{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;font-weight:500;display:flex;align-items:center;justify-content:space-between}
+.kgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.kcard{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden}
+.kcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kcard.k1::before{background:var(--gold)}.kcard.k2::before{background:#2dbd7a}.kcard.k3::before{background:#1e6ea8}.kcard.k4::before{background:#e07070}
+.kicon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:8px}
+.kcard.k1 .kicon{background:rgba(201,168,76,0.1);color:var(--gold)}.kcard.k2 .kicon{background:rgba(45,189,122,0.1);color:#2dbd7a}.kcard.k3 .kicon{background:rgba(30,110,168,0.15);color:#5aabe0}.kcard.k4 .kicon{background:rgba(224,85,85,0.1);color:#e07070}
+.kval{font-size:22px;font-weight:500;color:#f8f6f0;line-height:1}
+.klbl{font-size:10px;color:var(--text-muted);margin-top:3px}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+/* AGENDA TABLE */
+.agenda-filters{display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.filter-btn{padding:6px 14px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-family:'DM Sans',sans-serif;transition:all .2s}
+.filter-btn.active,.filter-btn:hover{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,0.08)}
+.refresh-btn{margin-left:auto;padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px;transition:all .2s}
+.refresh-btn:hover{border-color:var(--border-gold);color:var(--text-body)}
+.agenda-table{width:100%;border-collapse:collapse;font-size:12px}
+.agenda-table th{padding:8px 12px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);font-weight:500}
+.agenda-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text-body)}
+.agenda-table tr:hover td{background:rgba(201,168,76,0.03)}
+.sstatus{font-size:10px;padding:3px 8px;border-radius:4px;font-weight:500;white-space:nowrap}
+.sstatus.confirmado{background:rgba(45,189,122,0.1);color:#5dd49a;border:1px solid rgba(45,189,122,0.2)}
+.sstatus.pendente{background:rgba(201,168,76,0.1);color:var(--gold-light);border:1px solid rgba(201,168,76,0.2)}
+.sstatus.cancelado{background:rgba(224,85,85,0.1);color:#e07070;border:1px solid rgba(224,85,85,0.2)}
+.sstatus.realizado{background:rgba(30,110,168,0.1);color:#5aabe0;border:1px solid rgba(30,110,168,0.2)}
+.status-sel{background:var(--navy-light);border:1px solid var(--border);border-radius:4px;color:var(--text-body);font-size:10px;padding:3px 6px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.origem-badge{font-size:9px;padding:2px 6px;border-radius:3px}
+.origem-badge.whatsapp{background:rgba(45,189,122,0.1);color:#5dd49a}
+.origem-badge.chat{background:rgba(30,110,168,0.1);color:#5aabe0}
+.origem-badge.telefone{background:rgba(201,168,76,0.1);color:var(--gold-light)}
+.empty-state{text-align:center;padding:40px;color:var(--text-muted)}
+.empty-state i{font-size:36px;display:block;margin:0 auto 10px;opacity:.3;color:var(--gold)}
+/* CHAT */
+.chat-container{background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;overflow:hidden}
+.chat-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.aav{width:34px;height:34px;border-radius:50%;background:var(--navy-light);border:1.5px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:13px;color:var(--gold);flex-shrink:0}
+.aname{font-size:12px;font-weight:500;color:#f8f6f0}
+.astatus{font-size:10px;color:#2dbd7a;display:flex;align-items:center;gap:3px}
+.astatus::before{content:'';width:5px;height:5px;border-radius:50%;background:#2dbd7a;display:inline-block}
+.messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+.messages::-webkit-scrollbar{width:2px}
+.messages::-webkit-scrollbar-thumb{background:var(--border)}
+.msg{display:flex;gap:8px;max-width:86%}
+.msg.user{flex-direction:row-reverse;align-self:flex-end}
+.mbub{padding:8px 12px;border-radius:10px;font-size:12px;line-height:1.6}
+.msg.agent .mbub{background:var(--surface2);border:1px solid var(--border);color:var(--text-body);border-radius:2px 10px 10px 10px}
+.msg.user .mbub{background:#1a3d6e;border:1px solid rgba(30,110,168,0.4);color:#f8f6f0;border-radius:10px 2px 10px 10px}
+.mav{width:24px;height:24px;border-radius:50%;background:var(--navy-light);border:1px solid var(--border-gold);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--gold);flex-shrink:0;margin-top:2px}
+.mtime{font-size:9px;color:var(--text-muted);margin-top:3px}
+.tdots{display:flex;align-items:center;gap:4px;padding:8px 12px}
+.tdots span{width:5px;height:5px;border-radius:50%;background:#8fa0b8;animation:td 1.4s infinite}
+.tdots span:nth-child(2){animation-delay:.2s}.tdots span:nth-child(3){animation-delay:.4s}
+@keyframes td{0%,60%,100%{opacity:.3;transform:scale(.8)}30%{opacity:1;transform:scale(1)}}
+.chat-inp-row{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end}
+.chat-inp{flex:1;background:var(--navy-light);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text-body);font-family:'DM Sans',sans-serif;font-size:12px;resize:none;min-height:36px;max-height:80px;line-height:1.5;outline:none;transition:border-color .2s}
+.chat-inp:focus{border-color:var(--border-gold)}
+.chat-inp::placeholder{color:var(--text-muted)}
+.sbtn{width:34px;height:34px;border-radius:8px;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--navy);font-size:15px;flex-shrink:0}
+.sbtn:hover{background:var(--gold-light)}.sbtn:disabled{opacity:.4;cursor:not-allowed}
+.info-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px}
+.ict{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:10px;font-weight:500}
+.qa{padding:7px 9px;background:var(--navy-light);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text-muted);cursor:pointer;transition:all .2s;margin-bottom:5px;display:block;width:100%;text-align:left;font-family:'DM Sans',sans-serif}
+.qa:hover{border-color:var(--border-gold);color:var(--text-body)}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.stat-row:last-child{border-bottom:none}
+.stat-lbl{font-size:11px;color:var(--text-muted)}.stat-val{font-size:12px;font-weight:500;color:var(--text-body)}
+.stat-val.good{color:#2dbd7a}.stat-val.gold{color:var(--gold)}
+.toast{position:fixed;bottom:20px;right:20px;background:#1a3d2e;border:1px solid rgba(45,189,122,0.3);border-radius:8px;padding:10px 16px;font-size:12px;color:#5dd49a;display:none;z-index:999;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
 <body>
-<h1>América Assistente Online</h1>
+
+<div class="toast" id="toast"></div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo-area">
+      <div class="logo-cross"></div>
+      <div class="logo-name">Centro Médico<br>America</div>
+      <div class="logo-sub">Painel Premium</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Principal</div>
+      <div class="nav-item active" onclick="go('dash',this)"><i class="ti ti-layout-dashboard"></i>Dashboard</div>
+      <div class="nav-item" onclick="go('chat',this)"><i class="ti ti-message-chatbot"></i>CMA Assistente</div>
+      <div class="nav-section">Operação</div>
+      <div class="nav-item" onclick="go('agenda',this)"><i class="ti ti-calendar-event"></i>Agenda</div>
+      <div class="nav-item" onclick="go('pacientes',this)"><i class="ti ti-users"></i>Pacientes</div>
+      <div class="nav-section">Análise</div>
+      <div class="nav-item" onclick="go('relatorios',this)"><i class="ti ti-chart-bar"></i>Relatórios</div>
+      <div class="nav-item" onclick="go('config',this)"><i class="ti ti-settings"></i>Configurações</div>
+    </nav>
+    <div class="status-badge">
+      <div class="status-dot"></div>
+      <span style="color:#5dd49a;font-size:10px">Assistente ativa · 24h</span>
+    </div>
+  </aside>
+
+  <header class="topbar">
+    <div class="topbar-title" id="page-title">Dashboard · <span style="color:#8fa0b8;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:300">visão geral</span></div>
+    <div class="topbar-right">
+      <div style="text-align:right"><div class="kpi-mini-val" id="top-hoje">--</div><div class="kpi-mini-lbl">Hoje</div></div>
+      <div class="dvv"></div>
+      <div style="text-align:right"><div class="kpi-mini-val" id="top-total">--</div><div class="kpi-mini-lbl">Total</div></div>
+      <div class="dvv"></div>
+      <div style="width:30px;height:30px;border-radius:50%;background:var(--navy-light);border:1.5px solid var(--border-gold);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--gold)"><i class="ti ti-user"></i></div>
+    </div>
+  </header>
+
+  <!-- DASHBOARD -->
+  <main class="page active" id="p-dash">
+    <div class="ph">Painel de Controle</div>
+    <div class="ps" id="today-date"></div>
+    <div class="gl"></div>
+    <div class="kgrid">
+      <div class="kcard k1"><div class="kicon"><i class="ti ti-calendar-check"></i></div><div class="kval" id="k-total">--</div><div class="klbl">Total de agendamentos</div></div>
+      <div class="kcard k2"><div class="kicon"><i class="ti ti-calendar-plus"></i></div><div class="kval" id="k-hoje">--</div><div class="klbl">Agendamentos hoje</div></div>
+      <div class="kcard k3"><div class="kicon"><i class="ti ti-circle-check"></i></div><div class="kval" id="k-confirmados">--</div><div class="klbl">Confirmados</div></div>
+      <div class="kcard k4"><div class="kicon"><i class="ti ti-clock"></i></div><div class="kval" id="k-pendentes">--</div><div class="klbl">Aguardando confirmação</div></div>
+    </div>
+    <div class="sgrid">
+      <div class="card">
+        <div class="card-title">Agendamentos recentes <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--text-muted);cursor:pointer;font-weight:400" onclick="go('agenda',document.querySelectorAll('.nav-item')[3])">ver todos →</span></div>
+        <div id="recent-list"><div style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px">Carregando...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Distribuição por origem</div>
+        <div id="origem-stats"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- CHAT -->
+  <div class="chat-page" id="p-chat">
+    <div class="chat-container">
+      <div class="chat-hdr">
+        <div class="aav">A</div>
+        <div style="flex:1"><div class="aname">CMA Assistente Premium</div><div class="astatus" id="chat-status">Online · agendamentos salvos em tempo real</div></div>
+      </div>
+      <div class="messages" id="chat-msgs">
+        <div class="msg agent"><div class="mav">A</div><div><div class="mbub">Bem-vindo ao Centro Médico America. Sou a CMA, sua assistente executiva premium. Os agendamentos realizados aqui são salvos automaticamente na agenda.<br><br>Como posso auxiliá-lo hoje?</div><div class="mtime" id="chat-init-time"></div></div></div>
+      </div>
+      <div class="chat-inp-row">
+        <textarea class="chat-inp" id="chat-inp" placeholder="Digite sua mensagem..." rows="1" onkeydown="chatKey(event)" oninput="chatResize(this)"></textarea>
+        <button class="sbtn" id="chat-sbtn" onclick="chatSend()"><i class="ti ti-send"></i></button>
+      </div>
+    </div>
+    <div style="overflow-y:auto;display:flex;flex-direction:column;gap:10px">
+      <div class="info-card">
+        <div class="ict">Ações rápidas</div>
+        <button class="qa" onclick="chatSet('Quero agendar consulta com cardiologista')">Agendar consulta</button>
+        <button class="qa" onclick="chatSet('Valor da ressonância magnética?')">Cotação de exame</button>
+        <button class="qa" onclick="chatSet('Quais convênios vocês aceitam?')">Convênios aceitos</button>
+        <button class="qa" onclick="chatSet('Preciso remarcar minha consulta')">Remarcar consulta</button>
+        <button class="qa" onclick="chatSet('Quais especialidades vocês têm?')">Especialidades</button>
+      </div>
+      <div class="info-card">
+        <div class="ict">Agendamentos salvos</div>
+        <div class="stat-row"><div class="stat-lbl">Nesta sessão</div><div class="stat-val gold" id="session-count">0</div></div>
+        <div class="stat-row"><div class="stat-lbl">Banco de dados</div><div class="stat-val good">Supabase</div></div>
+        <div class="stat-row"><div class="stat-lbl">Status</div><div class="stat-val good">Conectado</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AGENDA -->
+  <div class="agenda-page" id="p-agenda">
+    <div class="ph">Agenda</div>
+    <div class="ps">Agendamentos em tempo real — atualizados automaticamente pelo WhatsApp e chat</div>
+    <div class="gl"></div>
+
+    <div class="agenda-filters">
+      <button class="filter-btn active" onclick="filtrarAgenda('',this)">Todos</button>
+      <button class="filter-btn" onclick="filtrarAgenda('pendente',this)">Pendentes</button>
+      <button class="filter-btn" onclick="filtrarAgenda('confirmado',this)">Confirmados</button>
+      <button class="filter-btn" onclick="filtrarAgenda('cancelado',this)">Cancelados</button>
+      <button class="filter-btn" onclick="filtrarAgenda('realizado',this)">Realizados</button>
+      <button class="refresh-btn" onclick="carregarAgenda()"><i class="ti ti-refresh" style="font-size:13px"></i>Atualizar</button>
+    </div>
+
+    <div class="card">
+      <table class="agenda-table">
+        <thead>
+          <tr>
+            <th>Paciente</th>
+            <th>Telefone</th>
+            <th>Especialidade</th>
+            <th>Convênio</th>
+            <th>Período</th>
+            <th>Origem</th>
+            <th>Data</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="agenda-tbody">
+          <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-muted)">Carregando agendamentos...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- OUTRAS PÁGINAS -->
+  <main class="page" id="p-pacientes">
+    <div class="ph">Pacientes</div><div class="ps">Base de dados</div><div class="gl"></div>
+    <div class="card" style="padding:28px;text-align:center;color:var(--text-muted)"><i class="ti ti-users" style="font-size:36px;display:block;margin:0 auto 10px;color:var(--gold);opacity:.4"></i>Módulo integrado ao Supabase.<br><span style="font-size:11px">Todos os pacientes que agendaram aparecem aqui automaticamente.</span></div>
+  </main>
+  <main class="page" id="p-relatorios">
+    <div class="ph">Relatórios</div><div class="ps">Métricas e análises</div><div class="gl"></div>
+    <div class="card" style="padding:28px;text-align:center;color:var(--text-muted)"><i class="ti ti-chart-bar" style="font-size:36px;display:block;margin:0 auto 10px;color:var(--gold);opacity:.4"></i>Relatórios exportáveis em PDF e Excel.</div>
+  </main>
+  <main class="page" id="p-config">
+    <div class="ph">Configurações</div><div class="ps">Integrações e personalização</div><div class="gl"></div>
+    <div class="card" style="padding:28px;text-align:center;color:var(--text-muted)"><i class="ti ti-settings" style="font-size:36px;display:block;margin:0 auto 10px;color:var(--gold);opacity:.4"></i>Evolution API · Supabase · Anthropic configurados no servidor.</div>
+  </main>
+</div>
+
 <script>
-fetch('/api/metricas').then(r=>r.json()).then(d=>document.body.innerHTML+='<p>Total agendamentos: '+d.total+'</p>');
+// ── CONFIG ───────────────────────────────────────────────────
+// URL do seu servidor no Railway (mude após o deploy)
+const API_BASE = window.location.origin;
+
+// ── UTILS ─────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+
+function formatarData(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+// ── NAVEGAÇÃO ─────────────────────────────────────────────────
+const pages = { dash:'p-dash', chat:'p-chat', agenda:'p-agenda', pacientes:'p-pacientes', relatorios:'p-relatorios', config:'p-config' };
+const titles = { dash:'Dashboard · visão geral', chat:'CMA Assistente · chat em tempo real', agenda:'Agenda · tempo real', pacientes:'Pacientes', relatorios:'Relatórios', config:'Configurações' };
+
+function go(id, el) {
+  Object.values(pages).forEach(pid => {
+    const p = document.getElementById(pid);
+    p.classList.remove('active');
+    p.style.display = 'none';
+  });
+  const p = document.getElementById(pages[id]);
+  p.style.display = id === 'chat' ? 'grid' : (id === 'agenda' ? 'block' : 'block');
+  setTimeout(() => p.classList.add('active'), 10);
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const [m, s] = titles[id].split(' · ');
+  document.getElementById('page-title').innerHTML = m + (s ? ` · <span style="color:#8fa0b8;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:300">${s}</span>` : '');
+  if (id === 'agenda') carregarAgenda();
+  if (id === 'dash') carregarDashboard();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────
+async function carregarDashboard() {
+  try {
+    const [metricas, recentes] = await Promise.all([
+      fetch(API_BASE + '/api/metricas').then(r => r.json()),
+      fetch(API_BASE + '/api/agendamentos?limite=5').then(r => r.json())
+    ]);
+
+    document.getElementById('k-total').textContent = metricas.total || 0;
+    document.getElementById('k-hoje').textContent = metricas.hoje || 0;
+    document.getElementById('k-confirmados').textContent = metricas.confirmados || 0;
+    document.getElementById('k-pendentes').textContent = metricas.pendentes || 0;
+    document.getElementById('top-hoje').textContent = metricas.hoje || 0;
+    document.getElementById('top-total').textContent = metricas.total || 0;
+
+    // Lista recente
+    const lista = document.getElementById('recent-list');
+    if (!recentes.length) {
+      lista.innerHTML = '<div class="empty-state"><i class="ti ti-calendar-off"></i>Nenhum agendamento ainda</div>';
+    } else {
+      lista.innerHTML = recentes.map(a => `
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--navy-light);border:1px solid var(--border-gold);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--gold);flex-shrink:0">${a.nome_paciente?.charAt(0) || '?'}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;color:var(--text-body);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.nome_paciente}</div>
+            <div style="font-size:10px;color:var(--text-muted)">${a.especialidade} · ${a.periodo || '—'}</div>
+          </div>
+          <span class="sstatus ${a.status}">${a.status}</span>
+        </div>
+      `).join('');
+    }
+
+    // Origens
+    const origens = recentes.reduce((acc, a) => { acc[a.origem] = (acc[a.origem] || 0) + 1; return acc; }, {});
+    document.getElementById('origem-stats').innerHTML = Object.entries(origens).map(([o, n]) => `
+      <div class="stat-row"><div class="stat-lbl"><span class="origem-badge ${o}">${o}</span></div><div class="stat-val gold">${n}</div></div>
+    `).join('') || '<div style="color:var(--text-muted);font-size:11px;text-align:center;padding:10px">Sem dados ainda</div>';
+
+  } catch (e) {
+    console.error('Erro dashboard:', e);
+  }
+}
+
+// ── AGENDA ────────────────────────────────────────────────────
+let filtroAtual = '';
+
+function filtrarAgenda(status, btn) {
+  filtroAtual = status;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  carregarAgenda();
+}
+
+async function carregarAgenda() {
+  const tbody = document.getElementById('agenda-tbody');
+  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted)">Carregando...</td></tr>';
+
+  try {
+    const url = API_BASE + '/api/agendamentos?limite=100' + (filtroAtual ? '&status=' + filtroAtual : '');
+    const dados = await fetch(url).then(r => r.json());
+
+    if (!dados.length) {
+      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="ti ti-calendar-off"></i>Nenhum agendamento encontrado</div></td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = dados.map(a => `
+      <tr>
+        <td style="font-weight:500">${a.nome_paciente}</td>
+        <td style="color:var(--text-muted)">${a.telefone}</td>
+        <td>${a.especialidade}</td>
+        <td style="color:var(--text-muted)">${a.convenio || 'particular'}</td>
+        <td style="color:var(--text-muted)">${a.periodo || '—'}</td>
+        <td><span class="origem-badge ${a.origem}">${a.origem}</span></td>
+        <td style="color:var(--text-muted);font-size:11px">${formatarData(a.created_at)}</td>
+        <td>
+          <select class="status-sel" onchange="mudarStatus('${a.id}', this.value)">
+            <option value="pendente" ${a.status==='pendente'?'selected':''}>pendente</option>
+            <option value="confirmado" ${a.status==='confirmado'?'selected':''}>confirmado</option>
+            <option value="cancelado" ${a.status==='cancelado'?'selected':''}>cancelado</option>
+            <option value="realizado" ${a.status==='realizado'?'selected':''}>realizado</option>
+          </select>
+        </td>
+      </tr>
+    `).join('');
+
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#e07070">Erro ao carregar. Verifique a conexão com o servidor.</td></tr>';
+  }
+}
+
+async function mudarStatus(id, status) {
+  try {
+    await fetch(API_BASE + '/api/agendamentos/' + id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    showToast('✅ Status atualizado: ' + status);
+  } catch (e) {
+    showToast('❌ Erro ao atualizar status');
+  }
+}
+
+// ── CHAT ──────────────────────────────────────────────────────
+let sessionAgendamentos = 0;
+
+function chatKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); chatSend(); } }
+function chatResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 80) + 'px'; }
+function chatSet(t) { const i = document.getElementById('chat-inp'); i.value = t; chatResize(i); i.focus(); }
+
+function chatAddMsg(role, text) {
+  const box = document.getElementById('chat-msgs');
+  const d = document.createElement('div');
+  d.className = 'msg ' + (role === 'user' ? 'user' : 'agent');
+  const safe = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>');
+  const t = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  if (role === 'user') {
+    d.innerHTML = `<div class="mav" style="background:rgba(30,110,168,0.2);color:#5aabe0">Eu</div><div><div class="mbub">${safe}</div><div class="mtime">${t}</div></div>`;
+  } else {
+    d.innerHTML = `<div class="mav">A</div><div><div class="mbub">${safe}</div><div class="mtime">${t}</div></div>`;
+  }
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+}
+
+function chatShowTyping() {
+  const box = document.getElementById('chat-msgs');
+  const d = document.createElement('div'); d.id = 'chat-typ'; d.className = 'msg agent';
+  d.innerHTML = '<div class="mav">A</div><div><div class="mbub"><div class="tdots"><span></span><span></span><span></span></div></div></div>';
+  box.appendChild(d); box.scrollTop = box.scrollHeight;
+}
+function chatRemoveTyping() { const e = document.getElementById('chat-typ'); if (e) e.remove(); }
+
+let chatBusy = false;
+async function chatSend() {
+  const inp = document.getElementById('chat-inp');
+  const txt = inp.value.trim();
+  if (!txt || chatBusy) return;
+  inp.value = ''; inp.style.height = 'auto';
+  chatAddMsg('user', txt);
+  chatBusy = true;
+  document.getElementById('chat-sbtn').disabled = true;
+  document.getElementById('chat-status').textContent = 'digitando...';
+  chatShowTyping();
+
+  try {
+    const r = await fetch(API_BASE + '/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mensagem: txt })
+    });
+    const data = await r.json();
+    chatRemoveTyping();
+    chatAddMsg('agent', data.resposta || 'Peço desculpas pela instabilidade.');
+
+    if (data.agendamento) {
+      sessionAgendamentos++;
+      document.getElementById('session-count').textContent = sessionAgendamentos;
+      showToast('📅 Agendamento salvo: ' + data.agendamento.nome + ' — ' + data.agendamento.especialidade);
+    }
+  } catch (e) {
+    chatRemoveTyping();
+    chatAddMsg('agent', 'Peço desculpas pela instabilidade momentânea. Poderia repetir?');
+  }
+
+  chatBusy = false;
+  document.getElementById('chat-sbtn').disabled = false;
+  document.getElementById('chat-status').textContent = 'Online · agendamentos salvos em tempo real';
+  inp.focus();
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+const now = new Date();
+document.getElementById('today-date').textContent = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase()) + ' · Sistema conectado ao Supabase';
+document.getElementById('chat-init-time').textContent = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+document.querySelectorAll('.page, .chat-page, .agenda-page').forEach(p => {
+  if (!p.classList.contains('active')) p.style.display = 'none';
+});
+
+carregarDashboard();
+
+// Auto-refresh da agenda a cada 30 segundos se estiver aberta
+setInterval(() => {
+  if (document.getElementById('p-agenda').classList.contains('active')) {
+    carregarAgenda();
+  }
+  carregarDashboard();
+}, 30000);
 </script>
 </body>
 </html>
+
