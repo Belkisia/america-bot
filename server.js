@@ -2,7 +2,8 @@
 const express = require('express');
 const axios = require('axios');
 const db = require('./supabase');
-
+console.log('SUPABASE_URL:', process.env.SUPABASE_URL);
+console.log('ANTHROPIC_KEY:', process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_API_KEY.substring(0,15) : 'UNDEFINED');
 const app = express();
 app.use(express.json());
 app.use(express.static('public'));
