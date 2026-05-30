@@ -21,6 +21,7 @@ const atendimentoHumano = new Set();
 // ──────────────────────────────────────────────────────────────
 // SYSTEM PROMPT DA AMÉRICA
 // ──────────────────────────────────────────────────────────────
+console.log('CHAVE:', ANTHROPIC_API_KEY ? ANTHROPIC_API_KEY.substring(0, 20) + '...' : 'UNDEFINED');
 const SYSTEM_PROMPT = `Você é a CMA, assistente executiva premium do Centro Médico America em São Paulo.
 
 Perfil: elegante, sofisticada, calorosa, extremamente profissional. Jamais robótica. Jamais dá diagnósticos. Jamais inventa informações.
