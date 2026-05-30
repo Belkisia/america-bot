@@ -285,7 +285,8 @@ app.post('/api/chat', async (req, res) => {
 
     res.json({ resposta: textoFinal, agendamento: dadosAgendamento || null });
   } catch (e) {
-    res.status(500).json({ erro: e.message });
+    console.error('ERRO CHAT:', e.message, e.stack);
+    res.status(500).json({ erro: e.message, detalhe: e.stack });
   }
 });
 
