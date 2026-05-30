@@ -5,7 +5,7 @@ const db = require('./supabase');
 
 const app = express();
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static('spublic'));
 
 const {
   ANTHROPIC_API_KEY,
@@ -94,7 +94,7 @@ async function chamarAmerica(telefone, mensagemUsuario) {
   const resposta = await axios.post(
     'https://api.anthropic.com/v1/messages',
     {
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 700,
       system: SYSTEM_PROMPT,
       messages: mensagens
