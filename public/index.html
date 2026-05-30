@@ -1,1 +1,10 @@
-file:///C:/Users/Acer%20Nitro%205/Downloads/index-v2.html
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>América Bot</title></head>
+<body>
+<h1>América Assistente Online</h1>
+<script>
+fetch('/api/metricas').then(r=>r.json()).then(d=>document.body.innerHTML+='<p>Total agendamentos: '+d.total+'</p>');
+</script>
+</body>
+</html>
