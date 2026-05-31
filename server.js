@@ -220,18 +220,15 @@ app.get('/api/agendamentos', async (req, res) => {
 });
 
 // Listar pacientes
-app.get('/api/pacientes', async (req, res) => {
+app.get('/api/pacientes', async function(req, res) {
   try {
     const result = await supabase
       .from('pacientes')
-      .select('*, agendamentos(count)')
+      .select('*')
       .order('created_at', { ascending: false });
-    const dados = (result.data || []).map(p => ({
-      ...p,
-      total_agendamentos: p.agendamentos?.[0]?.count || 0
-    }));
-    res.json(dados);
+    res.json(result.data || []);
   } catch (e) {
+    console.error('ERRO /api/pacientes:', e.message);
     res.status(500).json({ erro: e.message });
   }
 });
