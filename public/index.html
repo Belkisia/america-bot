@@ -351,10 +351,39 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text-bo
     </div>
   </main>
 
-  <!-- OUTRAS PÁGINAS -->
+  <!-- PACIENTES -->
   <main class="page" id="p-pacientes">
-    <div class="ph">Pacientes</div><div class="ps">Base de dados</div><div class="gl"></div>
-    <div class="card" style="padding:28px;text-align:center;color:var(--text-muted)"><i class="ti ti-users" style="font-size:36px;display:block;margin:0 auto 10px;color:var(--gold);opacity:.4"></i>Módulo integrado ao Supabase.<br><span style="font-size:11px">Todos os pacientes que agendaram aparecem aqui automaticamente.</span></div>
+    <div class="ph">Pacientes</div>
+    <div class="ps">Base de dados — todos os pacientes cadastrados via WhatsApp e chat</div>
+    <div class="gl"></div>
+
+    <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap">
+      <div style="flex:1;position:relative">
+        <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:14px"></i>
+        <input type="text" id="pac-busca" placeholder="Buscar por nome ou telefone..." oninput="filtrarPacientes(this.value)"
+          style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px 8px 32px;color:var(--text-body);font-family:'DM Sans',sans-serif;font-size:12px;outline:none">
+      </div>
+      <button onclick="carregarPacientes()" style="background:transparent;border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text-muted);cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px">
+        <i class="ti ti-refresh" style="font-size:13px"></i> Atualizar
+      </button>
+    </div>
+
+    <div class="card">
+      <table style="width:100%;border-collapse:collapse;font-size:12px" id="pac-table">
+        <thead>
+          <tr>
+            <th style="padding:8px 12px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);font-weight:500">Nome</th>
+            <th style="padding:8px 12px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);font-weight:500">Telefone</th>
+            <th style="padding:8px 12px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);font-weight:500">Convênio</th>
+            <th style="padding:8px 12px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);font-weight:500">Agendamentos</th>
+            <th style="padding:8px 12px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);font-weight:500">Cadastrado em</th>
+          </tr>
+        </thead>
+        <tbody id="pac-tbody">
+          <tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted)">Carregando pacientes...</td></tr>
+        </tbody>
+      </table>
+    </div>
   </main>
   <main class="page" id="p-relatorios">
     <div class="ph">Relatórios</div><div class="ps">Métricas e análises</div><div class="gl"></div>
@@ -403,6 +432,48 @@ function go(id, el) {
   document.getElementById('page-title').innerHTML = m + (s ? ` · <span style="color:#8fa0b8;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:300">${s}</span>` : '');
   if (id === 'agenda') carregarAgenda();
   if (id === 'dash') carregarDashboard();
+  if (id === 'pacientes') carregarPacientes();
+}
+
+// ── PACIENTES ─────────────────────────────────────────────────
+let todosPacientes = [];
+
+async function carregarPacientes() {
+  const tbody = document.getElementById('pac-tbody');
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">Carregando...</td></tr>';
+  try {
+    const dados = await fetch(API_BASE + '/api/pacientes').then(r => r.json());
+    todosPacientes = dados;
+    renderPacientes(dados);
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#e07070">Erro ao carregar pacientes.</td></tr>';
+  }
+}
+
+function renderPacientes(lista) {
+  const tbody = document.getElementById('pac-tbody');
+  if (!lista.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted)">Nenhum paciente cadastrado ainda.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = lista.map(p => `
+    <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
+      <td style="padding:10px 12px;color:var(--text-body);font-weight:500">${p.nome || '—'}</td>
+      <td style="padding:10px 12px;color:var(--text-muted)">${p.telefone || '—'}</td>
+      <td style="padding:10px 12px"><span style="background:rgba(201,168,76,0.1);color:var(--gold-light);border:1px solid rgba(201,168,76,0.2);padding:2px 8px;border-radius:4px;font-size:10px">${p.convenio || 'particular'}</span></td>
+      <td style="padding:10px 12px;color:var(--text-muted);font-size:11px">${p.total_agendamentos || '—'}</td>
+      <td style="padding:10px 12px;color:var(--text-muted);font-size:11px">${formatarData(p.created_at)}</td>
+    </tr>
+  `).join('');
+}
+
+function filtrarPacientes(termo) {
+  const t = termo.toLowerCase();
+  const filtrados = todosPacientes.filter(p =>
+    (p.nome && p.nome.toLowerCase().includes(t)) ||
+    (p.telefone && p.telefone.includes(t))
+  );
+  renderPacientes(filtrados);
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────
