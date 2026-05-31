@@ -133,6 +133,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text-bo
       <div class="nav-section">Operação</div>
       <div class="nav-item" onclick="go('agenda',this)"><i class="ti ti-calendar-event"></i>Agenda</div>
       <div class="nav-item" onclick="go('pacientes',this)"><i class="ti ti-users"></i>Pacientes</div>
+      <div class="nav-item" onclick="go('orcamento',this)"><i class="ti ti-receipt"></i>Tabela de Preços</div>
       <div class="nav-section">Análise</div>
       <div class="nav-item" onclick="go('relatorios',this)"><i class="ti ti-chart-bar"></i>Relatórios</div>
       <div class="nav-item" onclick="go('config',this)"><i class="ti ti-settings"></i>Configurações</div>
@@ -246,6 +247,110 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text-bo
     </div>
   </div>
 
+  <!-- TABELA DE PREÇOS -->
+  <main class="page" id="p-orcamento">
+    <div class="ph">Tabela de Preços</div>
+    <div class="ps">Consultas, exames e procedimentos · valores particulares</div>
+    <div class="gl"></div>
+
+    <!-- Buscador -->
+    <div style="margin-bottom:16px;display:flex;gap:10px;align-items:center">
+      <div style="flex:1;position:relative">
+        <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:14px"></i>
+        <input type="text" id="preco-busca" placeholder="Buscar exame ou procedimento..." oninput="filtrarPrecos(this.value)"
+          style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px 8px 32px;color:var(--text-body);font-family:'DM Sans',sans-serif;font-size:12px;outline:none">
+      </div>
+      <button onclick="copiarOrcamento()" style="background:var(--gold);border:none;border-radius:8px;padding:8px 14px;color:var(--navy);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px">
+        <i class="ti ti-copy" style="font-size:13px"></i> Copiar orçamento
+      </button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+      <!-- CONSULTAS -->
+      <div class="card">
+        <div class="card-title"><i class="ti ti-stethoscope" style="font-size:14px;margin-right:5px"></i>Consultas</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px" class="preco-table">
+          <tbody>
+            <tr class="preco-row"><td style="padding:7px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">Clínico Geral</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04)">R$ 80,00</td></tr>
+            <tr class="preco-row"><td style="padding:7px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">Ginecologia e Obstetrícia</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04)">R$ 120,00</td></tr>
+            <tr class="preco-row"><td style="padding:7px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">Endocrinologia</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04)">R$ 120,00</td></tr>
+            <tr class="preco-row"><td style="padding:7px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">Psiquiatria</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04)">R$ 120,00</td></tr>
+            <tr class="preco-row"><td style="padding:7px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">Pediatria</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04)">R$ 100,00</td></tr>
+            <tr class="preco-row"><td style="padding:7px 0;color:var(--text-body)">Otorrinolaringologia</td><td style="text-align:right;color:var(--gold);font-weight:500">R$ 140,00</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PROCEDIMENTOS -->
+      <div class="card">
+        <div class="card-title"><i class="ti ti-tools" style="font-size:14px;margin-right:5px"></i>Procedimentos</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px" class="preco-table">
+          <tbody>
+            <tr class="preco-row"><td style="padding:7px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">Limpeza de Ouvido</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04)">R$ 50,00</td></tr>
+            <tr class="preco-row"><td style="padding:7px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">Inserir DIU</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04)">R$ 400,00</td></tr>
+            <tr class="preco-row"><td style="padding:7px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">Retirar DIU</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04)">R$ 300,00</td></tr>
+            <tr class="preco-row"><td style="padding:7px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">Prevenção / Citopatológico</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04)">R$ 80,00</td></tr>
+            <tr class="preco-row"><td style="padding:7px 0;color:var(--text-body)">Retirada de Pontos</td><td style="text-align:right;color:var(--gold);font-weight:500">R$ 50,00</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ULTRASSONOGRAFIA -->
+      <div class="card" style="grid-column:1/-1">
+        <div class="card-title"><i class="ti ti-device-desktop-analytics" style="font-size:14px;margin-right:5px"></i>Ultrassonografia / Doppler</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 24px">
+          <table style="width:100%;border-collapse:collapse;font-size:12px" class="preco-table">
+            <tbody>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Abdome Inferior</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 70,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Abdome Inferior c/ Doppler</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 160,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Abdome Superior</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 70,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Abdome Superior c/ Doppler</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 160,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Abdome Total</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 100,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Abdome Total c/ Doppler</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 350,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Articulação</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 80,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Bolsa Escrotal</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 80,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Bolsa Escrotal c/ Doppler</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 150,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Mamas</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 90,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Morfológica 1º Trimestre</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 230,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Morfológica 2º Trimestre</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 280,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Obstétrica &gt;14 Semanas</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 100,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Obstétrica c/ Doppler</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 280,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Obstétrica Endovaginal</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 100,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Obstétrica Gestação Múltipla</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 180,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Partes Moles</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 70,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body)">USG Próstata Via Abdominal</td><td style="text-align:right;color:var(--gold);font-weight:500;white-space:nowrap">R$ 90,00</td></tr>
+            </tbody>
+          </table>
+          <table style="width:100%;border-collapse:collapse;font-size:12px" class="preco-table">
+            <tbody>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Quadril Pediátrico (cada lado)</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 80,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Tireoide</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 90,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Tireoide c/ Doppler</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 150,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Transvaginal</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 90,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Transvaginal c/ Doppler</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 160,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Vias Urinárias e Rins</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 80,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Transfontanela</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 130,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Pélvica</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 80,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Punho (cada lado)</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 80,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Parede Abdominal</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 80,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Parótidas</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 70,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Parótidas c/ Doppler</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 160,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Pé (cada lado)</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 80,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Quadril Adulto (cada lado)</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 80,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Orelha (cada lado)</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 70,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Cervical</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 80,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Ombro (cada lado)</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 90,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Região Inguinal (cada lado)</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 80,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">Doppler Órgão ou Estrutura Isolada</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 140,00</td></tr>
+              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body)">Doppler de Carótidas e Vertebrais</td><td style="text-align:right;color:var(--gold);font-weight:500;white-space:nowrap">R$ 150,00</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
   <!-- OUTRAS PÁGINAS -->
   <main class="page" id="p-pacientes">
     <div class="ph">Pacientes</div><div class="ps">Base de dados</div><div class="gl"></div>
@@ -280,8 +385,8 @@ function formatarData(iso) {
 }
 
 // ── NAVEGAÇÃO ─────────────────────────────────────────────────
-const pages = { dash:'p-dash', chat:'p-chat', agenda:'p-agenda', pacientes:'p-pacientes', relatorios:'p-relatorios', config:'p-config' };
-const titles = { dash:'Dashboard · visão geral', chat:'CMA Assistente · chat em tempo real', agenda:'Agenda · tempo real', pacientes:'Pacientes', relatorios:'Relatórios', config:'Configurações' };
+const pages = { dash:'p-dash', chat:'p-chat', agenda:'p-agenda', pacientes:'p-pacientes', orcamento:'p-orcamento', relatorios:'p-relatorios', config:'p-config' };
+const titles = { dash:'Dashboard · visão geral', chat:'CMA Assistente · chat em tempo real', agenda:'Agenda · tempo real', pacientes:'Pacientes', orcamento:'Tabela de Preços · valores particulares', relatorios:'Relatórios', config:'Configurações' };
 
 function go(id, el) {
   Object.values(pages).forEach(pid => {
@@ -476,6 +581,32 @@ async function chatSend() {
 const now = new Date();
 document.getElementById('today-date').textContent = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase()) + ' · Sistema conectado ao Supabase';
 document.getElementById('chat-init-time').textContent = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+
+// ── TABELA DE PREÇOS ──────────────────────────────────────────
+function filtrarPrecos(termo) {
+  const t = termo.toLowerCase();
+  document.querySelectorAll('.preco-row').forEach(function(row) {
+    const nome = row.querySelector('td') ? row.querySelector('td').textContent.toLowerCase() : '';
+    row.style.display = nome.includes(t) ? '' : 'none';
+  });
+}
+
+function copiarOrcamento() {
+  let texto = 'CENTRO MÉDICO AMERICA — TABELA DE PREÇOS\n\n';
+  document.querySelectorAll('.preco-table').forEach(function(table) {
+    table.querySelectorAll('.preco-row').forEach(function(row) {
+      const tds = row.querySelectorAll('td');
+      if (tds.length >= 2 && row.style.display !== 'none') {
+        texto += tds[0].textContent.trim() + ': ' + tds[1].textContent.trim() + '\n';
+      }
+    });
+  });
+  navigator.clipboard.writeText(texto).then(function() {
+    showToast('Tabela copiada para a área de transferência!');
+  });
+}
+// ─────────────────────────────────────────────────────────────
 
 document.querySelectorAll('.page, .chat-page, .agenda-page').forEach(p => {
   if (!p.classList.contains('active')) p.style.display = 'none';
