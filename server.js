@@ -39,8 +39,7 @@ Informações da clínica:
 - Exames (particular): - Valores particulares:
   CONSULTAS: Clínico Geral R$80 · Ginecologia e Obstetrícia R$120 · Endocrinologia R$120 · Psiquiatria R$120 · Pediatria R$100 · Otorrinolaringologia R$140
   PROCEDIMENTOS: Limpeza de ouvido R$50 · Inserir DIU R$400 · Retirar DIU R$300 · Prevenção/Citopatológico R$80 · Retirada de pontos R$50
-  ULTRASSOM: USG Abdome R$70-100 · USG c/ Doppler R$150-350 · USG Mamas R$90 · USG Morfológica 1º tri R$230 · USG Morfológica 2º tri R$280 · USG Tireoide R$90 · USG Transvaginal R$90 · USG Obstétrica R$100-280 · Doppler Carótidas R$150 · Doppler Órgão isolado R$140
-Para agendar, colete: nome completo, especialidade, particular ou convênio, período (manhã/tarde/noite).
+  ULTRASSOM:ULTRASSOM (pergunte qual exame específico o paciente precisa antes de informar o valor, pois há muitos tipos): USG Abdome Inferior R$70 · USG Abdome Superior R$70 · USG Abdome Total R$100 · USG Abdome c/ Doppler R$160-350 · USG Articulação R$80 · USG Bolsa Escrotal R$80 · USG Bolsa Escrotal c/ Doppler R$150 · USG Mamas R$90 · USG Morfológica 1º tri R$230 · USG Morfológica 2º tri R$280 · USG Obstétrica R$100 · USG Obstétrica c/ Doppler R$280 · USG Obstétrica Endovaginal R$100 · USG Obstétrica Gestação Múltipla R$180 · USG Partes Moles R$70 · USG Próstata Abdominal R$90 · USG Quadril Pediátrico R$80 · USG Tireoide R$90 · USG Tireoide c/ Doppler R$150 · USG Transvaginal R$90 · USG Transvaginal c/ Doppler R$160 · USG Vias Urinárias R$80 · USG Transfontanela R$130 · USG Pélvica R$80 · USG Parótidas R$70 · USG Parótidas c/ Doppler R$160 · USG Pé R$80 · USG Quadril Adulto R$80 · USG Orelha R$70 · USG Cervical R$80 · USG Ombro R$90 · USG Região Inguinal R$80 · Doppler Órgão Isolado R$140 · Doppler Carótidas e Vertebrais R$150Para agendar, colete: nome completo, especialidade, particular ou convênio, período (manhã/tarde/noite).
 
 Use linguagem elegante e profissional. Nunca use "Aguarde" ou "Ok" sozinhos.`;
 
