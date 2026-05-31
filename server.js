@@ -95,7 +95,7 @@ async function chamarAmerica(telefone, mensagemUsuario) {
   const resposta = await axios.post(
     'https://api.anthropic.com/v1/messages',
     {
-      model: ' claude-haiku-4-5',
+      model: 'claude-sonnet-4-6',
       max_tokens: 700,
       system: SYSTEM_PROMPT,
       messages: mensagens
@@ -276,7 +276,7 @@ app.post('/api/chat', async (req, res) => {
 
     const resposta = await axios.post(
       'https://api.anthropic.com/v1/messages',
-      { model: 'claude-haiku-4-5', max_tokens: 700, system: SYSTEM_PROMPT, messages: msgs },
+      { model: 'claude-sonnet-4-6', max_tokens: 700, system: SYSTEM_PROMPT, messages: msgs },
       { headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' } }
     );
 
