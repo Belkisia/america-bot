@@ -1,60 +1,76 @@
+require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
-const { createClient } = require('@supabase/supabase-js');
-const path = require('path');
+const db = require('./supabase');
 
 const app = express();
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static('public'));
 
-const PORT = process.env.PORT || 3000;
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
-const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL;
-const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY;
-const EVOLUTION_INSTANCE = process.env.EVOLUTION_INSTANCE;
+const {
+  ANTHROPIC_API_KEY,
+  EVOLUTION_API_URL,
+  EVOLUTION_API_KEY,
+  EVOLUTION_INSTANCE,
+  PORT = 3000
+} = process.env;
 
-console.log('=== CMA Assistente Premium v2 ===');
-console.log('ANTHROPIC:', ANTHROPIC_API_KEY ? ANTHROPIC_API_KEY.substring(0, 20) + '...' : 'FALTANDO');
-console.log('SUPABASE_URL:', SUPABASE_URL || 'FALTANDO');
-console.log('SUPABASE_KEY:', SUPABASE_SERVICE_KEY ? SUPABASE_SERVICE_KEY.substring(0, 15) + '...' : 'FALTANDO');
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-
+// Números em atendimento humano
 const atendimentoHumano = new Set();
 
+// ──────────────────────────────────────────────────────────────
+// SYSTEM PROMPT DA AMÉRICA
+// ──────────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `Você é a CMA, assistente executiva premium do Centro Médico America em São Paulo.
 
 Perfil: elegante, sofisticada, calorosa, extremamente profissional. Jamais robótica. Jamais dá diagnósticos. Jamais inventa informações.
 
-IMPORTANTE — Quando um agendamento for CONFIRMADO pelo paciente, inclua no final da resposta:
+IMPORTANTE — Detecção de agendamento:
+Quando um agendamento for CONFIRMADO pelo paciente (ele forneceu nome, especialidade e período), você DEVE incluir no final da sua resposta, em uma linha separada, o seguinte bloco exato (invisível para o paciente — só para o sistema):
+
 [AGENDAR:nome=NOME_COMPLETO|especialidade=ESPECIALIDADE|convenio=CONVENIO|periodo=PERIODO]
+
+Exemplo:
+[AGENDAR:nome=João Silva|especialidade=Cardiologia|convenio=Unimed|periodo=manha]
+
+Só inclua o bloco quando o paciente tiver fornecido TODOS os dados necessários e confirmado o agendamento.
 
 Informações da clínica:
 - Especialidades: cardiologia, ortopedia, dermatologia, neurologia, ginecologia, endocrinologia, oncologia, urologia, oftalmologia, otorrinolaringologia
 - Convênios: Unimed, Bradesco Saúde, SulAmérica, Amil, Porto Seguro, Notre Dame Intermédica, Hapvida
-- Horário: seg-sex 7h às 20h, sáb 7h às 14h, dom fechado
-- Endereço: Av. Paulista, 1234 — São Paulo/SP
-- Exames (particular): - Valores particulares:
-  CONSULTAS: Clínico Geral R$80 · Ginecologia e Obstetrícia R$120 · Endocrinologia R$120 · Psiquiatria R$120 · Pediatria R$100 · Otorrinolaringologia R$140
-  PROCEDIMENTOS: Limpeza de ouvido R$50 · Inserir DIU R$400 · Retirar DIU R$300 · Prevenção/Citopatológico R$80 · Retirada de pontos R$50
-  ULTRASSOM:ULTRASSOM (pergunte qual exame específico o paciente precisa antes de informar o valor, pois há muitos tipos): USG Abdome Inferior R$70 · USG Abdome Superior R$70 · USG Abdome Total R$100 · USG Abdome c/ Doppler R$160-350 · USG Articulação R$80 · USG Bolsa Escrotal R$80 · USG Bolsa Escrotal c/ Doppler R$150 · USG Mamas R$90 · USG Morfológica 1º tri R$230 · USG Morfológica 2º tri R$280 · USG Obstétrica R$100 · USG Obstétrica c/ Doppler R$280 · USG Obstétrica Endovaginal R$100 · USG Obstétrica Gestação Múltipla R$180 · USG Partes Moles R$70 · USG Próstata Abdominal R$90 · USG Quadril Pediátrico R$80 · USG Tireoide R$90 · USG Tireoide c/ Doppler R$150 · USG Transvaginal R$90 · USG Transvaginal c/ Doppler R$160 · USG Vias Urinárias R$80 · USG Transfontanela R$130 · USG Pélvica R$80 · USG Parótidas R$70 · USG Parótidas c/ Doppler R$160 · USG Pé R$80 · USG Quadril Adulto R$80 · USG Orelha R$70 · USG Cervical R$80 · USG Ombro R$90 · USG Região Inguinal R$80 · Doppler Órgão Isolado R$140 · Doppler Carótidas e Vertebrais R$150Para agendar, colete: nome completo, especialidade, particular ou convênio, período (manhã/tarde/noite).
+- Horário: seg-sex 7h às 20h · sáb 7h às 14h · dom fechado
+- Endereço: Av. Paulista, 1234 — São Paulo/SP · Estacionamento disponível
+- Exames (particular): hemograma R$45 · glicemia R$25 · colesterol R$35 · ressonância a partir de R$850 · tomografia a partir de R$450 · raio-x R$120 · ultrassom R$180 · ecocardiograma R$380 · eletrocardiograma R$95
 
-Use linguagem elegante e profissional. Nunca use "Aguarde" ou "Ok" sozinhos.`;
+Para agendar, colete em ordem:
+1. Nome completo
+2. Especialidade
+3. Particular ou convênio (qual?)
+4. Período preferido (manhã, tarde ou noite)
 
+Ao confirmar o agendamento, diga algo como:
+"Perfeito, [nome]! Seu agendamento em [especialidade] foi registrado com sucesso para o período da [período]. Nossa equipe entrará em contato em breve para confirmar o horário exato. Há mais alguma dúvida?"
+
+Comunicação premium:
+- Use: "Será um prazer auxiliá-lo", "Vou verificar a melhor disponibilidade"
+- Nunca use: "Aguarde", "Ok" sozinho, frases genéricas
+- Emojis com moderação
+
+Formato WhatsApp: máximo 3 parágrafos, bullets (•) apenas ao listar.`;
+
+// ──────────────────────────────────────────────────────────────
+// EXTRAIR DADOS DE AGENDAMENTO DA RESPOSTA DA IA
+// ──────────────────────────────────────────────────────────────
 function extrairAgendamento(texto) {
   const match = texto.match(/\[AGENDAR:([^\]]+)\]/);
   if (!match) return null;
+
   const dados = {};
-  match[1].split('|').forEach(function(par) {
-    const idx = par.indexOf('=');
-    if (idx > 0) {
-      const chave = par.substring(0, idx).trim();
-      const valor = par.substring(idx + 1).trim();
-      dados[chave] = valor;
-    }
+  match[1].split('|').forEach(par => {
+    const [chave, valor] = par.split('=');
+    if (chave && valor) dados[chave.trim()] = valor.trim();
   });
+
   return Object.keys(dados).length >= 3 ? dados : null;
 }
 
@@ -62,93 +78,23 @@ function removerBlocoAgendar(texto) {
   return texto.replace(/\[AGENDAR:[^\]]+\]/g, '').trim();
 }
 
-async function buscarHistorico(telefone) {
-  try {
-    const result = await supabase
-      .from('conversas')
-      .select('role, conteudo')
-      .eq('telefone', telefone)
-      .order('created_at', { ascending: true })
-      .limit(20);
-    return (result.data || []).map(function(m) {
-      return { role: m.role, content: m.conteudo };
-    });
-  } catch (e) {
-    console.error('Erro buscarHistorico:', e.message);
-    return [];
-  }
-}
+// ──────────────────────────────────────────────────────────────
+// CHAMAR ANTHROPIC
+// ──────────────────────────────────────────────────────────────
+async function chamarAmerica(telefone, mensagemUsuario) {
+  // Buscar histórico do Supabase
+  const historico = await db.buscarHistorico(telefone, 20);
 
-async function salvarMensagem(telefone, role, conteudo) {
-  try {
-    await supabase.from('conversas').insert({ telefone: telefone, role: role, conteudo: conteudo });
-  } catch (e) {
-    console.error('Erro salvarMensagem:', e.message);
-  }
-}
+  // Salvar mensagem do usuário
+  await db.salvarMensagem(telefone, 'user', mensagemUsuario);
+  await db.logMensagem(telefone, mensagemUsuario, 'recebida');
 
-async function salvarAgendamento(dados) {
-  try {
-    await supabase.from('pacientes').upsert(
-      { nome: dados.nome_paciente, telefone: dados.telefone, convenio: dados.convenio },
-      { onConflict: 'telefone' }
-    );
-    const result = await supabase.from('agendamentos').insert({
-      nome_paciente: dados.nome_paciente,
-      telefone: dados.telefone,
-      especialidade: dados.especialidade,
-      convenio: dados.convenio || 'particular',
-      periodo: dados.periodo,
-      status: 'pendente',
-      origem: dados.origem || 'whatsapp'
-    }).select().single();
-    return result.data;
-  } catch (e) {
-    console.error('Erro salvarAgendamento:', e.message);
-    return null;
-  }
-}
+  const mensagens = [...historico, { role: 'user', content: mensagemUsuario }];
 
-async function buscarAgendamentos(filtros) {
-  try {
-    let query = supabase.from('agendamentos').select('*').order('created_at', { ascending: false });
-    if (filtros && filtros.status) query = query.eq('status', filtros.status);
-    if (filtros && filtros.limite) query = query.limit(filtros.limite);
-    const result = await query;
-    return result.data || [];
-  } catch (e) {
-    console.error('Erro buscarAgendamentos:', e.message);
-    return [];
-  }
-}
-
-async function atualizarStatus(id, status) {
-  try {
-    await supabase.from('agendamentos').update({ status: status }).eq('id', id);
-  } catch (e) {
-    console.error('Erro atualizarStatus:', e.message);
-  }
-}
-
-async function buscarMetricas() {
-  try {
-    const hoje = new Date().toISOString().split('T')[0];
-    const r1 = await supabase.from('agendamentos').select('id', { count: 'exact', head: true });
-    const r2 = await supabase.from('agendamentos').select('id', { count: 'exact', head: true }).gte('created_at', hoje);
-    const r3 = await supabase.from('agendamentos').select('id', { count: 'exact', head: true }).eq('status', 'confirmado');
-    const r4 = await supabase.from('agendamentos').select('id', { count: 'exact', head: true }).eq('status', 'pendente');
-    return { total: r1.count || 0, hoje: r2.count || 0, confirmados: r3.count || 0, pendentes: r4.count || 0 };
-  } catch (e) {
-    console.error('Erro buscarMetricas:', e.message);
-    return { total: 0, hoje: 0, confirmados: 0, pendentes: 0 };
-  }
-}
-
-async function chamarIA(mensagens) {
   const resposta = await axios.post(
     'https://api.anthropic.com/v1/messages',
     {
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 700,
       system: SYSTEM_PROMPT,
       messages: mensagens
@@ -161,109 +107,221 @@ async function chamarIA(mensagens) {
       }
     }
   );
-  return resposta.data.content[0].text;
-}
 
-async function enviarMensagemWA(numero, texto) {
-  try {
-    await axios.post(
-      EVOLUTION_API_URL + '/message/sendText/' + EVOLUTION_INSTANCE,
-      { number: numero, text: texto },
-      { headers: { 'Content-Type': 'application/json', 'apikey': EVOLUTION_API_KEY } }
-    );
-  } catch (e) {
-    console.error('Erro enviarMensagemWA:', e.message);
+  const textoCompleto = resposta.data.content[0].text;
+
+  // Verificar se há agendamento para salvar
+  const dadosAgendamento = extrairAgendamento(textoCompleto);
+  if (dadosAgendamento) {
+    try {
+      await db.salvarAgendamento({
+        nome_paciente: dadosAgendamento.nome,
+        telefone,
+        especialidade: dadosAgendamento.especialidade,
+        convenio: dadosAgendamento.convenio || 'particular',
+        periodo: dadosAgendamento.periodo,
+        origem: 'whatsapp'
+      });
+      console.log(`📅 Agendamento salvo: ${dadosAgendamento.nome} — ${dadosAgendamento.especialidade}`);
+    } catch (e) {
+      console.error('Erro ao salvar agendamento:', e.message);
+    }
   }
+
+  // Remover o bloco técnico antes de enviar ao paciente
+  const textoFinal = removerBlocoAgendar(textoCompleto);
+
+  // Salvar resposta no histórico
+  await db.salvarMensagem(telefone, 'assistant', textoFinal);
+  await db.logMensagem(telefone, textoFinal, 'enviada');
+
+  return textoFinal;
 }
 
-// WEBHOOK
-app.post('/webhook', async function(req, res) {
+// ──────────────────────────────────────────────────────────────
+// ENVIAR MENSAGEM VIA EVOLUTION API
+// ──────────────────────────────────────────────────────────────
+async function enviarMensagem(numero, texto) {
+  await axios.post(
+    `${EVOLUTION_API_URL}/message/sendText/${EVOLUTION_INSTANCE}`,
+    { number: numero, text: texto },
+    { headers: { 'Content-Type': 'application/json', 'apikey': EVOLUTION_API_KEY } }
+  );
+}
+
+// ──────────────────────────────────────────────────────────────
+// WEBHOOK — recebe mensagens do WhatsApp
+// ──────────────────────────────────────────────────────────────
+app.post('/webhook', async (req, res) => {
   res.sendStatus(200);
+
   try {
     const body = req.body;
     if (body.event !== 'messages.upsert') return;
+
     const dados = body.data;
-    if (!dados || !dados.key) return;
+    if (!dados?.key) return;
     if (dados.key.fromMe) return;
-    if (dados.key.remoteJid && dados.key.remoteJid.includes('@g.us')) return;
-    const numero = dados.key.remoteJid ? dados.key.remoteJid.replace('@s.whatsapp.net', '') : null;
+    if (dados.key.remoteJid?.includes('@g.us')) return;
+
+    const numero = dados.key.remoteJid?.replace('@s.whatsapp.net', '');
     if (!numero) return;
-    const texto = (dados.message && (dados.message.conversation || (dados.message.extendedTextMessage && dados.message.extendedTextMessage.text))) || '';
+
+    const texto =
+      dados.message?.conversation ||
+      dados.message?.extendedTextMessage?.text ||
+      dados.message?.imageMessage?.caption || '';
+
     if (!texto.trim()) return;
-    console.log('WA [' + numero + ']:', texto);
-    if (atendimentoHumano.has(numero)) return;
-    if (texto.toLowerCase() === '#humano') {
-      atendimentoHumano.add(numero);
-      await enviarMensagemWA(numero + '@s.whatsapp.net', 'Direcionando para nossa equipe especializada. Em instantes alguém irá atendê-lo.');
+
+    console.log(`📩 [${numero}] ${texto}`);
+
+    if (atendimentoHumano.has(numero)) {
+      console.log(`👤 [${numero}] Atendimento humano ativo`);
       return;
     }
-    if (texto === '#ia_on') { atendimentoHumano.delete(numero); return; }
-    const historico = await buscarHistorico(numero);
-    await salvarMensagem(numero, 'user', texto);
-    const msgs = historico.concat([{ role: 'user', content: texto }]);
-    const resposta = await chamarIA(msgs);
-    const dadosAg = extrairAgendamento(resposta);
-    if (dadosAg) await salvarAgendamento({ nome_paciente: dadosAg.nome, telefone: numero, especialidade: dadosAg.especialidade, convenio: dadosAg.convenio, periodo: dadosAg.periodo, origem: 'whatsapp' });
-    const final = removerBlocoAgendar(resposta);
-    await salvarMensagem(numero, 'assistant', final);
-    await enviarMensagemWA(numero + '@s.whatsapp.net', final);
-  } catch (e) {
-    console.error('Erro webhook:', e.message);
+
+    if (texto.toLowerCase() === '#humano') {
+      atendimentoHumano.add(numero);
+      await enviarMensagem(
+        numero + '@s.whatsapp.net',
+        'Para oferecer o melhor suporte, estou direcionando seu atendimento para nossa equipe especializada. Em instantes alguém irá atendê-lo. 🌟'
+      );
+      return;
+    }
+
+    if (texto === '#ia_on') {
+      atendimentoHumano.delete(numero);
+      return;
+    }
+
+    const resposta = await chamarAmerica(numero, texto);
+    await enviarMensagem(numero + '@s.whatsapp.net', resposta);
+    console.log(`✅ [${numero}] Respondido`);
+
+  } catch (erro) {
+    console.error('Erro no webhook:', erro.message);
   }
 });
 
-// API CHAT
-app.post('/api/chat', async function(req, res) {
-  try {
-    const telefone = req.body.telefone || 'dashboard';
-    const mensagem = req.body.mensagem;
-    if (!mensagem) return res.status(400).json({ erro: 'mensagem obrigatória' });
-    const historico = await buscarHistorico(telefone);
-    await salvarMensagem(telefone, 'user', mensagem);
-    const msgs = historico.concat([{ role: 'user', content: mensagem }]);
-    const resposta = await chamarIA(msgs);
-    const dadosAg = extrairAgendamento(resposta);
-    if (dadosAg) await salvarAgendamento({ nome_paciente: dadosAg.nome, telefone: telefone, especialidade: dadosAg.especialidade, convenio: dadosAg.convenio, periodo: dadosAg.periodo, origem: 'chat' });
-    const final = removerBlocoAgendar(resposta);
-    await salvarMensagem(telefone, 'assistant', final);
-    res.json({ resposta: final, agendamento: dadosAg || null });
-  } catch (e) {
-    console.error('ERRO /api/chat:', e.message);
-    res.status(500).json({ erro: e.message });
-  }
-});
+// ──────────────────────────────────────────────────────────────
+// API REST — usada pelo dashboard HTML
+// ──────────────────────────────────────────────────────────────
 
-// API AGENDAMENTOS
-app.get('/api/agendamentos', async function(req, res) {
+// Listar agendamentos
+app.get('/api/agendamentos', async (req, res) => {
   try {
-    const dados = await buscarAgendamentos({ status: req.query.status, limite: parseInt(req.query.limite) || 50 });
+    const { status, limite = 50 } = req.query;
+    const dados = await db.buscarAgendamentos({ status, limite: parseInt(limite) });
     res.json(dados);
   } catch (e) {
     res.status(500).json({ erro: e.message });
   }
 });
 
-app.patch('/api/agendamentos/:id', async function(req, res) {
+// Listar pacientes
+app.get('/api/pacientes', async (req, res) => {
   try {
-    await atualizarStatus(req.params.id, req.body.status);
+    const result = await supabase
+      .from('pacientes')
+      .select('*, agendamentos(count)')
+      .order('created_at', { ascending: false });
+    const dados = (result.data || []).map(p => ({
+      ...p,
+      total_agendamentos: p.agendamentos?.[0]?.count || 0
+    }));
+    res.json(dados);
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+// Atualizar status de agendamento
+app.patch('/api/agendamentos/:id', async (req, res) => {
+  try {
+    await db.atualizarStatus(req.params.id, req.body.status);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ erro: e.message });
   }
 });
 
-app.get('/api/metricas', async function(req, res) {
+// Métricas do dashboard
+app.get('/api/metricas', async (req, res) => {
   try {
-    res.json(await buscarMetricas());
+    const dados = await db.buscarMetricas();
+    res.json(dados);
   } catch (e) {
     res.status(500).json({ erro: e.message });
   }
 });
 
-app.get('/', function(req, res) {
-  res.json({ status: 'online', agente: 'CMA Assistente Premium v2', uptime: Math.floor(process.uptime()) + 's' });
+// Criar agendamento manual (via chat do dashboard)
+app.post('/api/agendamentos', async (req, res) => {
+  try {
+    const dados = await db.salvarAgendamento({ ...req.body, origem: 'chat' });
+    res.json(dados);
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
 });
 
-app.listen(PORT, function() {
-  console.log('Porta: ' + PORT + ' | Online');
+// Chat direto com a CMA (usado pelo dashboard)
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { telefone = 'dashboard', mensagem } = req.body;
+
+    const historico = await db.buscarHistorico(telefone, 20);
+    await db.salvarMensagem(telefone, 'user', mensagem);
+
+    const msgs = [...historico, { role: 'user', content: mensagem }];
+
+    const resposta = await axios.post(
+      'https://api.anthropic.com/v1/messages',
+      { model: 'claude-sonnet-4-20250514', max_tokens: 700, system: SYSTEM_PROMPT, messages: msgs },
+      { headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' } }
+    );
+
+    const textoCompleto = resposta.data.content[0].text;
+
+    // Salvar agendamento se detectado
+    const dadosAgendamento = extrairAgendamento(textoCompleto);
+    if (dadosAgendamento) {
+      await db.salvarAgendamento({
+        nome_paciente: dadosAgendamento.nome,
+        telefone,
+        especialidade: dadosAgendamento.especialidade,
+        convenio: dadosAgendamento.convenio || 'particular',
+        periodo: dadosAgendamento.periodo,
+        origem: 'chat'
+      });
+    }
+
+    const textoFinal = removerBlocoAgendar(textoCompleto);
+    await db.salvarMensagem(telefone, 'assistant', textoFinal);
+
+    res.json({ resposta: textoFinal, agendamento: dadosAgendamento || null });
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+// Health check
+app.get('/', (req, res) => {
+  res.json({
+    status: 'online',
+    agente: 'CMA Assistente Premium v2',
+    banco: 'Supabase conectado',
+    uptime: Math.floor(process.uptime()) + 's'
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`
+  ╔════════════════════════════════════════╗
+  ║  CMA Assistente Premium v2 · Live  ║
+  ║  Supabase + Evolution API + Anthropic  ║
+  ║  Porta: ${PORT}                            ║
+  ╚════════════════════════════════════════╝
+  `);
 });
