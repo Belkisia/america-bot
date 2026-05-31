@@ -223,7 +223,7 @@ app.get('/api/agendamentos', async (req, res) => {
 // Listar pacientes
 app.get('/api/pacientes', async function(req, res) {
   try {
-    const result = await supabase
+    const result = await db.supabase
       .from('pacientes')
       .select('*')
       .order('created_at', { ascending: false });
