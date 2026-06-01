@@ -1,6 +1,6 @@
 {
   "name": "america-assistente-bot",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -9,7 +9,7 @@
     "express": "^4.18.2",
     "axios": "^1.6.0",
     "dotenv": "^16.3.1",
-    "@supabase/supabase-js": "^2.39.0"
+   "@supabase/supabase-js": "^2.50.0"
   },
   "engines": {
     "node": ">=18.0.0"
