@@ -29,8 +29,7 @@ async function enviar(numero, texto) {
   try {
     await axios.post(EVOLUTION_API_URL + '/send-text', { phone: numero, message: texto }, { headers: { 'Content-Type': 'application/json' } });
   } catch(e) { console.error('Erro enviar:', e.message); }
-}
-app.post('/webhook', async function(req, res) {
+}app.get('/webhook', function(req, res) { res.sendStatus(200); });
   res.sendStatus(200);
   try {
     const b = req.body;
