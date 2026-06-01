@@ -3,16 +3,12 @@ const axios = require('axios');
 const db = require('./supabase');
 const app = express();
 app.use(express.json());
-app.all('/webhook-test', function(req, res) {
-  console.log('TEST METHOD:', req.method);
-  console.log('TEST BODY:', JSON.stringify(req.body));
-  res.sendStatus(200);
-});
+app.use(express.static('public'));
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL;
 const PORT = process.env.PORT || 3000;
 const atendimentoHumano = new Set();
-const SYSTEM_PROMPT = `Você é a CMA, assistente executiva premium do Centro Médico America em Goiânia, GO. Perfil: elegante, sofisticada, calorosa, extremamente profissional. Jamais robótica. Jamais dá diagnósticos. Jamais inventa informações. IMPORTANTE: Quando agendamento CONFIRMADO inclua no final: [AGENDAR:nome=NOME|especialidade=ESP|convenio=CONV|periodo=PER] Informações: Especialidades: cardiologia, ortopedia, dermatologia, neurologia, ginecologia, endocrinologia, oncologia, urologia, oftalmologia, otorrinolaringologia. Convênios: Unimed, Bradesco Saúde, SulAmérica, Amil, Porto Seguro, Notre Dame Intermédica, Hapvida. Horário: seg-sex 7h-20h, sáb 7h-14h, dom fechado. Endereço: Av. Frei Miguelino, 247 - Bairro Goiá, Goiânia-GO, CEP 74485-055. CONSULTAS: Clínico Geral R$80, Ginecologia R$120, Endocrinologia R$120, Psiquiatria R$120, Pediatria R$100, Otorrino R$140. PROCEDIMENTOS: Limpeza ouvido R$50, DIU inserir R$400, DIU retirar R$300, Prevenção R$80, Retirada pontos R$50. ULTRASSOM: pergunte qual exame antes de informar valor. Para agendar colete: nome, especialidade, convênio/particular, período. Ao confirmar diga: Atendimento solicitado com sucesso! Centro Médico America - Av. Frei Miguelino 247, Goiânia-GO. Em breve confirmamos o horário.`;
+const SYSTEM_PROMPT = `Você é a CMA, assistente executiva premium do Centro Médico America em Goiânia, GO. Perfil: elegante, sofisticada, calorosa, extremamente profissional. Jamais robótica. Jamais dá diagnósticos. Jamais inventa informações. IMPORTANTE: Quando agendamento CONFIRMADO inclua no final: [AGENDAR:nome=NOME|especialidade=ESP|convenio=CONV|periodo=PER] Especialidades: cardiologia, ortopedia, dermatologia, neurologia, ginecologia, endocrinologia, oncologia, urologia, oftalmologia, otorrinolaringologia. Convênios: Unimed, Bradesco Saúde, SulAmérica, Amil, Porto Seguro, Notre Dame Intermédica, Hapvida. Horário: seg-sex 7h-20h, sáb 7h-14h, dom fechado. Endereço: Av. Frei Miguelino, 247 - Bairro Goiá, Goiânia-GO, CEP 74485-055. CONSULTAS: Clínico Geral R$80, Ginecologia R$120, Endocrinologia R$120, Psiquiatria R$120, Pediatria R$100, Otorrino R$140. PROCEDIMENTOS: Limpeza ouvido R$50, DIU inserir R$400, DIU retirar R$300, Prevenção R$80, Retirada pontos R$50. ULTRASSOM: pergunte qual exame antes de informar valor. Para agendar colete: nome, especialidade, convênio/particular, período. Ao confirmar: Atendimento solicitado! Centro Médico America - Av. Frei Miguelino 247, Goiânia-GO. Em breve confirmamos o horário.`;
 function extrairAgendamento(t) {
   const m = t.match(/\[AGENDAR:([^\]]+)\]/);
   if (!m) return null;
@@ -29,7 +25,9 @@ async function enviar(numero, texto) {
   try {
     await axios.post(EVOLUTION_API_URL + '/send-text', { phone: numero, message: texto }, { headers: { 'Content-Type': 'application/json' } });
   } catch(e) { console.error('Erro enviar:', e.message); }
-}app.get('/webhook', function(req, res) { res.sendStatus(200); });
+}
+app.get('/webhook', function(req, res) { res.sendStatus(200); });
+app.post('/webhook', async function(req, res) {
   res.sendStatus(200);
   try {
     const b = req.body;
@@ -38,13 +36,19 @@ async function enviar(numero, texto) {
     const txt = (b.text && b.text.message) || b.message || '';
     if (!num || !txt || b.fromMe) return;
     if (atendimentoHumano.has(num)) return;
-    if (txt.toLowerCase() === '#humano') { atendimentoHumano.add(num); await enviar(num, 'Direcionando para nossa equipe.'); return; }
+    if (txt.toLowerCase() === '#humano') {
+      atendimentoHumano.add(num);
+      await enviar(num, 'Direcionando para nossa equipe.');
+      return;
+    }
     if (txt === '#ia_on') { atendimentoHumano.delete(num); return; }
     const hist = await db.buscarHistorico(num, 20);
     await db.salvarMensagem(num, 'user', txt);
     const resp = await chamarIA(hist.concat([{ role: 'user', content: txt }]));
     const ag = extrairAgendamento(resp);
-    if (ag) await db.salvarAgendamento({ nome_paciente: ag.nome, telefone: num, especialidade: ag.especialidade, convenio: ag.convenio || 'particular', periodo: ag.periodo, origem: 'whatsapp' });
+    if (ag) {
+      await db.salvarAgendamento({ nome_paciente: ag.nome, telefone: num, especialidade: ag.especialidade, convenio: ag.convenio || 'particular', periodo: ag.periodo, origem: 'whatsapp' });
+    }
     const final = limpar(resp);
     await db.salvarMensagem(num, 'assistant', final);
     await enviar(num, final);
@@ -85,7 +89,9 @@ app.post('/api/chat', async function(req, res) {
     await db.salvarMensagem(tel, 'user', msg);
     const resp = await chamarIA(hist.concat([{ role: 'user', content: msg }]));
     const ag = extrairAgendamento(resp);
-    if (ag) await db.salvarAgendamento({ nome_paciente: ag.nome, telefone: tel, especialidade: ag.especialidade, convenio: ag.convenio || 'particular', periodo: ag.periodo, origem: 'chat' });
+    if (ag) {
+      await db.salvarAgendamento({ nome_paciente: ag.nome, telefone: tel, especialidade: ag.especialidade, convenio: ag.convenio || 'particular', periodo: ag.periodo, origem: 'chat' });
+    }
     const final = limpar(resp);
     await db.salvarMensagem(tel, 'assistant', final);
     res.json({ resposta: final, agendamento: ag || null });
