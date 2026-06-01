@@ -6,7 +6,6 @@ console.log('=== INICIANDO ===');
 console.log('NODE_VERSION:', process.version);
 
 const db = require('./supabase');
-const express = require('express');
 const axios = require('axios');
 const db = require('./supabase');
 
