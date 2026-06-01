@@ -1,4 +1,14 @@
-const { createClient } = require('@supabase/supabase-js');
+// const db = require('./supabase');
+const db = {
+  buscarHistorico: async () => [],
+  salvarMensagem: async () => {},
+  logMensagem: async () => {},
+  salvarAgendamento: async () => null,
+  buscarAgendamentos: async () => [],
+  atualizarStatus: async () => {},
+  buscarMetricas: async () => ({ total: 0, hoje: 0, confirmados: 0, pendentes: 0 }),
+  supabase: { from: () => ({ select: () => ({ order: () => ({ data: [] }) }) }) }
+};
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
