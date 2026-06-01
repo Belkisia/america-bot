@@ -96,6 +96,32 @@ app.post('/webhook', async (req, res) => {
   res.sendStatus(200);
   try {
     const body = req.body;
+    console.log('WEBHOOK:', JSON.stringify(body).substring(0, 300));
+    
+    // Formato Z-API
+    const numero = body.phone || body.from || '';
+    const texto = body.text?.message || body.message?.text || body.message || '';
+    const fromMe = body.fromMe || body.isFromMe || false;
+    
+    if (!numero || !texto || fromMe) return;
+    
+    console.log('MSG [' + numero + ']:', texto);
+    
+    if (atendimentoHumano.has(numero)) return;
+    
+    if (texto.toLowerCase() === '#humano') {
+      atendimentoHumano.add(numero);
+      await enviarMensagemZAPI(numero, 'Direcionando para nossa equipe especializada. Em instantes alguém irá atendê-lo. 🌟');
+      return;
+    }
+    if (texto === '#ia_on') { atendimentoHumano.delete(numero); return; }
+    
+    const resposta = await chamarAmerica(numero, texto);
+    await enviarMensagemZAPI(numero, resposta);
+    console.log('Respondido:', numero);
+    
+  } catch (e) { console.error('Erro webhook:', e.message); }
+});
     console.log('WEBHOOK RECEBIDO:', JSON.stringify(body).substring(0, 200));
     const numero = body.phone || body.from;
     const texto = body.text?.message || body.message || '';
