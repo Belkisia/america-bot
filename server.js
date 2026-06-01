@@ -96,6 +96,7 @@ app.post('/webhook', async (req, res) => {
   res.sendStatus(200);
   try {
     const body = req.body;
+    console.log('WEBHOOK RECEBIDO:', JSON.stringify(body).substring(0, 200));
     const numero = body.phone || body.from;
     const texto = body.text?.message || body.message || '';
     if (!numero || !texto.trim()) return;
