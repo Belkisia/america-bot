@@ -31,7 +31,7 @@ async function atualizarStatus(id, status) {
   await supabase.from('agendamentos').update({ status: status }).eq('id', id);
 }
 async function logMensagem(telefone, mensagem, direcao) {
-  await supabase.from('mensagens_whatsapp').insert({ telefone: telefone, mensagem: mensagem, direcao: direcao });
+  try { await supabase.from('mensagens_whatsapp').insert({ telefone: telefone, mensagem: mensagem, direcao: direcao }); } catch(e) {}
 }
 async function buscarMetricas() {
   const hoje = new Date().toISOString().split('T')[0];
