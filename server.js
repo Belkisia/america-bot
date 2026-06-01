@@ -1,6 +1,13 @@
 require('dotenv').config({ path: '/dev/null' });
 const express = require('express');
 const axios = require('axios');
+
+console.log('=== INICIANDO ===');
+console.log('NODE_VERSION:', process.version);
+
+const db = require('./supabase');
+const express = require('express');
+const axios = require('axios');
 const db = require('./supabase');
 
 const app = express();
