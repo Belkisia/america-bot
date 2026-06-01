@@ -3,7 +3,11 @@ const axios = require('axios');
 const db = require('./supabase');
 const app = express();
 app.use(express.json());
-app.use(express.static('public'));
+app.all('/webhook-test', function(req, res) {
+  console.log('TEST METHOD:', req.method);
+  console.log('TEST BODY:', JSON.stringify(req.body));
+  res.sendStatus(200);
+});
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL;
 const PORT = process.env.PORT || 3000;
