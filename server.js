@@ -58,7 +58,7 @@ app.get('/setup-zapi', async function(req, res) {
   try {
     const r = await axios.put(
       'https://api.z-api.io/instances/3F3F8C9C08E0135E5F3B6653CAD29060/token/64D60F31AD6196D01A97A0D3/update-webhook-received',
-      { url: 'https://america-bot-production.up.railway.app/webhook' },
+     { value: 'https://america-bot-production.up.railway.app/webhook' },
       { headers: { 'Content-Type': 'application/json' } }
     );
     res.json({ ok: true, resultado: r.data });
