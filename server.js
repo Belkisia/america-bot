@@ -69,7 +69,8 @@ app.post('/webhook', async function(req, res) {
     }
     if (txt === '#ia_on') { atendimentoHumano.delete(num); return; }
     await db.salvarMensagem(num, 'user', txt);
-    const hist = await db.buscarHistorico(num, 10);
+    const hist = await db.buscarHistorico(num, 12);
+    if (hist.length === 0) hist.push({ role: 'user', content: txt });
     const resp = await chamarIA(hist);
     const ag = extrairAgendamento(resp);
     if (ag) {
