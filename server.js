@@ -26,20 +26,20 @@ async function enviar(numero, texto) {
     await axios.post(EVOLUTION_API_URL + '/send-text', { phone: numero, message: texto }, { headers: { 'Content-Type': 'application/json' } });
   } catch(e) { console.error('Erro enviar:', e.message); }
 }
+const webhookLogs = [];
 app.get('/webhook', function(req, res) { res.sendStatus(200); });
 app.post('/webhook', async function(req, res) {
   res.sendStatus(200);
+  const logEntry = { time: new Date().toISOString(), body: req.body };
+  webhookLogs.unshift(logEntry);
+  if (webhookLogs.length > 20) webhookLogs.pop();
   try {
     const b = req.body;
-    console.log('WH RECEBIDO:', JSON.stringify(b).substring(0, 300));
     const num = b.phone || b.from || '';
     const txt = (b.text && b.text.message) || b.message || '';
     const fromMe = b.fromMe || b.isFromMe || false;
-    console.log('NUM:', num, 'TXT:', txt, 'FROMME:', fromMe);
-    if (!num || !txt || fromMe) {
-      console.log('IGNORADO: num vazio, txt vazio ou fromMe');
-      return;
-    }
+    console.log('WH:', num, txt, fromMe);
+    if (!num || !txt || fromMe) return;
     if (atendimentoHumano.has(num)) return;
     if (txt.toLowerCase() === '#humano') {
       atendimentoHumano.add(num);
@@ -58,8 +58,9 @@ app.post('/webhook', async function(req, res) {
     await db.salvarMensagem(num, 'assistant', final);
     await enviar(num, final);
     console.log('RESPONDIDO:', num);
-  } catch(e) { console.error('WH ERRO:', e.message, e.stack); }
+  } catch(e) { console.error('WH ERRO:', e.message); }
 });
+app.get('/webhook-logs', function(req, res) { res.json(webhookLogs); });
 app.get('/setup-zapi', async function(req, res) {
   try {
     const r = await axios.put(
