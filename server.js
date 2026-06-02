@@ -68,9 +68,9 @@ app.post('/webhook', async function(req, res) {
       return;
     }
     if (txt === '#ia_on') { atendimentoHumano.delete(num); return; }
-    const hist = await db.buscarHistorico(num, 10);
     await db.salvarMensagem(num, 'user', txt);
-    const resp = await chamarIA(hist.concat([{ role: 'user', content: txt }]));
+    const hist = await db.buscarHistorico(num, 10);
+    const resp = await chamarIA(hist);
     const ag = extrairAgendamento(resp);
     if (ag) {
       await db.salvarAgendamento({ nome_paciente: ag.nome, telefone: num, especialidade: ag.especialidade, convenio: ag.convenio || 'particular', periodo: ag.periodo, origem: 'whatsapp' });
