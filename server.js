@@ -47,6 +47,7 @@ async function enviar(numero, texto) {
 }
 const webhookLogs = [];
 const processando = new Set();
+const filaMsg = {};
 const NUMEROS_IGNORAR = ['556284271335'];
 
 app.get('/webhook', function(req, res) { res.sendStatus(200); });
@@ -65,15 +66,24 @@ app.post('/webhook', function(req, res) {
   if (!txt.trim()) return;
   if (b.fromMe || b.fromApi) return;
   if (b.isGroup) return;
+
+  if (!filaMsg[num]) filaMsg[num] = [];
+  filaMsg[num].push(txt);
+
   if (processando.has(num)) return;
-
   processando.add(num);
-  setTimeout(function() { processando.delete(num); }, 30000);
 
-  processar(num, txt).catch(function(e) {
-    console.error('WH ERRO:', e.message);
-    processando.delete(num);
-  });
+  setTimeout(function() {
+    const msgs = filaMsg[num] || [];
+    filaMsg[num] = [];
+    const txtCompleto = msgs.join(' ');
+    console.log('WH:', num, txtCompleto);
+    processar(num, txtCompleto).catch(function(e) {
+      console.error('WH ERRO:', e.message);
+    }).finally(function() {
+      processando.delete(num);
+    });
+  }, 3000);
 });
 
 async function processar(num, txt) {
