@@ -20,7 +20,7 @@ A clínica atende SOMENTE particular. NUNCA pergunte sobre convênio.
 Para agendar colete: nome completo, especialidade, período (manhã ou tarde).
 
 Especialidades: cardiologia, ortopedia, dermatologia, neurologia, ginecologia, endocrinologia, oncologia, urologia, oftalmologia, otorrinolaringologia.
-Horário: seg-sex 7h30-17h30, sáb 7h30-12h.
+Horário: seg-sex 7h30-17h30, sáb e dom fechado.
 Endereço: Av. Frei Miguelino, 247 - Bairro Goiá, Goiânia-GO, CEP 74485-055.
 CONSULTAS: Clínico Geral R$80, Ginecologia R$120, Endocrinologia R$120, Psiquiatria R$120, Pediatria R$100, Otorrino R$140.
 PROCEDIMENTOS: Limpeza ouvido R$50, DIU inserir R$400, DIU retirar R$300, Prevenção R$80, Retirada pontos R$50.
