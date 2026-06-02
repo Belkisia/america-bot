@@ -47,6 +47,7 @@ async function enviar(numero, texto) {
 }
 const webhookLogs = [];
 const processando = new Set();
+const NUMEROS_IGNORAR = ['556284271335'];
 
 app.get('/webhook', function(req, res) { res.sendStatus(200); });
 app.post('/webhook', function(req, res) {
@@ -59,9 +60,11 @@ app.post('/webhook', function(req, res) {
   if (b.type !== 'ReceivedCallback') return;
   const num = b.phone || '';
   if (!num || num.includes('@lid') || num.includes('-group')) return;
+  if (NUMEROS_IGNORAR.includes(num)) return;
   const txt = (b.text && b.text.message) || '';
   if (!txt.trim()) return;
   if (b.fromMe || b.fromApi) return;
+  if (b.isGroup) return;
   if (processando.has(num)) return;
 
   processando.add(num);
