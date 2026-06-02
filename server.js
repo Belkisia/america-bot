@@ -31,10 +31,15 @@ app.post('/webhook', async function(req, res) {
   res.sendStatus(200);
   try {
     const b = req.body;
-    console.log('WH:', JSON.stringify(b).substring(0, 150));
+    console.log('WH RECEBIDO:', JSON.stringify(b).substring(0, 300));
     const num = b.phone || b.from || '';
     const txt = (b.text && b.text.message) || b.message || '';
-    if (!num || !txt || b.fromMe) return;
+    const fromMe = b.fromMe || b.isFromMe || false;
+    console.log('NUM:', num, 'TXT:', txt, 'FROMME:', fromMe);
+    if (!num || !txt || fromMe) {
+      console.log('IGNORADO: num vazio, txt vazio ou fromMe');
+      return;
+    }
     if (atendimentoHumano.has(num)) return;
     if (txt.toLowerCase() === '#humano') {
       atendimentoHumano.add(num);
@@ -52,7 +57,8 @@ app.post('/webhook', async function(req, res) {
     const final = limpar(resp);
     await db.salvarMensagem(num, 'assistant', final);
     await enviar(num, final);
-  } catch(e) { console.error('WH err:', e.message); }
+    console.log('RESPONDIDO:', num);
+  } catch(e) { console.error('WH ERRO:', e.message, e.stack); }
 });
 app.get('/setup-zapi', async function(req, res) {
   try {
