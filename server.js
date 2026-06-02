@@ -26,6 +26,7 @@ async function enviar(numero, texto) {
     await axios.post(EVOLUTION_API_URL, { phone: numero, message: texto }, { headers: { 'Content-Type': 'application/json', 'Client-Token': process.env.ZAPI_CLIENT_TOKEN } });
   } catch(e) { console.error('Erro enviar:', e.message); }
 }
+const webhookLogs = [];
 app.get('/webhook', function(req, res) { res.sendStatus(200); });
 app.post('/webhook', async function(req, res) {
   res.sendStatus(200);
