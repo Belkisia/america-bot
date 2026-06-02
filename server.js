@@ -31,7 +31,7 @@ Ao confirmar: Seu atendimento foi solicitado!
 Av. Frei Miguelino, 247 - Bairro Goiá, Goiânia-GO, CEP 74485-055
 🗺 https://maps.google.com/?q=Av.+Frei+Miguelino,+247,+Goiânia
 
-Em breve nossa equipe confirmará o horário. Será um prazer recebê-lo(a)!
+Em breve nossa equipe entrará em contato pelo WhatsApp para confirmar o dia e horário exato da sua consulta. Será um prazer recebê-lo(a)!
 Formato: máximo 3 parágrafos curtos, sem # markdown.`;
 
 function extrairAgendamento(t) {
