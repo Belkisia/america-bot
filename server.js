@@ -26,7 +26,6 @@ async function enviar(numero, texto) {
     await axios.post(EVOLUTION_API_URL, { phone: numero, message: texto }, { headers: { 'Content-Type': 'application/json', 'Client-Token': process.env.ZAPI_CLIENT_TOKEN } });
   } catch(e) { console.error('Erro enviar:', e.message); }
 }
-const webhookLogs = [];
 app.get('/webhook', function(req, res) { res.sendStatus(200); });
 app.post('/webhook', async function(req, res) {
   res.sendStatus(200);
@@ -35,11 +34,13 @@ app.post('/webhook', async function(req, res) {
   if (webhookLogs.length > 20) webhookLogs.pop();
   try {
     const b = req.body;
-    const num = b.phone || b.from || '';
-    const txt = (b.text && b.text.message) || b.message || '';
-    const fromMe = b.fromMe || b.isFromMe || false;
-    console.log('WH:', num, txt, fromMe);
-    if (!num || !txt || fromMe) return;
+    if (b.type !== 'ReceivedCallback') return;
+    const num = b.phone || '';
+    if (!num || num.includes('@lid')) return;
+    const txt = (b.text && b.text.message) || '';
+    if (!txt.trim()) return;
+    if (b.fromMe || b.fromApi) return;
+    console.log('WH:', num, txt);
     if (atendimentoHumano.has(num)) return;
     if (txt.toLowerCase() === '#humano') {
       atendimentoHumano.add(num);
@@ -47,17 +48,18 @@ app.post('/webhook', async function(req, res) {
       return;
     }
     if (txt === '#ia_on') { atendimentoHumano.delete(num); return; }
-    const hist = await db.buscarHistorico(num, 20);
+    const hist = await db.buscarHistorico(num, 10);
     await db.salvarMensagem(num, 'user', txt);
     const resp = await chamarIA(hist.concat([{ role: 'user', content: txt }]));
     const ag = extrairAgendamento(resp);
     if (ag) {
       await db.salvarAgendamento({ nome_paciente: ag.nome, telefone: num, especialidade: ag.especialidade, convenio: ag.convenio || 'particular', periodo: ag.periodo, origem: 'whatsapp' });
+      console.log('Agendamento salvo:', ag.nome);
     }
     const final = limpar(resp);
     await db.salvarMensagem(num, 'assistant', final);
     await enviar(num, final);
-    console.log('RESPONDIDO:', num);
+    console.log('Respondido:', num);
   } catch(e) { console.error('WH ERRO:', e.message); }
 });
 app.get('/webhook-logs', function(req, res) { res.json(webhookLogs); });
