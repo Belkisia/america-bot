@@ -23,7 +23,7 @@ async function chamarIA(msgs) {
 }
 async function enviar(numero, texto) {
   try {
-    await axios.post(EVOLUTION_API_URL + '/send-text', { phone: numero, message: texto }, { headers: { 'Content-Type': 'application/json' } });
+    await axios.post(EVOLUTION_API_URL, { phone: numero, message: texto }, { headers: { 'Content-Type': 'application/json', 'Client-Token': process.env.ZAPI_CLIENT_TOKEN } });
   } catch(e) { console.error('Erro enviar:', e.message); }
 }
 const webhookLogs = [];
