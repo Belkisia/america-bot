@@ -98,8 +98,10 @@ async function processar(num, txt) {
     }
     if (txt === '#ia_on') { atendimentoHumano.delete(num); processando.delete(num); return; }
     await db.salvarMensagem(num, 'user', txt);
-    const hist = await db.buscarHistorico(num, 12);
-    if (hist.length === 0) hist.push({ role: 'user', content: txt });
+    let hist = await db.buscarHistorico(num, 8);
+    if (hist.length === 0) hist = [{ role: 'user', content: txt }];
+    // Garante que termina com mensagem do user
+    if (hist[hist.length - 1].role !== 'user') hist.push({ role: 'user', content: txt });
     const resp = await chamarIA(hist);
     const ag = extrairAgendamento(resp);
     if (ag) {
