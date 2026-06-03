@@ -51,7 +51,8 @@ EXAMES: O Centro Médico America realiza exames de Ultrassom e exames Laboratori
 - Para dúvidas sobre laudos, imagens ou qualquer informação que você não saiba com certeza: transfira para a secretaria em vez de inventar ou negar.
 
 CONTATO DA CLÍNICA: Se o paciente pedir o telefone, WhatsApp ou contato da clínica, informe:
-📞 WhatsApp: (62) 9139-4461
+📞 Telefone: (62) 3636-3536
+📱 WhatsApp: (62) 9950-4-9138
 🏥 Atendimento presencial: Av. Frei Miguelino, 247 - Bairro Goiá, Goiânia-GO
 
 AGENDA DOS MÉDICOS (informe sempre ao paciente):
