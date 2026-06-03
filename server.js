@@ -154,7 +154,7 @@ async function processarFila(num) {
     }
 
     if (txtCompleto.toLowerCase() === '#humano' || txtCompleto.toLowerCase() === '#secretaria') {
-      await ativarHumano(num, 5);
+      await ativarHumano(num, 15);
       await enviar(num, 'Obrigado por entrar em contato com o *Centro Médico America*.\n\nSua solicitação requer um acompanhamento especializado da nossa equipe. Para oferecer a você a melhor experiência possível, vou encaminhar sua conversa para um de nossos consultores.\n\nTodas as informações registradas durante este atendimento serão compartilhadas internamente, garantindo continuidade e agilidade no suporte, sem necessidade de repetir os dados já fornecidos.\n\nNossa equipe assumirá seu atendimento em instantes para concluir sua solicitação com total atenção e cuidado.\n\nAgradecemos pela preferência e pela confiança em nossos serviços.\n\n🔹 *Transferindo para um especialista do Centro Médico America...*');
       processarFila(num);
       return;
@@ -162,6 +162,7 @@ async function processarFila(num) {
 
     if (txtCompleto === '#cma') {
       await desativarHumano(num);
+      console.log('CMA reativada para [' + num + ']');
       processarFila(num);
       return;
     }
@@ -213,7 +214,22 @@ app.post('/webhook', function(req, res) {
   const num = b.phone || '';
   if (!num || num.includes('@lid') || num.includes('-group')) return;
   if (NUMEROS_IGNORAR.includes(num)) return;
-  if (b.fromMe || b.fromApi) return;
+
+  // ── Secretaria humana digitou: pausa a CMA automaticamente por 15 min ──
+  // fromMe = true significa que a mensagem foi enviada PELO WhatsApp Business (secretaria)
+  // fromApi = true significa que foi enviada pela API (próprio bot) — ignorar
+  if (b.fromMe && !b.fromApi) {
+    const txtSecretaria = (b.text && b.text.message) || '';
+    // Ignora se for o comando #cma (reativação manual)
+    if (txtSecretaria.trim() !== '#cma') {
+      ativarHumano(num, 15).then(function() {
+        console.log('SECRETARIA [' + num + ']: atendimento humano ativado por 15min — CMA pausada');
+      });
+    }
+    return;
+  }
+
+  if (b.fromApi) return;
 
   // ── Detecta áudio antes de checar texto ──
   if (detectarAudio(b)) {
