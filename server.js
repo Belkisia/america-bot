@@ -17,7 +17,6 @@ REGRA CRÍTICA: Leia TODO o histórico antes de responder. NUNCA reinicie a conv
 
 AGENDAMENTO: Quando todos os dados forem confirmados, inclua no final: [AGENDAR:nome=NOME|especialidade=ESP|convenio=particular|periodo=PER]
 A clínica atende SOMENTE particular. NUNCA pergunte sobre convênio.
-EXAMES LABORATORIAIS (hemograma, glicemia, colesterol, etc): informe que realizamos e que nossa equipe entrará em contato para passar os valores. Digite #humano para transferir para atendente.
 Para agendar colete: nome completo, especialidade, período (manhã ou tarde).
 
 Especialidades: cardiologia, ortopedia, dermatologia, neurologia, ginecologia, endocrinologia, oncologia, urologia, oftalmologia, otorrinolaringologia.
@@ -86,9 +85,9 @@ async function processarFila(num) {
   try {
     console.log('PROC [' + num + ']:', txtCompleto);
     if (atendimentoHumano.has(num)) { processarFila(num); return; }
-    if (txtCompleto.toLowerCase() === '#humano') {
+    if (txtCompleto.toLowerCase() === '#humano' || txtCompleto.toLowerCase() === '#secretaria') {
       atendimentoHumano.add(num);
-      await enviar(num, 'Direcionando para nossa equipe especializada. Em instantes alguém irá atendê-lo.');
+      await enviar(num, 'Obrigado por entrar em contato com o *Centro Médico America*.\n\nSua solicitação requer um acompanhamento especializado da nossa equipe. Para oferecer a você a melhor experiência possível, vou encaminhar sua conversa para um de nossos consultores.\n\nTodas as informações registradas durante este atendimento serão compartilhadas internamente, garantindo continuidade e agilidade no suporte, sem necessidade de repetir os dados já fornecidos.\n\nNossa equipe assumirá seu atendimento em instantes para concluir sua solicitação com total atenção e cuidado.\n\nAgradecemos pela preferência e pela confiança em nossos serviços.\n\n🔹 *Transferindo para um especialista do Centro Médico America...*');
       processarFila(num);
       return;
     }
