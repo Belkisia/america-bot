@@ -8,8 +8,29 @@ app.use(express.static('public'));
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL;
 const PORT = process.env.PORT || 3000;
-const atendimentoHumano = new Set();
 const NUMEROS_IGNORAR = ['556284271335'];
+
+// Verifica se número está em atendimento humano (com cache local de 30s)
+const cacheHumano = {};
+async function emAtendimentoHumano(num) {
+  const agora = Date.now();
+  if (cacheHumano[num] && cacheHumano[num].expira > agora) return cacheHumano[num].valor;
+  const { data } = await db.supabase.from('atendimento_humano').select('expira_em').eq('telefone', num).single();
+  const ativo = data && new Date(data.expira_em) > new Date();
+  cacheHumano[num] = { valor: ativo, expira: agora + 30000 };
+  return ativo;
+}
+
+async function ativarHumano(num, minutos) {
+  const expira = new Date(Date.now() + minutos * 60 * 1000).toISOString();
+  await db.supabase.from('atendimento_humano').upsert({ telefone: num, expira_em: expira });
+  cacheHumano[num] = { valor: true, expira: Date.now() + 30000 };
+}
+
+async function desativarHumano(num) {
+  await db.supabase.from('atendimento_humano').delete().eq('telefone', num);
+  cacheHumano[num] = { valor: false, expira: Date.now() + 30000 };
+}
 
 const SYSTEM_PROMPT = `Você é a CMA, assistente executiva do Centro Médico America em Goiânia, GO. Elegante, profissional, calorosa. Jamais dá diagnósticos. Jamais inventa informações.
 
@@ -76,7 +97,6 @@ async function processarFila(num) {
   }
   filas[num].rodando = true;
 
-  // Aguarda 2s para agrupar mensagens rápidas
   await new Promise(function(r) { setTimeout(r, 2000); });
 
   const msgs = filas[num].msgs.splice(0);
@@ -84,14 +104,21 @@ async function processarFila(num) {
 
   try {
     console.log('PROC [' + num + ']:', txtCompleto);
-    if (atendimentoHumano.has(num)) { processarFila(num); return; }
+
     if (txtCompleto.toLowerCase() === '#humano' || txtCompleto.toLowerCase() === '#secretaria') {
-      atendimentoHumano.add(num);
+      await ativarHumano(num, 5);
       await enviar(num, 'Obrigado por entrar em contato com o *Centro Médico America*.\n\nSua solicitação requer um acompanhamento especializado da nossa equipe. Para oferecer a você a melhor experiência possível, vou encaminhar sua conversa para um de nossos consultores.\n\nTodas as informações registradas durante este atendimento serão compartilhadas internamente, garantindo continuidade e agilidade no suporte, sem necessidade de repetir os dados já fornecidos.\n\nNossa equipe assumirá seu atendimento em instantes para concluir sua solicitação com total atenção e cuidado.\n\nAgradecemos pela preferência e pela confiança em nossos serviços.\n\n🔹 *Transferindo para um especialista do Centro Médico America...*');
       processarFila(num);
       return;
     }
-    if (txtCompleto === '#cma') { atendimentoHumano.delete(num); processarFila(num); return; }
+
+    if (txtCompleto === '#cma') {
+      await desativarHumano(num);
+      processarFila(num);
+      return;
+    }
+
+    if (await emAtendimentoHumano(num)) { processarFila(num); return; }
 
     await db.salvarMensagem(num, 'user', txtCompleto);
     let hist = await db.buscarHistorico(num, 10);
