@@ -36,9 +36,10 @@ const SYSTEM_PROMPT = `Você se chama America, assistente executiva do Centro M�
 
 REGRA CRÍTICA: Leia TODO o histórico antes de responder. NUNCA reinicie a conversa se já há mensagens. NUNCA peça dados que o paciente já forneceu.
 
-AGENDAMENTO: Quando todos os dados forem confirmados, inclua no final: [AGENDAR:nome=NOME|especialidade=ESP|convenio=particular|periodo=PER]
+AGENDAMENTO: Quando todos os dados forem confirmados, inclua no final: [AGENDAR:nome=NOME|nascimento=DATA_NASC|especialidade=ESP|convenio=particular|periodo=PER]
 A clínica atende SOMENTE particular. NUNCA pergunte sobre convênio.
-Para agendar colete: nome completo, especialidade, período (manhã ou tarde).
+Para agendar colete: nome completo, data de nascimento, especialidade, período (manhã ou tarde).
+Pergunte o nome completo e a data de nascimento na mesma mensagem.
 
 Especialidades: Clínico Geral, Endocrinologia, Ginecologia, Otorrinolaringologia, Pediatria, Psiquiatria.
 
@@ -175,7 +176,7 @@ async function processarFila(num) {
     const resp = await chamarIA(hist);
     const ag = extrairAgendamento(resp);
     if (ag) {
-      await db.salvarAgendamento({ nome_paciente: ag.nome, telefone: num, especialidade: ag.especialidade, convenio: 'particular', periodo: ag.periodo, origem: 'whatsapp' });
+      await db.salvarAgendamento({ nome_paciente: ag.nome, data_nascimento: ag.nascimento || null, telefone: num, especialidade: ag.especialidade, convenio: 'particular', periodo: ag.periodo, origem: 'whatsapp' });
       console.log('AGENDADO:', ag.nome, ag.especialidade);
     }
     const final = limpar(resp);
@@ -265,7 +266,7 @@ app.post('/api/chat', async function(req, res) {
     if (hist.length === 0 || hist[hist.length-1].role !== 'user') hist.push({ role: 'user', content: msg });
     const resp = await chamarIA(hist);
     const ag = extrairAgendamento(resp);
-    if (ag) await db.salvarAgendamento({ nome_paciente: ag.nome, telefone: tel, especialidade: ag.especialidade, convenio: 'particular', periodo: ag.periodo, origem: 'chat' });
+    if (ag) await db.salvarAgendamento({ nome_paciente: ag.nome, data_nascimento: ag.nascimento || null, telefone: tel, especialidade: ag.especialidade, convenio: 'particular', periodo: ag.periodo, origem: 'chat' });
     const final = limpar(resp);
     await db.salvarMensagem(tel, 'assistant', final);
     res.json({ resposta: final, agendamento: ag || null });
