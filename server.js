@@ -1,4 +1,4 @@
-const express = require('express');
+ const express = require('express');
 const axios = require('axios');
 const db = require('./supabase');
 const app = express();
@@ -88,12 +88,31 @@ async function enviar(numero, texto) {
   } catch(e) { console.error('Erro enviar:', e.message); }
 }
 
+// ── Detecta se o webhook é uma mensagem de áudio/ptt ──
+function detectarAudio(b) {
+  // Z-API envia áudio com type "audio" ou "ptt" (push-to-talk)
+  // O campo pode vir em b.type, b.messageType ou dentro de b.audio
+  if (b.audio) return true;
+  if (b.messageType === 'audioMessage') return true;
+  if (b.messageType === 'pttMessage') return true;
+  if (b.type === 'audio') return true;
+  if (b.type === 'ptt') return true;
+  return false;
+}
+
 // Fila independente por número
 const filas = {};
 
 function enfileirar(num, txt) {
   if (!filas[num]) filas[num] = { msgs: [], rodando: false };
   filas[num].msgs.push(txt);
+  if (!filas[num].rodando) processarFila(num);
+}
+
+// Enfileira áudio diretamente (não agrupa com texto)
+function enfileirarAudio(num) {
+  if (!filas[num]) filas[num] = { msgs: [], rodando: false };
+  filas[num].msgs.push('__AUDIO__');
   if (!filas[num].rodando) processarFila(num);
 }
 
@@ -111,6 +130,22 @@ async function processarFila(num) {
 
   try {
     console.log('PROC [' + num + ']:', txtCompleto);
+
+    // ── Tratamento de áudio: encaminha para secretaria ──
+    if (msgs.includes('__AUDIO__') || txtCompleto === '__AUDIO__') {
+      if (await emAtendimentoHumano(num)) { processarFila(num); return; }
+      await ativarHumano(num, 5);
+      await enviar(num,
+        'Olá! 😊 Recebemos seu áudio.\n\n' +
+        'No momento nossa assistente virtual não consegue processar mensagens de voz. ' +
+        'Por isso estou encaminhando você para nossa *secretaria*, que irá te atender em breve! 🏥\n\n' +
+        'Se preferir, pode digitar sua mensagem que respondemos na hora. 😊\n\n' +
+        '🔹 *Transferindo para a secretaria do Centro Médico America...*'
+      );
+      console.log('AUDIO [' + num + ']: transferido para secretaria');
+      processarFila(num);
+      return;
+    }
 
     if (txtCompleto.toLowerCase() === '#humano' || txtCompleto.toLowerCase() === '#secretaria') {
       await ativarHumano(num, 5);
@@ -155,18 +190,34 @@ const webhookLogs = [];
 app.get('/webhook', function(req, res) { res.sendStatus(200); });
 app.post('/webhook', function(req, res) {
   res.sendStatus(200);
-  webhookLogs.unshift({ time: new Date().toISOString(), phone: req.body.phone, text: req.body.text && req.body.text.message });
-  if (webhookLogs.length > 30) webhookLogs.pop();
 
   const b = req.body;
+
+  // Log geral (inclui áudio)
+  webhookLogs.unshift({
+    time: new Date().toISOString(),
+    phone: b.phone,
+    type: b.messageType || b.type || 'text',
+    text: b.text && b.text.message
+  });
+  if (webhookLogs.length > 30) webhookLogs.pop();
+
   if (b.type !== 'ReceivedCallback') return;
   if (b.isGroup) return;
   const num = b.phone || '';
   if (!num || num.includes('@lid') || num.includes('-group')) return;
   if (NUMEROS_IGNORAR.includes(num)) return;
+  if (b.fromMe || b.fromApi) return;
+
+  // ── Detecta áudio antes de checar texto ──
+  if (detectarAudio(b)) {
+    console.log('AUDIO recebido de [' + num + '] — encaminhando para secretaria');
+    enfileirarAudio(num);
+    return;
+  }
+
   const txt = (b.text && b.text.message) || '';
   if (!txt.trim()) return;
-  if (b.fromMe || b.fromApi) return;
 
   enfileirar(num, txt);
 });
@@ -216,5 +267,38 @@ app.post('/api/chat', async function(req, res) {
     res.json({ resposta: final, agendamento: ag || null });
   } catch(e) { console.error('CHAT:', e.message); res.status(500).json({ erro: e.message }); }
 });
+
+// ── API Dashboard ──
+app.get('/api/dashboard', async function(req, res) {
+  try {
+    const hoje = new Date().toISOString().slice(0, 10);
+    const ini  = hoje + 'T00:00:00';
+    const fim  = hoje + 'T23:59:59';
+    const [agHoje, totalMsgs, totalPac, agReceita, ultimasMsgs] = await Promise.all([
+      db.supabase.from('agendamentos').select('*').gte('data_agendamento', ini).lte('data_agendamento', fim),
+      db.supabase.from('mensagens_whatsapp').select('*', { count: 'exact', head: true }).gte('created_at', ini),
+      db.supabase.from('pacientes').select('*', { count: 'exact', head: true }),
+      db.supabase.from('agendamentos').select('valor').gte('data_agendamento', ini).lte('data_agendamento', fim).eq('status', 'confirmado'),
+      db.supabase.from('mensagens_whatsapp').select('*').order('created_at', { ascending: false }).limit(5),
+    ]);
+    const receitaHoje = (agReceita.data || []).reduce(function(s, r) { return s + (r.valor || 0); }, 0);
+    res.json({
+      consultasHoje:   (agHoje.data || []).length,
+      msgsHoje:         totalMsgs.count || 0,
+      totalPacientes:   totalPac.count  || 0,
+      receitaHoje,
+      agendamentosHoje: agHoje.data     || [],
+      ultimasMensagens: ultimasMsgs.data|| [],
+    });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+app.get('/api/whatsapp', async function(req, res) {
+  try {
+    const r = await db.supabase.from('mensagens_whatsapp').select('*').order('created_at', { ascending: false }).limit(100);
+    res.json(r.data || []);
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
 app.get('/', function(req, res) { res.json({ status: 'online', agente: 'CMA v2', uptime: Math.floor(process.uptime()) + 's' }); });
 app.listen(PORT, function() { console.log('CMA Assistente Premium v2 | Porta: ' + PORT + ' | Online'); });
