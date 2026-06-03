@@ -91,7 +91,7 @@ async function processarFila(num) {
       processarFila(num);
       return;
     }
-    if (txtCompleto === '#ia_on') { atendimentoHumano.delete(num); processarFila(num); return; }
+    if (txtCompleto === '#cma') { atendimentoHumano.delete(num); processarFila(num); return; }
 
     await db.salvarMensagem(num, 'user', txtCompleto);
     let hist = await db.buscarHistorico(num, 10);
