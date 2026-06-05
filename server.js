@@ -117,8 +117,14 @@ function extrairAgendamento(t) {
 function limpar(t) { return t.replace(/\[AGENDAR:[^\]]+\]/g, '').trim(); }
 
 async function chamarIA(msgs) {
+  const agora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const diaSemana = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long' });
+  const dataHoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric' });
+
+  const systemComData = SYSTEM_PROMPT + `\n\nDATA E HORA ATUAL (Brasília): ${agora}\nHoje é ${diaSemana}, ${dataHoje}. Use essa informação para responder perguntas sobre dias, horários e disponibilidade com precisão.`;
+
   const r = await axios.post('https://api.anthropic.com/v1/messages',
-    { model: 'claude-sonnet-4-6', max_tokens: 600, system: SYSTEM_PROMPT, messages: msgs },
+    { model: 'claude-sonnet-4-6', max_tokens: 600, system: systemComData, messages: msgs },
     { headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' }, timeout: 25000 }
   );
   return r.data.content[0].text;
