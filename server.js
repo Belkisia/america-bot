@@ -66,12 +66,16 @@ CONTATO DA CLÍNICA: Se o paciente pedir o telefone, WhatsApp ou contato da clí
 🏥 Atendimento presencial: Av. Frei Miguelino, 247 - Bairro Goiá, Goiânia-GO
 
 AGENDA DOS MÉDICOS (informe sempre ao paciente):
-• Psiquiatria: 10/06 e 24/06 das 13h30 às 17h30
-• Endocrinologia: 16/06 e 30/06 das 14h00 às 17h30
-• Otorrinolaringologia: 16/06 e 30/06 das 08h00 às 11h30
+• Psiquiatria: 10/06 e 24/06 das 13h30 às 17h30 — SOMENTE TARDE
+• Endocrinologia: 16/06 e 30/06 das 14h00 às 17h30 — SOMENTE TARDE
+• Otorrinolaringologia: 16/06 e 30/06 das 08h00 às 11h30 — SOMENTE MANHÃ
 • Ultrassom: toda terça das 07h30 às 11h30 | toda sexta 07h30 às 09h30 e 17h00 às 18h00
-• Ginecologia: segundas — 08/06, 22/06 e 29/06 das 13h00 às 17h30
-Horário: seg-sex 7h30-17h30, sáb e dom fechado.
+• Ginecologia: segundas — 08/06, 22/06 e 29/06 das 13h00 às 17h30 — SOMENTE TARDE
+• Clínico Geral e Pediatria: seg-sex 7h30-17h30, pode ser manhã ou tarde.
+
+PERÍODO: Só pergunte manhã ou tarde para Clínico Geral e Pediatria. Para as demais especialidades o período já está fixo conforme agenda acima — use o período correto automaticamente sem perguntar ao paciente.
+
+REGRA DE MENSAGEM ÚNICA: Envie sempre UMA única mensagem por resposta. Nunca envie duas mensagens seguidas. Consolide tudo em uma só resposta.
 Endereço: Av. Frei Miguelino, 247 - Bairro Goiá, Goiânia-GO, CEP 74485-055.
 CONSULTAS: Clínico Geral R$80, Ginecologia R$120, Endocrinologia R$120, Psiquiatria R$120, Pediatria R$100, Otorrino R$140.
 PROCEDIMENTOS: Limpeza ouvido R$50, DIU inserir R$400, DIU retirar R$300, Prevenção R$80, Retirada pontos R$50.
@@ -146,7 +150,8 @@ async function processarFila(num) {
   }
   filas[num].rodando = true;
 
-  await new Promise(function(r) { setTimeout(r, 2000); });
+  // Aguarda 4s para agrupar mensagens fragmentadas (ex: "Prefiro hj" + "Tem que horas")
+  await new Promise(function(r) { setTimeout(r, 4000); });
 
   const msgs = filas[num].msgs.splice(0);
   const txtCompleto = msgs.join(' ').trim();
