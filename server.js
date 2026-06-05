@@ -8,7 +8,15 @@ app.use(express.static('public'));
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL;
 const PORT = process.env.PORT || 3000;
-const NUMEROS_IGNORAR = ['556284271335'];
+const NUMEROS_IGNORAR = [
+  '556284271335',  // Dr. Wilder (proprietário)
+  '5562982797221', // médico
+  '5562998079861', // médico
+  '5562981604381', // médico
+  '5562981764258', // médico
+  '5562993598081', // médico
+  '5562981958856', // médico
+];
 
 // Verifica se número está em atendimento humano (com cache local de 30s)
 const cacheHumano = {};
@@ -41,6 +49,8 @@ A clínica atende SOMENTE particular. NUNCA pergunte sobre convênio.
 Para agendar colete: nome completo, data de nascimento, especialidade, período (manhã ou tarde).
 Pergunte o nome completo e a data de nascimento na mesma mensagem.
 IMPORTANTE: Aceite qualquer data de nascimento sem questionar. Nunca valide, nunca pergunte se a data está correta. Datas recentes ou do ano atual são normais — podem ser recém-nascidos.
+IMPORTANTE: Se o paciente enviar nome e data de nascimento na mesma mensagem (ex: "João Silva 15/03/1990"), extraia os dois dados e NÃO peça a data de nascimento novamente.
+IMPORTANTE: Se o paciente já informou a especialidade, NÃO liste as especialidades disponíveis. Apenas confirme e siga o fluxo. Só liste especialidades se o paciente pedir ou não souber qual quer.
 
 Especialidades: Clínico Geral, Endocrinologia, Ginecologia, Otorrinolaringologia, Pediatria, Psiquiatria.
 
