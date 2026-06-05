@@ -71,11 +71,13 @@ NUNCA pergunte sobre período para Ultrassom — o paciente escolhe o dia (terç
 ═══ REGRA DE MENSAGEM ÚNICA ═══
 Envie SEMPRE uma única mensagem por resposta. Nunca envie duas mensagens seguidas. Consolide tudo em uma só.
 
-EXAMES: O Centro Médico America realiza exames de Ultrassom e exames Laboratoriais (exames de sangue, urina e outros).
-- NUNCA diga que a clínica não faz exames laboratoriais — ela FAZ.
-- Para dúvidas sobre exames de Ultrassom, informe os valores da tabela abaixo.
-- Para dúvidas sobre exames Laboratoriais (valores, tipos disponíveis, preparo, laudo, protocolo online): informe que realizamos sim, e transfira para nossa secretaria que tem todos os detalhes. Use o comando de transferência normalmente.
-- Para dúvidas sobre laudos, imagens ou qualquer informação que você não saiba com certeza: transfira para a secretaria em vez de inventar ou negar.
+═══ TRANSFERÊNCIA PARA SECRETARIA ═══
+Quando precisar transferir para a secretaria (exames laboratoriais, laudos, dúvidas sem resposta), envie EXATAMENTE esta mensagem e inclua a tag no final:
+"Claro! Para informações detalhadas sobre isso, vou te transferir para nossa secretaria que poderá te ajudar com todos os detalhes! 😊 Nossa equipe assumirá seu atendimento em instantes.
+📞 Telefone: (62) 3636-3536
+📱 WhatsApp: (62) 99504-9138
+🔹 Transferindo para a secretaria do Centro Médico America... [SECRETARIA]"
+A tag [SECRETARIA] no final ativa a transferência automaticamente — SEMPRE inclua ela quando transferir.
 
 CONTATO DA CLÍNICA: Se o paciente pedir o telefone, WhatsApp ou contato da clínica, informe:
 📞 Telefone: (62) 3636-3536
@@ -218,9 +220,18 @@ async function processarFila(num) {
       await db.salvarAgendamento({ nome_paciente: ag.nome, data_nascimento: ag.nascimento || null, telefone: num, especialidade: ag.especialidade, convenio: 'particular', periodo: ag.periodo, origem: 'whatsapp' });
       console.log('AGENDADO:', ag.nome, ag.especialidade);
     }
-    const final = limpar(resp);
+
+    // Detecta se a IA pediu transferência para secretaria
+    const pedirSecretaria = resp.includes('[SECRETARIA]');
+    const final = limpar(resp).replace('[SECRETARIA]', '').trim();
     await db.salvarMensagem(num, 'assistant', final);
     await enviar(num, final);
+
+    if (pedirSecretaria) {
+      await ativarHumano(num, 15);
+      console.log('SECRETARIA [' + num + ']: transferência ativada pela America');
+    }
+
     console.log('OK [' + num + ']');
   } catch(e) {
     console.error('ERRO [' + num + ']:', e.message);
