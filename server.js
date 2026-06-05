@@ -40,7 +40,7 @@ async function desativarHumano(num) {
   cacheHumano[num] = { valor: false, expira: Date.now() + 30000 };
 }
 
-const SYSTEM_PROMPT = `Você se chama America, assistente executiva do Centro Médico America em Goiânia, GO. Elegante, profissional, calorosa. Jamais dá diagnósticos. Jamais inventa informações. NUNCA negue um serviço que a clínica oferece — se não souber os detalhes, transfira para a secretaria.
+const SYSTEM_PROMPT = `Você se chama América, assistente executiva do Centro Médico América em Goiânia, GO. Elegante, profissional, calorosa. Jamais dá diagnósticos. Jamais inventa informações. NUNCA negue um serviço que a clínica oferece — se não souber os detalhes, transfira para a secretaria.
 
 REGRA CRÍTICA: Leia TODO o histórico antes de responder. NUNCA reinicie a conversa se já há mensagens. NUNCA peça dados que o paciente já forneceu.
 
@@ -76,7 +76,7 @@ Quando precisar transferir para a secretaria (exames laboratoriais, laudos, dúv
 "Claro! Para informações detalhadas sobre isso, vou te transferir para nossa secretaria que poderá te ajudar com todos os detalhes! 😊 Nossa equipe assumirá seu atendimento em instantes.
 📞 Telefone: (62) 3636-3536
 📱 WhatsApp: (62) 99504-9138
-🔹 Transferindo para a secretaria do Centro Médico America... [SECRETARIA]"
+🔹 Transferindo para a secretaria do Centro Médico América... [SECRETARIA]"
 A tag [SECRETARIA] no final ativa a transferência automaticamente — SEMPRE inclua ela quando transferir.
 
 CONTATO DA CLÍNICA: Se o paciente pedir o telefone, WhatsApp ou contato da clínica, informe:
@@ -99,7 +99,7 @@ PROCEDIMENTOS: Limpeza ouvido R$50, DIU inserir R$400, DIU retirar R$300, Preven
 ULTRASSOM (informe o valor quando o paciente especificar): USG Abdome Inferior R$70, USG Abdome Inferior c/Doppler R$160, USG Abdome Superior R$70, USG Abdome Superior c/Doppler R$160, USG Abdome Total R$100, USG Abdome Total c/Doppler R$350, USG Articulação R$80, USG Bolsa Escrotal R$80, USG Bolsa Escrotal c/Doppler R$150, USG Mamas R$90, USG Morfológica 1º Trimestre R$230, USG Morfológica 2º Trimestre R$280, USG Obstétrica acima 14 semanas R$100, USG Obstétrica c/Doppler R$280, USG Obstétrica Endovaginal R$100, USG Obstétrica Gestação Múltipla R$180, USG Partes Moles R$70, USG Próstata Via Abdominal R$90, USG Quadril Pediátrico cada lado R$80, USG Tireoide R$90, USG Tireoide c/Doppler R$150, USG Transvaginal R$90, USG Transvaginal c/Doppler R$160, USG Vias Urinárias e Rins R$80, USG Transfontanela R$130, USG Pélvica R$80, USG Punho cada lado R$80, USG Parede Abdominal R$80, USG Parótidas R$70, USG Parótidas c/Doppler R$160, USG Pé cada lado R$80, USG Quadril Adulto cada lado R$80, USG Orelha cada lado R$70, USG Cervical R$80, USG Ombro cada lado R$90, USG Região Inguinal cada lado R$80, Doppler Órgão ou Estrutura Isolada R$140, Doppler Carótidas e Vertebrais R$150.
 Ao confirmar: *Seu atendimento foi solicitado com sucesso!* ✅
 
-📍 *Centro Médico America*
+📍 *Centro Médico América*
 Av. Frei Miguelino, 247 - Bairro Goiá, Goiânia-GO, CEP 74485-055
 🗺 https://maps.google.com/?q=Av.+Frei+Miguelino,+247,+Goiânia
 
@@ -191,7 +191,7 @@ async function processarFila(num) {
         'No momento nossa assistente virtual não consegue processar mensagens de voz. ' +
         'Por isso estou encaminhando você para nossa *secretaria*, que irá te atender em breve! 🏥\n\n' +
         'Se preferir, pode digitar sua mensagem que respondemos na hora. 😊\n\n' +
-        '🔹 *Transferindo para a secretaria do Centro Médico America...*'
+        '🔹 *Transferindo para a secretaria do Centro Médico América...*'
       );
       console.log('AUDIO [' + num + ']: transferido para secretaria');
       processarFila(num);
@@ -200,7 +200,7 @@ async function processarFila(num) {
 
     if (txtCompleto.toLowerCase() === '#humano' || txtCompleto.toLowerCase() === '#secretaria') {
       await ativarHumano(num, 15);
-      await enviar(num, 'Obrigado por entrar em contato com o *Centro Médico America*.\n\nSua solicitação requer um acompanhamento especializado da nossa equipe. Para oferecer a você a melhor experiência possível, vou encaminhar sua conversa para um de nossos consultores.\n\nTodas as informações registradas durante este atendimento serão compartilhadas internamente, garantindo continuidade e agilidade no suporte, sem necessidade de repetir os dados já fornecidos.\n\nNossa equipe assumirá seu atendimento em instantes para concluir sua solicitação com total atenção e cuidado.\n\nAgradecemos pela preferência e pela confiança em nossos serviços.\n\n🔹 *Transferindo para um especialista do Centro Médico America...*');
+      await enviar(num, 'Obrigado por entrar em contato com o *Centro Médico América*.\n\nSua solicitação requer um acompanhamento especializado da nossa equipe. Para oferecer a você a melhor experiência possível, vou encaminhar sua conversa para um de nossos consultores.\n\nTodas as informações registradas durante este atendimento serão compartilhadas internamente, garantindo continuidade e agilidade no suporte, sem necessidade de repetir os dados já fornecidos.\n\nNossa equipe assumirá seu atendimento em instantes para concluir sua solicitação com total atenção e cuidado.\n\nAgradecemos pela preferência e pela confiança em nossos serviços.\n\n🔹 *Transferindo para um especialista do Centro Médico América...*');
       processarFila(num);
       return;
     }
@@ -235,7 +235,7 @@ async function processarFila(num) {
 
     if (pedirSecretaria) {
       await ativarHumano(num, 15);
-      console.log('SECRETARIA [' + num + ']: transferência ativada pela America');
+      console.log('SECRETARIA [' + num + ']: transferência ativada pela América');
     }
 
     console.log('OK [' + num + ']');
@@ -377,4 +377,4 @@ app.get('/api/whatsapp', async function(req, res) {
 });
 
 app.get('/', function(req, res) { res.json({ status: 'online', agente: 'CMA v2', uptime: Math.floor(process.uptime()) + 's' }); });
-app.listen(PORT, function() { console.log('America — Assistente CMA v2 | Porta: ' + PORT + ' | Online'); });
+app.listen(PORT, function() { console.log('América — Assistente CMA v2 | Porta: ' + PORT + ' | Online'); });
