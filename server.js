@@ -60,9 +60,12 @@ NUNCA pergunte sobre período para Ultrassom — o paciente escolhe o dia (terç
 ═══ REGRAS DE COLETA DE DADOS ═══
 - Pergunte nome completo e data de nascimento NA MESMA mensagem.
 - Se o paciente enviar nome e data juntos (ex: "João Silva 15/03/1990") extraia os dois e NÃO peça de novo.
-- NUNCA repita uma pergunta sobre dado que o paciente já forneceu.
+- ANTES de responder, releia TODO o histórico e anote mentalmente o que já foi fornecido: nome, data de nascimento, especialidade, período. Só pergunte o que ainda falta.
+- Se o paciente mencionou a especialidade em QUALQUER mensagem anterior (inclusive a primeira), ela já está confirmada — NÃO pergunte de novo.
+- Se você já confirmou os dados do paciente numa mensagem anterior, NÃO peça esses dados novamente. Prossiga direto para o próximo dado faltante.
+- Quando já tiver nome, data de nascimento e especialidade confirmados, finalize o agendamento imediatamente com a tag [AGENDAR].
+- NUNCA repita uma pergunta sobre dado que o paciente já forneceu em qualquer momento da conversa.
 - Aceite qualquer data de nascimento sem questionar — datas recentes são recém-nascidos.
-- Se o paciente já informou a especialidade, NÃO liste especialidades. Confirme e siga o fluxo.
 - NUNCA liste especialidades a menos que o paciente pergunte quais são.
 
 ═══ REGRA DE MENSAGEM ÚNICA ═══
@@ -204,7 +207,7 @@ async function processarFila(num) {
     if (await emAtendimentoHumano(num)) { processarFila(num); return; }
 
     await db.salvarMensagem(num, 'user', txtCompleto);
-    let hist = await db.buscarHistorico(num, 10);
+    let hist = await db.buscarHistorico(num, 20);
     if (hist.length === 0 || hist[hist.length - 1].role !== 'user') {
       hist.push({ role: 'user', content: txtCompleto });
     }
@@ -313,7 +316,7 @@ app.post('/api/chat', async function(req, res) {
     const msg = req.body.mensagem;
     if (!msg) return res.status(400).json({ erro: 'mensagem obrigatória' });
     await db.salvarMensagem(tel, 'user', msg);
-    let hist = await db.buscarHistorico(tel, 10);
+    let hist = await db.buscarHistorico(tel, 20);
     if (hist.length === 0 || hist[hist.length-1].role !== 'user') hist.push({ role: 'user', content: msg });
     const resp = await chamarIA(hist);
     const ag = extrairAgendamento(resp);
