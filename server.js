@@ -150,6 +150,19 @@ function detectarAudio(b) {
   return false;
 }
 
+
+// ── Detecta imagem, documento, receituário ──
+// Z-API envia ReceivedCallback sem text e sem audio quando é imagem/documento
+function detectarImagem(b) {
+  if (b.image) return true;
+  if (b.document) return true;
+  if (b.messageType === 'imageMessage') return true;
+  if (b.messageType === 'documentMessage') return true;
+  const txt = (b.text && b.text.message) || '';
+  if (!txt.trim() && !detectarAudio(b)) return true;
+  return false;
+}
+
 // Fila independente por número
 const filas = {};
 
@@ -163,6 +176,13 @@ function enfileirar(num, txt) {
 function enfileirarAudio(num) {
   if (!filas[num]) filas[num] = { msgs: [], rodando: false };
   filas[num].msgs.push('__AUDIO__');
+  if (!filas[num].rodando) processarFila(num);
+}
+
+// Enfileira imagem/documento
+function enfileirarImagem(num) {
+  if (!filas[num]) filas[num] = { msgs: [], rodando: false };
+  filas[num].msgs.push('__IMAGEM__');
   if (!filas[num].rodando) processarFila(num);
 }
 
@@ -185,7 +205,7 @@ async function processarFila(num) {
     // ── Tratamento de áudio: encaminha para secretaria ──
     if (msgs.includes('__AUDIO__') || txtCompleto === '__AUDIO__') {
       if (await emAtendimentoHumano(num)) { processarFila(num); return; }
-      await ativarHumano(num, 5);
+      await ativarHumano(num, 15);
       await enviar(num,
         'Olá! 😊 Recebemos seu áudio.\n\n' +
         'No momento nossa assistente virtual não consegue processar mensagens de voz. ' +
@@ -194,6 +214,23 @@ async function processarFila(num) {
         '🔹 *Transferindo para a secretaria do Centro Médico América...*'
       );
       console.log('AUDIO [' + num + ']: transferido para secretaria');
+      processarFila(num);
+      return;
+    }
+
+    // ── Tratamento de imagem/documento: receituário, exame, foto ──
+    if (msgs.includes('__IMAGEM__') || txtCompleto === '__IMAGEM__') {
+      if (await emAtendimentoHumano(num)) { processarFila(num); return; }
+      await ativarHumano(num, 15);
+      await enviar(num,
+        'Olá! 😊 Recebemos seu documento.\n\n' +
+        'Vou encaminhar para nossa *secretaria*, que irá analisar e te orientar sobre os próximos passos com todos os detalhes! 🏥\n\n' +
+        '📞 Se preferir, entre em contato diretamente:\n' +
+        '📞 Telefone: (62) 3636-3536\n' +
+        '📱 WhatsApp: (62) 99504-9138\n\n' +
+        '🔹 *Transferindo para a secretaria do Centro Médico América...*'
+      );
+      console.log('IMAGEM [' + num + ']: transferido para secretaria');
       processarFila(num);
       return;
     }
@@ -254,12 +291,13 @@ app.post('/webhook', function(req, res) {
 
   const b = req.body;
 
-  // Log geral (inclui áudio)
+  // Log completo para diagnóstico (primeiros 5 campos + body completo)
   webhookLogs.unshift({
     time: new Date().toISOString(),
     phone: b.phone,
     type: b.messageType || b.type || 'text',
-    text: b.text && b.text.message
+    text: b.text && b.text.message,
+    body: JSON.stringify(b).slice(0, 800) // body completo para diagnóstico
   });
   if (webhookLogs.length > 30) webhookLogs.pop();
 
@@ -289,6 +327,13 @@ app.post('/webhook', function(req, res) {
   if (detectarAudio(b)) {
     console.log('AUDIO recebido de [' + num + '] — encaminhando para secretaria');
     enfileirarAudio(num);
+    return;
+  }
+
+  // ── Detecta imagem, documento, receituário ──
+  if (detectarImagem(b)) {
+    console.log('IMAGEM recebida de [' + num + '] — encaminhando para secretaria');
+    enfileirarImagem(num);
     return;
   }
 
