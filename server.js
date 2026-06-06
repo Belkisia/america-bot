@@ -144,7 +144,45 @@ async function enviar(numero, texto) {
   } catch(e) { console.error('Erro enviar:', e.message); }
 }
 
-// ── Detecta se o webhook é uma mensagem de áudio/ptt ──
+// ── Lê imagem/receituário via Claude Vision ──
+async function lerImagem(imageUrl) {
+  try {
+    const imgResp = await axios.get(imageUrl, { responseType: 'arraybuffer', timeout: 15000 });
+    const contentType = imgResp.headers['content-type'] || 'image/jpeg';
+    const base64 = Buffer.from(imgResp.data).toString('base64');
+    const mediaType = contentType.split(';')[0].trim();
+
+    const r = await axios.post('https://api.anthropic.com/v1/messages',
+      {
+        model: 'claude-sonnet-4-6',
+        max_tokens: 600,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: mediaType, data: base64 }
+            },
+            {
+              type: 'text',
+              text: `Você é um assistente de clínica médica. Analise esta imagem e identifique:
+1. Se é uma receita/pedido médico: extraia o nome do médico, CRM (se visível) e os exames ou procedimentos solicitados.
+2. Se é um exame/resultado: identifique o tipo de exame.
+3. Se é outra coisa: descreva brevemente o que é.
+
+Responda em formato simples, direto, sem markdown. Foque apenas nos exames/procedimentos solicitados que possam ser realizados numa clínica médica (ultrassom, consultas, procedimentos). Não mencione medicamentos.`
+            }
+          ]
+        }]
+      },
+      { headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' }, timeout: 30000 }
+    );
+    return r.data.content[0].text;
+  } catch(e) {
+    console.error('Erro lerImagem:', e.message);
+    return null;
+  }
+}
 function detectarAudio(b) {
   // Z-API envia áudio com type "audio" ou "ptt" (push-to-talk)
   // O campo pode vir em b.type, b.messageType ou dentro de b.audio
@@ -185,10 +223,10 @@ function enfileirarAudio(num) {
   if (!filas[num].rodando) processarFila(num);
 }
 
-// Enfileira imagem/documento
-function enfileirarImagem(num) {
+// Enfileira imagem/documento com URL
+function enfileirarImagem(num, imageUrl) {
   if (!filas[num]) filas[num] = { msgs: [], rodando: false };
-  filas[num].msgs.push('__IMAGEM__');
+  filas[num].msgs.push('__IMAGEM__:' + (imageUrl || ''));
   if (!filas[num].rodando) processarFila(num);
 }
 
@@ -225,18 +263,41 @@ async function processarFila(num) {
     }
 
     // ── Tratamento de imagem/documento: receituário, exame, foto ──
-    if (msgs.includes('__IMAGEM__') || txtCompleto === '__IMAGEM__') {
+    const imagemMsg = msgs.find(m => m && m.startsWith('__IMAGEM__'));
+    if (imagemMsg) {
       if (await emAtendimentoHumano(num)) { processarFila(num); return; }
-      await ativarHumano(num, 15);
-      await enviar(num,
-        'Olá! 😊 Recebemos seu documento.\n\n' +
-        'Vou encaminhar para nossa *secretaria*, que irá analisar e te orientar sobre os próximos passos com todos os detalhes! 🏥\n\n' +
-        '📞 Se preferir, entre em contato diretamente:\n' +
-        '📞 Telefone: (62) 3636-3536\n' +
-        '📱 WhatsApp: (62) 99504-9138\n\n' +
-        '🔹 *Transferindo para a secretaria do Centro Médico América...*'
-      );
-      console.log('IMAGEM [' + num + ']: transferido para secretaria');
+      const imageUrl = imagemMsg.replace('__IMAGEM__:', '').trim();
+      console.log('IMAGEM [' + num + ']: processando com visão — ' + imageUrl);
+
+      // Tenta ler a imagem com Claude Vision
+      let leitura = null;
+      if (imageUrl) leitura = await lerImagem(imageUrl);
+
+      if (leitura) {
+        // Monta contexto para a América responder com base na leitura
+        const msgContexto = 'O paciente enviou uma imagem. Análise da imagem: ' + leitura + '\n\nCom base nisso, responda ao paciente de forma calorosa: confirme o que foi identificado, informe se realizamos esses exames/procedimentos aqui no Centro Médico América com valores e disponibilidade, e ofereça agendamento. Se não realizarmos o exame identificado, informe e transfira para a secretaria.';
+        await db.salvarMensagem(num, 'user', '[imagem enviada pelo paciente]');
+        let hist = await db.buscarHistorico(num, 20);
+        hist.push({ role: 'user', content: msgContexto });
+        const resp = await chamarIA(hist);
+        const pedirSecretaria = resp.includes('[SECRETARIA]');
+        const final = limpar(resp).replace('[SECRETARIA]', '').trim();
+        await db.salvarMensagem(num, 'assistant', final);
+        await enviar(num, final);
+        if (pedirSecretaria) await ativarHumano(num, 15);
+        console.log('IMAGEM [' + num + ']: respondido com visão');
+      } else {
+        // Fallback: sem URL ou erro na leitura — transfere para secretaria
+        await ativarHumano(num, 15);
+        await enviar(num,
+          'Olá! 😊 Recebemos seu documento.\n\n' +
+          'Vou encaminhar para nossa *secretaria*, que irá analisar e te orientar sobre os próximos passos com todos os detalhes! 🏥\n\n' +
+          '📞 Telefone: (62) 3636-3536\n' +
+          '📱 WhatsApp: (62) 99504-9138\n\n' +
+          '🔹 *Transferindo para a secretaria do Centro Médico América...*'
+        );
+        console.log('IMAGEM [' + num + ']: sem URL — transferido para secretaria');
+      }
       processarFila(num);
       return;
     }
@@ -338,8 +399,9 @@ app.post('/webhook', function(req, res) {
 
   // ── Detecta imagem, documento, receituário ──
   if (detectarImagem(b)) {
-    console.log('IMAGEM recebida de [' + num + '] — encaminhando para secretaria');
-    enfileirarImagem(num);
+    const imageUrl = (b.image && b.image.imageUrl) || (b.document && b.document.documentUrl) || '';
+    console.log('IMAGEM recebida de [' + num + '] url=' + imageUrl);
+    enfileirarImagem(num, imageUrl);
     return;
   }
 
