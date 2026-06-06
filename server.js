@@ -366,7 +366,8 @@ app.post('/webhook', function(req, res) {
     phone: b.phone,
     type: b.messageType || b.type || 'text',
     text: b.text && b.text.message,
-    body: JSON.stringify(b).slice(0, 800) // body completo para diagnóstico
+    imageUrl: b.image && b.image.imageUrl,
+    body: JSON.stringify(b).slice(0, 1200)
   });
   if (webhookLogs.length > 30) webhookLogs.pop();
 
@@ -402,7 +403,8 @@ app.post('/webhook', function(req, res) {
   // ── Detecta imagem, documento, receituário ──
   if (detectarImagem(b)) {
     const imageUrl = (b.image && b.image.imageUrl) || (b.document && b.document.documentUrl) || '';
-    console.log('IMAGEM recebida de [' + num + '] url=' + imageUrl);
+    console.log('IMAGEM recebida de [' + num + '] url=' + imageUrl.slice(0, 80) + '...');
+    console.log('IMAGEM url completa length=' + imageUrl.length);
     enfileirarImagem(num, imageUrl);
     return;
   }
