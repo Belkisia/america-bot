@@ -72,12 +72,8 @@ NUNCA pergunte sobre período para Ultrassom — o paciente escolhe o dia (terç
 Envie SEMPRE uma única mensagem por resposta. Nunca envie duas mensagens seguidas. Consolide tudo em uma só.
 
 ═══ TRANSFERÊNCIA PARA SECRETARIA ═══
-Quando precisar transferir para a secretaria (exames laboratoriais, laudos, dúvidas sem resposta), envie EXATAMENTE esta mensagem e inclua a tag no final:
-"Claro! Para informações detalhadas sobre isso, vou te transferir para nossa secretaria que poderá te ajudar com todos os detalhes! 😊 Nossa equipe assumirá seu atendimento em instantes.
-📞 Telefone: (62) 3636-3536
-📱 WhatsApp: (62) 99504-9138
-🔹 Transferindo para a secretaria do Centro Médico América... [SECRETARIA]"
-A tag [SECRETARIA] no final ativa a transferência automaticamente — SEMPRE inclua ela quando transferir.
+Quando precisar transferir para a secretaria (exames laboratoriais, laudos, dúvidas sem resposta), responda ao paciente normalmente explicando o que identificou e que nossa secretaria ajudará com detalhes. No FINAL da mensagem adicione apenas: [SECRETARIA]
+O sistema cuidará do restante automaticamente. NÃO escreva mensagens de "transferindo", NÃO repita contatos, NÃO diga "Nossa equipe assumirá".
 
 CONTATO DA CLÍNICA: Se o paciente pedir o telefone, WhatsApp ou contato da clínica, informe:
 📞 Telefone: (62) 3636-3536
@@ -103,6 +99,13 @@ ULTRASSOM MORFOLÓGICO — PERÍODO GESTACIONAL (informe sempre que o paciente p
 • Morfológico 2º Trimestre (R$280): realizado entre *20 semanas e 23 semanas e 6 dias*
 • Morfológico 3º Trimestre: realizado entre *32 semanas e 34 semanas e 6 dias*
 Se o paciente não souber em quantas semanas está, oriente a verificar com seu médico para confirmar o período correto antes de agendar.
+
+EXAMES LABORATORIAIS: O Centro Médico América realiza exames laboratoriais. Exemplos de exames que realizamos:
+- Exame de sangue para gravidez (Beta-HCG)
+- Hemograma, Glicemia, Colesterol, Ureia, Creatinina e outros exames de sangue
+- Exames de urina
+- Coagulograma, Eletrocardiograma e outros
+NUNCA diga que não realizamos exames laboratoriais. Para valores e agendamento de laboratoriais, transfira para a secretaria com a tag [SECRETARIA].
 Ao confirmar: *Seu atendimento foi solicitado com sucesso!* ✅
 
 📍 *Centro Médico América*
@@ -275,7 +278,7 @@ async function processarFila(num) {
 
       if (leitura) {
         // Monta contexto para a América responder com base na leitura
-        const msgContexto = 'O paciente enviou uma imagem/receita. Análise da imagem: ' + leitura + '\n\nCom base nisso, responda ao paciente em UMA ÚNICA mensagem de forma calorosa: confirme o que foi identificado, informe se realizamos esses exames/procedimentos aqui no Centro Médico América com valores e disponibilidade. Se forem exames laboratoriais, confirme que realizamos e informe que nossa secretaria entrará em contato para detalhes. NÃO use a tag [SECRETARIA] nesta resposta — apenas responda ao paciente diretamente.';
+        const msgContexto = 'O paciente enviou uma imagem/receita. Análise da imagem: ' + leitura + '\n\nCom base nisso, responda ao paciente em UMA ÚNICA mensagem curta e calorosa: confirme o que foi identificado (nome do paciente e exames), informe que realizamos esses exames aqui no Centro Médico América e que nossa secretaria entrará em contato para confirmar disponibilidade e valores. Finalize com os contatos: 📞 (62) 3636-3536 | 📱 (62) 99504-9138. NÃO use tags [SECRETARIA], NÃO repita mensagem de transferência, NÃO diga "transferindo". Apenas responda diretamente ao paciente.';
         await db.salvarMensagem(num, 'user', '[imagem enviada pelo paciente]');
         let hist = await db.buscarHistorico(num, 20);
         hist.push({ role: 'user', content: msgContexto });
@@ -335,12 +338,24 @@ async function processarFila(num) {
 
     // Detecta se a IA pediu transferência para secretaria
     const pedirSecretaria = resp.includes('[SECRETARIA]');
-    const final = limpar(resp).replace('[SECRETARIA]', '').trim();
+    const final = limpar(resp)
+      .replace('[SECRETARIA]', '')
+      .replace(/claro!?\s*para informações detalhadas sobre isso.*?instantes\.?/gis, '')
+      .replace(/📞\s*Telefone:.*?[\n\r]/gi, '')
+      .replace(/📱\s*WhatsApp:.*?[\n\r]/gi, '')
+      .replace(/🔹.*?transferindo.*?[\n\r]?/gi, '')
+      .replace(/nossa equipe assumirá.*?instantes\.?/gi, '')
+      .trim();
     await db.salvarMensagem(num, 'assistant', final);
     await enviar(num, final);
 
     if (pedirSecretaria) {
       await ativarHumano(num, 15);
+      await enviar(num,
+        '📞 Telefone: (62) 3636-3536\n' +
+        '📱 WhatsApp: (62) 99504-9138\n\n' +
+        '🔹 *Nossa secretaria assumirá seu atendimento em instantes!*'
+      );
       console.log('SECRETARIA [' + num + ']: transferência ativada pela América');
     }
 
