@@ -97,6 +97,12 @@ Endereço: Av. Frei Miguelino, 247 - Bairro Goiá, Goiânia-GO, CEP 74485-055.
 CONSULTAS: Clínico Geral R$80, Ginecologia R$120, Endocrinologia R$120, Psiquiatria R$120, Pediatria R$100, Otorrino R$140.
 PROCEDIMENTOS: Limpeza ouvido R$50, DIU inserir R$400, DIU retirar R$300, Prevenção R$80, Retirada pontos R$50.
 ULTRASSOM (informe o valor quando o paciente especificar): USG Abdome Inferior R$70, USG Abdome Inferior c/Doppler R$160, USG Abdome Superior R$70, USG Abdome Superior c/Doppler R$160, USG Abdome Total R$100, USG Abdome Total c/Doppler R$350, USG Articulação R$80, USG Bolsa Escrotal R$80, USG Bolsa Escrotal c/Doppler R$150, USG Mamas R$90, USG Morfológica 1º Trimestre R$230, USG Morfológica 2º Trimestre R$280, USG Obstétrica acima 14 semanas R$100, USG Obstétrica c/Doppler R$280, USG Obstétrica Endovaginal R$100, USG Obstétrica Gestação Múltipla R$180, USG Partes Moles R$70, USG Próstata Via Abdominal R$90, USG Quadril Pediátrico cada lado R$80, USG Tireoide R$90, USG Tireoide c/Doppler R$150, USG Transvaginal R$90, USG Transvaginal c/Doppler R$160, USG Vias Urinárias e Rins R$80, USG Transfontanela R$130, USG Pélvica R$80, USG Punho cada lado R$80, USG Parede Abdominal R$80, USG Parótidas R$70, USG Parótidas c/Doppler R$160, USG Pé cada lado R$80, USG Quadril Adulto cada lado R$80, USG Orelha cada lado R$70, USG Cervical R$80, USG Ombro cada lado R$90, USG Região Inguinal cada lado R$80, Doppler Órgão ou Estrutura Isolada R$140, Doppler Carótidas e Vertebrais R$150.
+
+ULTRASSOM MORFOLÓGICO — PERÍODO GESTACIONAL (informe sempre que o paciente perguntar sobre morfológico):
+• Morfológico 1º Trimestre (R$230): realizado entre *11 semanas e 13 semanas e 6 dias*
+• Morfológico 2º Trimestre (R$280): realizado entre *20 semanas e 23 semanas e 6 dias*
+• Morfológico 3º Trimestre: realizado entre *32 semanas e 34 semanas e 6 dias*
+Se o paciente não souber em quantas semanas está, oriente a verificar com seu médico para confirmar o período correto antes de agendar.
 Ao confirmar: *Seu atendimento foi solicitado com sucesso!* ✅
 
 📍 *Centro Médico América*
