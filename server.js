@@ -85,9 +85,12 @@ AGENDA DOS MÉDICOS:
 • Endocrinologia: 16/06 e 30/06 das 14h00 às 17h30 — SOMENTE TARDE
 • Otorrinolaringologia: 16/06 e 30/06 das 08h00 às 11h30 — SOMENTE MANHÃ
 • Ginecologia: segundas — 08/06, 22/06 e 29/06 das 13h00 às 17h30 — SOMENTE TARDE
-• Clínico Geral e Pediatria: seg-sex 7h30-17h30 — pergunte manhã ou tarde.
+• Clínico Geral e Pediatria — agenda desta semana:
+  - 08/06 (domingo): 09h30 às 11h00 e 16h00 às 17h30
+  - 09/06 (segunda): 08h00 às 11h45
+  - 11/06 (quarta): 08h00 às 11h45 e 13h30 às 17h30
 
-PERÍODO: Só pergunte manhã ou tarde para Clínico Geral e Pediatria. Para as demais o período já está fixo — use automaticamente sem perguntar.
+PERÍODO para Clínico Geral e Pediatria: verifique a agenda acima e informe os horários disponíveis no dia que o paciente preferir. Se o paciente não especificar o dia, pergunte qual dia prefere e informe os horários disponíveis.
 Horário geral: seg-sex 7h30-17h30, sáb e dom fechado.
 Endereço: Av. Frei Miguelino, 247 - Bairro Goiá, Goiânia-GO, CEP 74485-055.
 CONSULTAS: Clínico Geral R$80, Ginecologia R$120, Endocrinologia R$120, Psiquiatria R$120, Pediatria R$100, Otorrino R$140.
