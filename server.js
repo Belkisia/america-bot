@@ -275,16 +275,18 @@ async function processarFila(num) {
 
       if (leitura) {
         // Monta contexto para a América responder com base na leitura
-        const msgContexto = 'O paciente enviou uma imagem. Análise da imagem: ' + leitura + '\n\nCom base nisso, responda ao paciente de forma calorosa: confirme o que foi identificado, informe se realizamos esses exames/procedimentos aqui no Centro Médico América com valores e disponibilidade, e ofereça agendamento. Se não realizarmos o exame identificado, informe e transfira para a secretaria.';
+        const msgContexto = 'O paciente enviou uma imagem/receita. Análise da imagem: ' + leitura + '\n\nCom base nisso, responda ao paciente em UMA ÚNICA mensagem de forma calorosa: confirme o que foi identificado, informe se realizamos esses exames/procedimentos aqui no Centro Médico América com valores e disponibilidade. Se forem exames laboratoriais, confirme que realizamos e informe que nossa secretaria entrará em contato para detalhes. NÃO use a tag [SECRETARIA] nesta resposta — apenas responda ao paciente diretamente.';
         await db.salvarMensagem(num, 'user', '[imagem enviada pelo paciente]');
         let hist = await db.buscarHistorico(num, 20);
         hist.push({ role: 'user', content: msgContexto });
         const resp = await chamarIA(hist);
-        const pedirSecretaria = resp.includes('[SECRETARIA]');
-        const final = limpar(resp).replace('[SECRETARIA]', '').trim();
+        const final = limpar(resp).replace('[SECRETARIA]', '').replace(/🔹.*Transferindo.*$/gm, '').trim();
         await db.salvarMensagem(num, 'assistant', final);
         await enviar(num, final);
-        if (pedirSecretaria) await ativarHumano(num, 15);
+        // Se tiver exames laboratoriais na leitura, ativa secretaria silenciosamente
+        if (leitura.toLowerCase().includes('laboratori') || leitura.toLowerCase().includes('sangue') || leitura.toLowerCase().includes('urina') || leitura.toLowerCase().includes('exame')) {
+          await ativarHumano(num, 15);
+        }
         console.log('IMAGEM [' + num + ']: respondido com visão');
       } else {
         // Fallback: sem URL ou erro na leitura — transfere para secretaria
