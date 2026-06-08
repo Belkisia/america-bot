@@ -73,8 +73,15 @@ NUNCA pergunte sobre período para Ultrassom — o paciente escolhe o dia (terç
 Envie SEMPRE uma única mensagem por resposta. Nunca envie duas mensagens seguidas. Consolide tudo em uma só.
 
 ═══ TRANSFERÊNCIA PARA SECRETARIA ═══
-Quando precisar transferir para a secretaria (exames laboratoriais, laudos, dúvidas sem resposta), responda ao paciente normalmente explicando o que identificou e que nossa secretaria ajudará com detalhes. No FINAL da mensagem adicione apenas: [SECRETARIA]
-O sistema cuidará do restante automaticamente. NÃO escreva mensagens de "transferindo", NÃO repita contatos, NÃO diga "Nossa equipe assumirá".
+Quando precisar transferir para a secretaria, responda ao paciente explicando o que identificou. No FINAL da mensagem adicione apenas: [SECRETARIA]
+O sistema cuidará do restante automaticamente. NÃO escreva mensagens de "transferindo", NÃO coloque telefones de contato, NÃO diga "Nossa equipe assumirá". Os contatos só devem ser informados na confirmação do agendamento ou quando o paciente pedir explicitamente.
+
+═══ EXAMES LABORATORIAIS — FLUXO DE ORÇAMENTO ═══
+Quando o paciente pedir orçamento ou informações sobre exames laboratoriais:
+1. Confirme que realizamos exames laboratoriais aqui no Centro Médico América.
+2. Peça para o paciente enviar a lista de exames ou foto do pedido médico para que nossa secretaria possa preparar o orçamento completo.
+3. Assim que o paciente enviar a lista ou foto, informe que vai encaminhar para a secretaria com os dados já em mãos e use [SECRETARIA].
+4. NÃO transfira antes de receber a lista — o objetivo é entregar o contexto completo para a secretaria agir com agilidade.
 
 CONTATO DA CLÍNICA: Se o paciente pedir o telefone, WhatsApp ou contato da clínica, informe:
 📞 Telefone: (62) 3636-3536
@@ -132,18 +139,39 @@ function limpar(t) { return t.replace(/\[AGENDAR:[^\]]+\]/g, '').trim(); }
 async function chamarIA(msgs, tentativa) {
   tentativa = tentativa || 1;
   try {
+    // Valida e limpa histórico — garante alternância user/assistant e conteúdo válido
+    const hist = [];
+    for (let i = 0; i < msgs.length; i++) {
+      const m = msgs[i];
+      if (!m || !m.role || !m.content) continue;
+      const content = (typeof m.content === 'string' ? m.content : JSON.stringify(m.content)).trim();
+      if (!content) continue;
+      // Garante alternância: não pode ter dois do mesmo role seguidos
+      if (hist.length > 0 && hist[hist.length - 1].role === m.role) {
+        // Junta com o anterior
+        hist[hist.length - 1].content += ' ' + content;
+      } else {
+        hist.push({ role: m.role, content: content });
+      }
+    }
+    // Deve começar com user
+    while (hist.length > 0 && hist[0].role !== 'user') hist.shift();
+    // Deve terminar com user
+    while (hist.length > 0 && hist[hist.length - 1].role !== 'user') hist.pop();
+    if (hist.length === 0) throw new Error('Histórico vazio após validação');
+
     const agora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
     const diaSemana = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long' });
     const dataHoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric' });
     const systemComData = SYSTEM_PROMPT + '\n\nDATA E HORA ATUAL (Brasília): ' + agora + '\nHoje é ' + diaSemana + ', ' + dataHoje + '. Use essa informação para responder perguntas sobre dias, horários e disponibilidade com precisão.';
     const r = await axios.post('https://api.anthropic.com/v1/messages',
-      { model: 'claude-sonnet-4-6', max_tokens: 600, system: systemComData, messages: msgs },
+      { model: 'claude-sonnet-4-6', max_tokens: 600, system: systemComData, messages: hist },
       { headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' }, timeout: 35000 }
     );
     return r.data.content[0].text;
   } catch(e) {
-    if (tentativa < 2) {
-      console.log('RETRY IA tentativa ' + (tentativa + 1) + ' para ' + (msgs[msgs.length-1] && msgs[msgs.length-1].content || ''));
+    if (tentativa < 2 && e.message !== 'Histórico vazio após validação') {
+      console.log('RETRY IA tentativa ' + (tentativa + 1));
       await new Promise(function(r) { setTimeout(r, 3000); });
       return chamarIA(msgs, tentativa + 1);
     }
@@ -383,11 +411,7 @@ async function processarFila(num) {
 
     if (pedirSecretaria) {
       await ativarHumano(num, 15);
-      await enviar(num,
-        '📞 Telefone: (62) 3636-3536\n' +
-        '📱 WhatsApp: (62) 99504-9138\n\n' +
-        '🔹 *Nossa secretaria assumirá seu atendimento em instantes!*'
-      );
+      await enviar(num, '🔹 *Nossa secretaria já recebeu seu atendimento e entrará em contato em instantes!*');
       console.log('SECRETARIA [' + num + ']: transferência ativada pela América');
     }
 
