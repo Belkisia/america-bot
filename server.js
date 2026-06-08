@@ -129,18 +129,26 @@ function extrairAgendamento(t) {
 }
 function limpar(t) { return t.replace(/\[AGENDAR:[^\]]+\]/g, '').trim(); }
 
-async function chamarIA(msgs) {
-  const agora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-  const diaSemana = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long' });
-  const dataHoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric' });
-
-  const systemComData = SYSTEM_PROMPT + `\n\nDATA E HORA ATUAL (Brasília): ${agora}\nHoje é ${diaSemana}, ${dataHoje}. Use essa informação para responder perguntas sobre dias, horários e disponibilidade com precisão.`;
-
-  const r = await axios.post('https://api.anthropic.com/v1/messages',
-    { model: 'claude-sonnet-4-6', max_tokens: 600, system: systemComData, messages: msgs },
-    { headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' }, timeout: 25000 }
-  );
-  return r.data.content[0].text;
+async function chamarIA(msgs, tentativa) {
+  tentativa = tentativa || 1;
+  try {
+    const agora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const diaSemana = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long' });
+    const dataHoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric' });
+    const systemComData = SYSTEM_PROMPT + '\n\nDATA E HORA ATUAL (Brasília): ' + agora + '\nHoje é ' + diaSemana + ', ' + dataHoje + '. Use essa informação para responder perguntas sobre dias, horários e disponibilidade com precisão.';
+    const r = await axios.post('https://api.anthropic.com/v1/messages',
+      { model: 'claude-sonnet-4-6', max_tokens: 600, system: systemComData, messages: msgs },
+      { headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' }, timeout: 35000 }
+    );
+    return r.data.content[0].text;
+  } catch(e) {
+    if (tentativa < 2) {
+      console.log('RETRY IA tentativa ' + (tentativa + 1) + ' para ' + (msgs[msgs.length-1] && msgs[msgs.length-1].content || ''));
+      await new Promise(function(r) { setTimeout(r, 3000); });
+      return chamarIA(msgs, tentativa + 1);
+    }
+    throw e;
+  }
 }
 
 async function enviar(numero, texto) {
@@ -244,8 +252,14 @@ async function processarFila(num) {
   }
   filas[num].rodando = true;
 
-  // Aguarda 4s para agrupar mensagens fragmentadas (ex: "Prefiro hj" + "Tem que horas")
+  // Aguarda 4s para agrupar mensagens fragmentadas
   await new Promise(function(r) { setTimeout(r, 4000); });
+
+  // Segurança: limpa fila se cresceu demais (evita acúmulo)
+  if (filas[num].msgs.length > 10) {
+    console.log('FILA LIMPA [' + num + ']: ' + filas[num].msgs.length + ' msgs acumuladas');
+    filas[num].msgs = filas[num].msgs.slice(-3);
+  }
 
   const msgs = filas[num].msgs.splice(0);
   const txtCompleto = msgs.join(' ').trim();
