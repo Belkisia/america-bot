@@ -335,8 +335,22 @@ async function processarFila(num) {
     const resp = await chamarIA(hist);
     const ag = extrairAgendamento(resp);
     if (ag) {
-      await db.salvarAgendamento({ nome_paciente: ag.nome, data_nascimento: ag.nascimento || null, telefone: num, especialidade: ag.especialidade, convenio: 'particular', periodo: ag.periodo, origem: 'whatsapp' });
-      console.log('AGENDADO:', ag.nome, ag.especialidade);
+      // Verifica duplicata — mesmo telefone + especialidade nas últimas 24h
+      const ontemISO = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: jaExiste } = await db.supabase
+        .from('agendamentos')
+        .select('id')
+        .eq('telefone', num)
+        .eq('especialidade', ag.especialidade)
+        .gte('created_at', ontemISO)
+        .limit(1);
+
+      if (jaExiste && jaExiste.length > 0) {
+        console.log('DUPLICATA IGNORADA [' + num + ']:', ag.especialidade);
+      } else {
+        await db.salvarAgendamento({ nome_paciente: ag.nome, data_nascimento: ag.nascimento || null, telefone: num, especialidade: ag.especialidade, convenio: 'particular', periodo: ag.periodo, origem: 'whatsapp' });
+        console.log('AGENDADO:', ag.nome, ag.especialidade);
+      }
     }
 
     // Detecta se a IA pediu transferência para secretaria
