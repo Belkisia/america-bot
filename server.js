@@ -53,10 +53,33 @@ ANTI-DUPLICATA: Se no histórico já constar confirmação de agendamento (*Seu 
 
 ═══ AGENDAMENTO DE ULTRASSOM ═══
 Ultrassom NÃO é especialidade médica — é um exame. Trate separadamente das consultas.
-Quando o paciente quiser agendar Ultrassom: colete nome completo, data de nascimento e qual exame deseja (se souber).
-Horários do Ultrassom: toda terça 07h30–11h30 | toda sexta 07h30–09h30 e 17h00–18h00.
+Quando o paciente quiser agendar Ultrassom: colete nome completo, data de nascimento e qual exame deseja.
 Para Ultrassom use: [AGENDAR:nome=NOME|nascimento=DATA_NASC|especialidade=Ultrassom|convenio=particular|periodo=manha]
-NUNCA pergunte sobre período para Ultrassom — o paciente escolhe o dia (terça ou sexta).
+
+AGENDA DO ULTRASSOM — dois dias disponíveis com médicos diferentes:
+
+📅 TERÇA-FEIRA — 07h30 às 11h30
+Exames disponíveis SOMENTE na terça:
+- USG Transvaginal
+- USG Obstétrica
+- USG Obstétrica Endovaginal
+- USG Morfológica 2º Trimestre
+- USG Abdome Total
+- USG Abdome Superior
+- USG Abdome Inferior
+- USG Pélvica
+- USG Mamas
+- USG Axilas
+- USG Próstata Via Abdominal
+- USG Tireoide
+
+📅 SEXTA-FEIRA — 07h30 às 09h30 e 17h00 às 18h00
+Todos os exames de ultrassom disponíveis (lista completa da tabela de preços).
+
+REGRA DE DIRECIONAMENTO:
+- Se o paciente quiser um exame da lista da terça → ofereça terça OU sexta.
+- Se o paciente quiser um exame que NÃO está na lista da terça (ex: USG Morfológica 1º ou 3º trimestre, USG Articulação, USG Tireoide c/Doppler, Doppler, USG Bolsa Escrotal, etc.) → direcione SOMENTE para sexta, pois esse exame não é realizado na terça.
+- Seja direto: "Esse exame é realizado às sextas. Posso agendar para a próxima sexta?"
 
 ═══ REGRAS DE COLETA DE DADOS ═══
 - Pergunte nome completo e data de nascimento NA MESMA mensagem.
@@ -596,17 +619,25 @@ async function quarkCriarAgendamento(dados) {
 // Endpoint de teste da API Quark — acesse /test-quark para verificar conexão
 app.get('/test-quark', async function(req, res) {
   try {
-    // Testa GET nos principais endpoints para descobrir estrutura
     const testes = {};
-    for (const ep of ['paciente', 'pacientes', 'agendamento', 'agendamentos', 'agenda', 'especialidade', 'profissional']) {
+    const endpoints = [
+      'v1/paciente', 'v1/pacientes', 'v1/agendamento', 'v1/agendamentos',
+      'v2/paciente', 'v2/pacientes', 'v2/agendamento', 'v2/agendamentos',
+      'api/paciente', 'api/pacientes', 'api/agendamento',
+      'paciente/listar', 'agendamento/listar', 'agenda/listar',
+      'clinica', 'clinica/paciente', 'clinica/agendamento',
+      'externo/paciente', 'externo/agendamento',
+      'public/paciente', 'public/agendamento',
+    ];
+    for (const ep of endpoints) {
       try {
-        const r = await axios.get(QUARK_BASE + '/' + ep, { headers: QUARK_HEADERS, timeout: 8000 });
-        testes[ep] = { status: r.status, data: JSON.stringify(r.data).slice(0, 200) };
+        const r = await axios.get(QUARK_BASE + '/' + ep, { headers: QUARK_HEADERS, timeout: 6000 });
+        testes[ep] = { status: r.status, data: JSON.stringify(r.data).slice(0, 300) };
       } catch(e) {
-        testes[ep] = { status: e.response ? e.response.status : 'ERR', data: e.response ? JSON.stringify(e.response.data).slice(0, 200) : e.message };
+        testes[ep] = { status: e.response ? e.response.status : 'ERR', msg: e.response ? JSON.stringify(e.response.data).slice(0, 150) : e.message };
       }
     }
-    res.json({ quark: 'teste', resultados: testes });
+    res.json({ quark: 'teste', base: QUARK_BASE, resultados: testes });
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
 
