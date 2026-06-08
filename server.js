@@ -526,5 +526,51 @@ app.get('/api/whatsapp', async function(req, res) {
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
 
+// ── Integração Quark Clinic ──
+const QUARK_HEADERS = {
+  'Content-Type': 'application/json',
+  'Auth-token': 'bgdWIDWVoYDQBtFLLlblOQpDoalqBbWXJbezRxVhbujmivbakllRWcAoHcxMHqbk',
+  'X-Chave-Key': '5196e91382b959a96f18aa61485c30de2a6b9f42241d4b0d5b3fe5426758dc95',
+  'X-Secret-Key': 'f7c217f2aeeef1ea6fc2db2aa22a028dee1246989e52c21866515b2de25bbecb'
+};
+const QUARK_BASE = 'https://api.quark.tec.br/clinic/ext';
+
+async function quarkCriarPaciente(dados) {
+  try {
+    const r = await axios.post(QUARK_BASE + '/paciente', dados, { headers: QUARK_HEADERS, timeout: 10000 });
+    return r.data;
+  } catch(e) {
+    console.error('QUARK paciente:', e.response ? JSON.stringify(e.response.data) : e.message);
+    return null;
+  }
+}
+
+async function quarkCriarAgendamento(dados) {
+  try {
+    const r = await axios.post(QUARK_BASE + '/agendamento', dados, { headers: QUARK_HEADERS, timeout: 10000 });
+    return r.data;
+  } catch(e) {
+    console.error('QUARK agendamento:', e.response ? JSON.stringify(e.response.data) : e.message);
+    return null;
+  }
+}
+
+// Endpoint de teste da API Quark — acesse /test-quark para verificar conexão
+app.get('/test-quark', async function(req, res) {
+  try {
+    // Testa GET nos principais endpoints para descobrir estrutura
+    const testes = {};
+    for (const ep of ['paciente', 'pacientes', 'agendamento', 'agendamentos', 'agenda', 'especialidade', 'profissional']) {
+      try {
+        const r = await axios.get(QUARK_BASE + '/' + ep, { headers: QUARK_HEADERS, timeout: 8000 });
+        testes[ep] = { status: r.status, data: JSON.stringify(r.data).slice(0, 200) };
+      } catch(e) {
+        testes[ep] = { status: e.response ? e.response.status : 'ERR', data: e.response ? JSON.stringify(e.response.data).slice(0, 200) : e.message };
+      }
+    }
+    res.json({ quark: 'teste', resultados: testes });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
 app.get('/', function(req, res) { res.json({ status: 'online', agente: 'CMA v2', uptime: Math.floor(process.uptime()) + 's' }); });
 app.listen(PORT, function() { console.log('América — Assistente CMA v2 | Porta: ' + PORT + ' | Online'); });
