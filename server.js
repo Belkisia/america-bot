@@ -163,31 +163,36 @@ function limpar(t) { return t.replace(/\[AGENDAR:[^\]]+\]/g, '').trim(); }
 async function chamarIA(msgs, tentativa) {
   tentativa = tentativa || 1;
   try {
-    // Valida e limpa histórico — garante alternância user/assistant e conteúdo válido
     const hist = [];
     for (let i = 0; i < msgs.length; i++) {
       const m = msgs[i];
       if (!m || !m.role || !m.content) continue;
       const content = (typeof m.content === 'string' ? m.content : JSON.stringify(m.content)).trim();
       if (!content) continue;
-      // Garante alternância: não pode ter dois do mesmo role seguidos
       if (hist.length > 0 && hist[hist.length - 1].role === m.role) {
-        // Junta com o anterior
         hist[hist.length - 1].content += ' ' + content;
       } else {
         hist.push({ role: m.role, content: content });
       }
     }
-    // Deve começar com user
     while (hist.length > 0 && hist[0].role !== 'user') hist.shift();
-    // Deve terminar com user
     while (hist.length > 0 && hist[hist.length - 1].role !== 'user') hist.pop();
     if (hist.length === 0) throw new Error('Histórico vazio após validação');
 
-    const agora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-    const diaSemana = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long' });
-    const dataHoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric' });
-    const systemComData = SYSTEM_PROMPT + '\n\nDATA E HORA ATUAL (Brasília): ' + agora + '\nHoje é ' + diaSemana + ', ' + dataHoje + '. Use essa informação para responder perguntas sobre dias, horários e disponibilidade com precisão.';
+    const now = new Date();
+    const agora = now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const diaSemana = now.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long' });
+    const dataHoje = now.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric' });
+    const hora = parseInt(now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', hour12: false }));
+    const saudacao = hora >= 5 && hora < 12 ? 'Bom dia' : hora >= 12 && hora < 18 ? 'Boa tarde' : 'Boa noite';
+    const despedida = hora >= 18 || hora < 5 ? 'Tenha uma boa noite' : hora < 12 ? 'Tenha um ótimo dia' : 'Tenha uma boa tarde';
+
+    const systemComData = SYSTEM_PROMPT
+      + '\n\nDATA E HORA ATUAL (Brasília): ' + agora
+      + '\nHoje é ' + diaSemana + ', ' + dataHoje + '.'
+      + '\nSAUDAÇÃO CORRETA AGORA: "' + saudacao + '" — use esta saudação em todas as mensagens iniciais.'
+      + '\nDESPEDIDA CORRETA AGORA: "' + despedida + '" — use ao encerrar atendimento. NUNCA use saudação errada para o período do dia.';
+
     const r = await axios.post('https://api.anthropic.com/v1/messages',
       { model: 'claude-sonnet-4-6', max_tokens: 600, system: systemComData, messages: hist },
       { headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' }, timeout: 35000 }
