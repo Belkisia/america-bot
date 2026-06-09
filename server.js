@@ -256,8 +256,6 @@ Responda em formato simples, direto, sem markdown. Foque apenas nos exames/proce
   }
 }
 function detectarAudio(b) {
-  // Z-API envia áudio com type "audio" ou "ptt" (push-to-talk)
-  // O campo pode vir em b.type, b.messageType ou dentro de b.audio
   if (b.audio) return true;
   if (b.messageType === 'audioMessage') return true;
   if (b.messageType === 'pttMessage') return true;
@@ -266,10 +264,17 @@ function detectarAudio(b) {
   return false;
 }
 
+// ── Detecta PDF especificamente ──
+function detectarPDF(b) {
+  if (b.document && b.document.mimeType && b.document.mimeType.includes('pdf')) return true;
+  if (b.document && b.document.fileName && b.document.fileName.toLowerCase().endsWith('.pdf')) return true;
+  if (b.messageType === 'documentMessage' && JSON.stringify(b).toLowerCase().includes('pdf')) return true;
+  return false;
+}
 
 // ── Detecta imagem, documento, receituário ──
-// Z-API envia ReceivedCallback sem text e sem audio quando é imagem/documento
 function detectarImagem(b) {
+  if (detectarPDF(b)) return false; // PDF tem tratamento separado
   if (b.image) return true;
   if (b.document) return true;
   if (b.messageType === 'imageMessage') return true;
@@ -277,6 +282,33 @@ function detectarImagem(b) {
   const txt = (b.text && b.text.message) || '';
   if (!txt.trim() && !detectarAudio(b)) return true;
   return false;
+}
+
+// ── Follow-up: manda mensagem se paciente sumir por 10 min ──
+const followUpTimers = {};
+function agendarFollowUp(num) {
+  if (followUpTimers[num]) clearTimeout(followUpTimers[num]);
+  followUpTimers[num] = setTimeout(async function() {
+    try {
+      const ativo = await emAtendimentoHumano(num);
+      if (ativo) return; // Secretaria está atendendo, não interfere
+      // Verifica se ainda tem fila rodando
+      if (filas[num] && filas[num].rodando) return;
+      console.log('FOLLOW-UP [' + num + ']: paciente inativo por 10min');
+      await enviar(num,
+        'Olá! 😊 Ainda posso te ajudar com alguma coisa?\n\n' +
+        'Estou por aqui caso precise agendar uma consulta ou exame no *Centro Médico América*!'
+      );
+    } catch(e) { console.error('FOLLOW-UP ERRO:', e.message); }
+    delete followUpTimers[num];
+  }, 10 * 60 * 1000); // 10 minutos
+}
+
+function cancelarFollowUp(num) {
+  if (followUpTimers[num]) {
+    clearTimeout(followUpTimers[num]);
+    delete followUpTimers[num];
+  }
 }
 
 // Fila independente por número
@@ -302,6 +334,13 @@ function enfileirarImagem(num, imageUrl) {
   if (!filas[num].rodando) processarFila(num);
 }
 
+// Enfileira PDF
+function enfileirarPDF(num) {
+  if (!filas[num]) filas[num] = { msgs: [], rodando: false };
+  filas[num].msgs.push('__PDF__');
+  if (!filas[num].rodando) processarFila(num);
+}
+
 async function processarFila(num) {
   if (!filas[num] || filas[num].msgs.length === 0) {
     if (filas[num]) filas[num].rodando = false;
@@ -323,6 +362,22 @@ async function processarFila(num) {
 
   try {
     console.log('PROC [' + num + ']:', txtCompleto);
+
+    // ── Tratamento de PDF ──
+    if (msgs.includes('__PDF__') || txtCompleto === '__PDF__') {
+      if (await emAtendimentoHumano(num)) { processarFila(num); return; }
+      await ativarHumano(num, 60);
+      await enviar(num,
+        'Olá! 😊 Recebi seu arquivo PDF.\n\n' +
+        'O envio de documentos em PDF é feito diretamente pela nossa secretaria. ' +
+        'Vou transferir seu atendimento agora para que nossa equipe possa te ajudar com isso! 📋\n\n' +
+        '🔹 *Nossa secretaria assumirá seu atendimento em instantes!*'
+      );
+      cancelarFollowUp(num);
+      console.log('PDF [' + num + ']: transferido para secretaria');
+      processarFila(num);
+      return;
+    }
 
     // ── Tratamento de áudio: encaminha para secretaria ──
     if (msgs.includes('__AUDIO__') || txtCompleto === '__AUDIO__') {
@@ -383,7 +438,8 @@ async function processarFila(num) {
     }
 
     if (txtCompleto.toLowerCase() === '#humano' || txtCompleto.toLowerCase() === '#secretaria') {
-      await ativarHumano(num, 15);
+      await ativarHumano(num, 60);
+      cancelarFollowUp(num);
       await enviar(num, 'Obrigado por entrar em contato com o *Centro Médico América*.\n\nSua solicitação requer um acompanhamento especializado da nossa equipe. Para oferecer a você a melhor experiência possível, vou encaminhar sua conversa para um de nossos consultores.\n\nTodas as informações registradas durante este atendimento serão compartilhadas internamente, garantindo continuidade e agilidade no suporte, sem necessidade de repetir os dados já fornecidos.\n\nNossa equipe assumirá seu atendimento em instantes para concluir sua solicitação com total atenção e cuidado.\n\nAgradecemos pela preferência e pela confiança em nossos serviços.\n\n🔹 *Transferindo para um especialista do Centro Médico América...*');
       processarFila(num);
       return;
@@ -439,9 +495,13 @@ async function processarFila(num) {
     await enviar(num, final);
 
     if (pedirSecretaria) {
-      await ativarHumano(num, 15);
+      await ativarHumano(num, 60);
+      cancelarFollowUp(num);
       await enviar(num, '🔹 *Nossa secretaria já recebeu seu atendimento e entrará em contato em instantes!*');
       console.log('SECRETARIA [' + num + ']: transferência ativada pela América');
+    } else {
+      // Agenda follow-up se paciente não responder em 10min
+      agendarFollowUp(num);
     }
 
     console.log('OK [' + num + ']');
@@ -484,8 +544,9 @@ app.post('/webhook', function(req, res) {
     const txtSecretaria = (b.text && b.text.message) || '';
     // Ignora se for o comando #cma (reativação manual)
     if (txtSecretaria.trim() !== '#cma') {
-      ativarHumano(num, 15).then(function() {
-        console.log('SECRETARIA [' + num + ']: atendimento humano ativado por 15min — CMA pausada');
+      cancelarFollowUp(num);
+      ativarHumano(num, 60).then(function() {
+        console.log('SECRETARIA [' + num + ']: atendimento humano ativado por 60min — CMA pausada');
       });
     }
     return;
@@ -497,6 +558,13 @@ app.post('/webhook', function(req, res) {
   if (detectarAudio(b)) {
     console.log('AUDIO recebido de [' + num + '] — encaminhando para secretaria');
     enfileirarAudio(num);
+    return;
+  }
+
+  // ── Detecta PDF ──
+  if (detectarPDF(b)) {
+    console.log('PDF recebido de [' + num + ']');
+    enfileirarPDF(num);
     return;
   }
 
@@ -512,6 +580,7 @@ app.post('/webhook', function(req, res) {
   const txt = (b.text && b.text.message) || '';
   if (!txt.trim()) return;
 
+  cancelarFollowUp(num);
   enfileirar(num, txt);
 });
 
