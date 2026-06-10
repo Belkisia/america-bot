@@ -420,19 +420,14 @@ async function processarFila(num) {
 
     await db.salvarMensagem(num, 'user', txtCompleto);
     let hist = await db.buscarHistorico(num, 20);
-    // Remove mensagens vazias do histórico
+    // Remove mensagens vazias
     hist = hist.filter(function(m) { return m.content && m.content.trim(); });
-    // Garante que a mensagem atual está no final do histórico
-    const ultimaUser = hist.filter(function(m) { return m.role === 'user'; }).pop();
-    if (!ultimaUser || ultimaUser.content !== txtCompleto) {
-      // Remove última mensagem se for user para não duplicar
-      if (hist.length > 0 && hist[hist.length - 1].role === 'user') {
-        hist[hist.length - 1].content = hist[hist.length - 1].content + ' ' + txtCompleto;
-      } else {
-        hist.push({ role: 'user', content: txtCompleto });
-      }
+    // A mensagem atual já foi salva e está no histórico — não adiciona de novo
+    // Se por algum motivo não estiver, garante que está no final
+    if (hist.length === 0 || hist[hist.length - 1].role !== 'user') {
+      hist.push({ role: 'user', content: txtCompleto });
     }
-    console.log('HIST [' + num + ']: ' + hist.length + ' msgs, ultima=' + (hist[hist.length-1] && hist[hist.length-1].content || '').slice(0,50));
+    console.log('HIST [' + num + ']: ' + hist.length + ' msgs | ' + hist.map(function(m){return m.role[0]+':'+m.content.slice(0,20);}).join(' | '));
 
     const resp = await chamarIA(hist);
     const ag = extrairAgendamento(resp);
