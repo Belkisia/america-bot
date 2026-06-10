@@ -287,8 +287,8 @@ async function processarFila(num) {
   conversasAtivas++;
   console.log('PROC_START [' + num + '] ativas=' + conversasAtivas);
 
-  // Aguarda 4s para agrupar mensagens fragmentadas
-  await new Promise(function(r) { setTimeout(r, 4000); });
+  // Aguarda 6s para agrupar mensagens fragmentadas
+  await new Promise(function(r) { setTimeout(r, 6000); });
 
   // Segurança: limpa fila se cresceu demais (evita acúmulo)
   if (filas[num].msgs.length > 10) {
@@ -397,11 +397,19 @@ async function processarFila(num) {
 
     await db.salvarMensagem(num, 'user', txtCompleto);
     let hist = await db.buscarHistorico(num, 20);
-    // Remove mensagens vazias do histórico antes de enviar para a IA
+    // Remove mensagens vazias do histórico
     hist = hist.filter(function(m) { return m.content && m.content.trim(); });
-    if (hist.length === 0 || hist[hist.length - 1].role !== 'user') {
-      hist.push({ role: 'user', content: txtCompleto });
+    // Garante que a mensagem atual está no final do histórico
+    const ultimaUser = hist.filter(function(m) { return m.role === 'user'; }).pop();
+    if (!ultimaUser || ultimaUser.content !== txtCompleto) {
+      // Remove última mensagem se for user para não duplicar
+      if (hist.length > 0 && hist[hist.length - 1].role === 'user') {
+        hist[hist.length - 1].content = hist[hist.length - 1].content + ' ' + txtCompleto;
+      } else {
+        hist.push({ role: 'user', content: txtCompleto });
+      }
     }
+    console.log('HIST [' + num + ']: ' + hist.length + ' msgs, ultima=' + (hist[hist.length-1] && hist[hist.length-1].content || '').slice(0,50));
 
     const resp = await chamarIA(hist);
     const ag = extrairAgendamento(resp);
