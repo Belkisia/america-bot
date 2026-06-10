@@ -263,8 +263,9 @@ function detectarImagem(b) {
 function agendarFollowUp(num) { /* desativado */ }
 function cancelarFollowUp(num) { /* desativado */ }
 
-// Fila independente por número
+// Fila independente por número — serialização completa por número
 const filas = {};
+const processando = {}; // Lock por número — garante que só um processa por vez
 
 function enfileirar(num, txt) {
   if (!filas[num]) filas[num] = { msgs: [], rodando: false };
@@ -298,6 +299,10 @@ async function processarFila(num) {
     if (filas[num]) filas[num].rodando = false;
     return;
   }
+
+  // Se já está processando este número, sai — a chamada recursiva no final vai pegar
+  if (processando[num]) return;
+  processando[num] = true;
 
   // Limite de conversas simultâneas — espera com retry até ter vaga
   let tentativas = 0;
@@ -506,6 +511,7 @@ async function processarFila(num) {
   }
 
   conversasAtivas = Math.max(0, conversasAtivas - 1);
+  processando[num] = false; // Libera lock antes da próxima
   processarFila(num);
 }
 
