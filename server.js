@@ -234,8 +234,13 @@ function detectarImagem(b) {
   return false;
 }
 
-// Follow-up desativado temporariamente
-function cancelarFollowUp(num) { /* desativado */ }
+// Follow-up desativado
+function agendarFollowUp(num) { /* desativado */ }
+function cancelarFollowUp(num) {
+  if (followUpTimers && followUpTimers[num]) {
+    clearTimeout(followUpTimers[num]);
+    delete followUpTimers[num];
+  }
 }
 
 // Fila independente por número
@@ -433,6 +438,9 @@ async function processarFila(num) {
       cancelarFollowUp(num);
       await enviar(num, '🔹 *Nossa secretaria já recebeu seu atendimento e entrará em contato em instantes!*');
       console.log('SECRETARIA [' + num + ']: transferência ativada pela América');
+    } else {
+      // Agenda follow-up: se paciente não responder em 10min, América manda uma mensagem
+      agendarFollowUp(num);
     }
 
     console.log('OK [' + num + ']');
