@@ -147,11 +147,22 @@ async function chamarIA(msgs, tentativa) {
   }
 }
 
+// Controle de concorrência — máximo 3 conversas simultâneas
+let conversasAtivas = 0;
+const MAX_SIMULTANEAS = 3;
+
 async function enviar(numero, texto) {
   try {
+    // Simula digitação: 1 segundo por cada 100 chars, mínimo 3s, máximo 8s
+    const tempoDigitacao = Math.min(Math.max(Math.floor(texto.length / 100) * 1000, 3000), 8000);
+    // Adiciona variação aleatória para parecer mais humano
+    const variacao = Math.floor(Math.random() * 2000);
+    await new Promise(function(r) { setTimeout(r, tempoDigitacao + variacao); });
+
     await axios.post(EVOLUTION_API_URL, { phone: numero, message: texto },
       { headers: { 'Content-Type': 'application/json', 'Client-Token': process.env.ZAPI_CLIENT_TOKEN }, timeout: 10000 }
     );
+    console.log('ENVIADO [' + numero + ']: ' + texto.slice(0, 50) + '...');
   } catch(e) { console.error('Erro enviar:', e.message); }
 }
 
@@ -262,7 +273,14 @@ async function processarFila(num) {
     if (filas[num]) filas[num].rodando = false;
     return;
   }
+
+  // Limite de conversas simultâneas — espera se já tem muitas rodando
+  if (conversasAtivas >= MAX_SIMULTANEAS) {
+    await new Promise(function(r) { setTimeout(r, 5000); });
+  }
+
   filas[num].rodando = true;
+  conversasAtivas++;
 
   // Aguarda 4s para agrupar mensagens fragmentadas
   await new Promise(function(r) { setTimeout(r, 4000); });
@@ -422,6 +440,7 @@ async function processarFila(num) {
     console.error('ERRO [' + num + ']:', e.message);
   }
 
+  conversasAtivas = Math.max(0, conversasAtivas - 1);
   processarFila(num);
 }
 
