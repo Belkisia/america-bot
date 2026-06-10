@@ -60,7 +60,11 @@ AGENDA MÉDICOS
 • Ginecologia: 08/06, 22/06, 29/06 das 13h00–17h30 — SOMENTE TARDE
 • Clínico Geral/Pediatria: 11/06 08h–11h45 e 13h30–17h30
 
-DATAS PASSADAS: NUNCA ofereça datas que já passaram. Use a data atual injetada no prompt para verificar. Se todas as datas de uma especialidade já passaram, informe que não há agenda disponível no momento e que em breve novas datas serão abertas.
+REGRA CRÍTICA DE DATAS: Compare CADA data acima com a DATA ATUAL do prompt antes de informar ao paciente. Filtre e mostre SOMENTE datas futuras. Exemplos práticos:
+- Se hoje é 10/06: Ginecologia tem 22/06 e 29/06 disponíveis (08/06 já passou, ignore).
+- Se hoje é 17/06: Endocrinologia tem só 30/06 (16/06 já passou, ignore).
+- Se hoje é 25/06: Psiquiatria não tem mais datas disponíveis este mês.
+Se TODAS as datas passaram: "No momento não temos agenda disponível para [especialidade]. Em breve novas datas serão abertas!"
 
 PERÍODO: Para Clínico Geral/Pediatria pergunte o dia e informe horários. Para demais, use o período fixo da agenda sem perguntar.
 
