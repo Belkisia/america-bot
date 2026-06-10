@@ -155,10 +155,10 @@ const MAX_SIMULTANEAS = 3;
 
 async function enviar(numero, texto) {
   try {
-    // Simula digitação: 1 segundo por cada 100 chars, mínimo 3s, máximo 8s
-    const tempoDigitacao = Math.min(Math.max(Math.floor(texto.length / 100) * 1000, 3000), 8000);
+    // Simula digitação: mínimo 2s, máximo 4s
+    const tempoDigitacao = Math.min(Math.max(Math.floor(texto.length / 200) * 1000, 2000), 4000);
     // Adiciona variação aleatória para parecer mais humano
-    const variacao = Math.floor(Math.random() * 2000);
+    const variacao = Math.floor(Math.random() * 1000);
     await new Promise(function(r) { setTimeout(r, tempoDigitacao + variacao); });
 
     await axios.post(EVOLUTION_API_URL, { phone: numero, message: texto },
