@@ -310,8 +310,8 @@ async function processarFila(num) {
   conversasAtivas++;
   console.log('PROC_START [' + num + '] ativas=' + conversasAtivas);
 
-  // Aguarda 2s para agrupar mensagens fragmentadas
-  await new Promise(function(r) { setTimeout(r, 2000); });
+  // Aguarda 3s para agrupar mensagens fragmentadas
+  await new Promise(function(r) { setTimeout(r, 3000); });
 
   // Segurança: limpa fila se cresceu demais (evita acúmulo)
   if (filas[num].msgs.length > 10) {
@@ -419,15 +419,42 @@ async function processarFila(num) {
     if (!txtCompleto.trim()) { processarFila(num); return; }
 
     await db.salvarMensagem(num, 'user', txtCompleto);
+    // Aguarda 500ms para garantir que o DB persistiu antes de buscar
+    await new Promise(function(r) { setTimeout(r, 500); });
     let hist = await db.buscarHistorico(num, 20);
     // Remove mensagens vazias
     hist = hist.filter(function(m) { return m.content && m.content.trim(); });
-    // A mensagem atual já foi salva e está no histórico — não adiciona de novo
-    // Se por algum motivo não estiver, garante que está no final
-    if (hist.length === 0 || hist[hist.length - 1].role !== 'user') {
-      hist.push({ role: 'user', content: txtCompleto });
+    // Se a mensagem atual não está no final, adiciona
+    const ultimaMsg = hist[hist.length - 1];
+    if (!ultimaMsg || ultimaMsg.role !== 'user' || ultimaMsg.content !== txtCompleto) {
+      if (ultimaMsg && ultimaMsg.role === 'user') {
+        // Última é user mas diferente — adiciona como nova
+        hist.push({ role: 'user', content: txtCompleto });
+      } else if (!ultimaMsg || ultimaMsg.role === 'assistant') {
+        hist.push({ role: 'user', content: txtCompleto });
+      }
     }
-    console.log('HIST [' + num + ']: ' + hist.length + ' msgs | ' + hist.map(function(m){return m.role[0]+':'+m.content.slice(0,20);}).join(' | '));
+    console.log('HIST [' + num + ']: ' + hist.length + ' msgs | ' + hist.map(function(m){return m.role[0]+':'+m.content.slice(0,25);}).join(' > '));
+
+    // Extrai contexto do histórico para injetar como lembrete
+    const todasMsgs = hist.map(function(m) { return m.content; }).join(' ').toLowerCase();
+    const especialidadeDetectada = 
+      todasMsgs.includes('psiquiatria') ? 'Psiquiatria' :
+      todasMsgs.includes('ginecolog') ? 'Ginecologia' :
+      todasMsgs.includes('endocrinolog') ? 'Endocrinologia' :
+      todasMsgs.includes('otorrino') ? 'Otorrinolaringologia' :
+      todasMsgs.includes('pediatr') ? 'Pediatria' :
+      todasMsgs.includes('clínico') || todasMsgs.includes('clinico') ? 'Clínico Geral' :
+      todasMsgs.includes('ultrassom') || todasMsgs.includes('usg') ? 'Ultrassom' : null;
+
+    if (especialidadeDetectada) {
+      // Injeta lembrete no início do histórico como system context
+      const lembrete = 'CONTEXTO DESTA CONVERSA: O paciente já informou que quer ' + especialidadeDetectada + '. NÃO pergunte especialidade novamente.';
+      if (hist[0] && hist[0].role === 'user') {
+        hist[0] = { role: 'user', content: '[' + lembrete + ']\n' + hist[0].content };
+      }
+      console.log('CONTEXTO [' + num + ']: especialidade=' + especialidadeDetectada);
+    }
 
     const resp = await chamarIA(hist);
     const ag = extrairAgendamento(resp);
