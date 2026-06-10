@@ -236,12 +236,7 @@ function detectarImagem(b) {
 
 // Follow-up desativado
 function agendarFollowUp(num) { /* desativado */ }
-function cancelarFollowUp(num) {
-  if (followUpTimers && followUpTimers[num]) {
-    clearTimeout(followUpTimers[num]);
-    delete followUpTimers[num];
-  }
-}
+function cancelarFollowUp(num) { /* desativado */ }
 
 // Fila independente por número
 const filas = {};
