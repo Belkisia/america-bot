@@ -134,11 +134,28 @@ async function chamarIA(msgs, tentativa) {
     const saudacao = hora >= 5 && hora < 12 ? 'Bom dia' : hora >= 12 && hora < 18 ? 'Boa tarde' : 'Boa noite';
     const despedida = hora >= 18 || hora < 5 ? 'Tenha uma boa noite' : hora < 12 ? 'Tenha um ótimo dia' : 'Tenha uma boa tarde';
 
+    // Calcula datas futuras no código — injeta já filtradas no prompt
+    const nowBR = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    nowBR.setHours(0, 0, 0, 0);
+    function dataFutura(dia, mes) {
+      const d = new Date(2026, mes - 1, dia);
+      return d >= nowBR;
+    }
+    const agendaFiltrada = [
+      dataFutura(24, 6) ? '• Psiquiatria: 24/06 das 13h30–17h30 — SOMENTE TARDE' : '• Psiquiatria: sem agenda disponível no momento',
+      ['• Endocrinologia:', [dataFutura(16,6)?'16/06':null, dataFutura(30,6)?'30/06':null].filter(Boolean).join(' e ') || 'sem agenda'].join(' ') + (dataFutura(16,6)||dataFutura(30,6) ? ' das 14h00–17h30 — SOMENTE TARDE' : ' no momento'),
+      ['• Otorrinolaringologia:', [dataFutura(16,6)?'16/06':null, dataFutura(30,6)?'30/06':null].filter(Boolean).join(' e ') || 'sem agenda'].join(' ') + (dataFutura(16,6)||dataFutura(30,6) ? ' das 08h00–11h30 — SOMENTE MANHÃ' : ' no momento'),
+      ['• Ginecologia:', [dataFutura(8,6)?'08/06':null, dataFutura(22,6)?'22/06':null, dataFutura(29,6)?'29/06':null].filter(Boolean).join(', ') || 'sem agenda'].join(' ') + ([dataFutura(8,6), dataFutura(22,6), dataFutura(29,6)].some(Boolean) ? ' das 13h00–17h30 — SOMENTE TARDE' : ' no momento'),
+      '• Clínico Geral/Pediatria:' + (dataFutura(11,6) ? ' 11/06 08h–11h45 e 13h30–17h30' : ' sem agenda disponível no momento'),
+    ].join('\n');
+
     const systemComData = SYSTEM_PROMPT
+      + '\n\nAGENDA ATUALIZADA (datas já filtradas, somente futuras):\n' + agendaFiltrada
       + '\n\nDATA E HORA ATUAL (Brasília): ' + agora
       + '\nHoje é ' + diaSemana + ', ' + dataHoje + '.'
       + '\nSAUDAÇÃO CORRETA AGORA: "' + saudacao + '" — use esta saudação em todas as mensagens iniciais.'
-      + '\nDESPEDIDA CORRETA AGORA: "' + despedida + '" — use ao encerrar atendimento. NUNCA use saudação errada para o período do dia.';
+      + '\nDESPEDIDA CORRETA AGORA: "' + despedida + '" — use ao encerrar atendimento.'
+      + '\nUSE A AGENDA ATUALIZADA ACIMA — ela já tem apenas datas futuras válidas. Ignore as datas no corpo do prompt se conflitarem com esta.';
 
     const r = await axios.post('https://api.anthropic.com/v1/messages',
       { model: 'claude-sonnet-4-6', max_tokens: 600, system: systemComData, messages: hist },
