@@ -204,6 +204,25 @@ function detectarImagem(b) {
   return !txt.trim() && !detectarAudio(b);
 }
 
+// Cache de histórico em memória — atualizado imediatamente, sem depender do banco
+const historicoCache = {};
+const CACHE_MAX = 20; // máximo de mensagens por número
+
+function cacheAdicionarMensagem(num, role, content) {
+  if (!historicoCache[num]) historicoCache[num] = [];
+  historicoCache[num].push({ role: role, content: content });
+  if (historicoCache[num].length > CACHE_MAX) historicoCache[num] = historicoCache[num].slice(-CACHE_MAX);
+}
+
+async function buscarHistoricoComCache(num) {
+  // Busca do banco
+  const dbHist = await db.buscarHistorico(num, 20);
+  // Se tem cache em memória com mais mensagens recentes, usa ele
+  const cache = historicoCache[num] || [];
+  if (cache.length >= dbHist.length) return cache;
+  return dbHist;
+}
+
 // Fila independente por número
 const filas = {};
 const msgProcessadas = new Set();
@@ -294,6 +313,7 @@ async function processarFila(num) {
     }
     if (txtCompleto === '#cma') {
       await desativarHumano(num);
+      delete historicoCache[num]; // limpa cache ao reativar
       console.log('CMA reativada [' + num + ']');
       filas[num].rodando = false; processarFila(num); return;
     }
@@ -302,7 +322,8 @@ async function processarFila(num) {
     if (!txtCompleto.trim()) { filas[num].rodando = false; processarFila(num); return; }
 
     await db.salvarMensagem(num, 'user', txtCompleto);
-    let hist = await db.buscarHistorico(num, 20);
+    cacheAdicionarMensagem(num, 'user', txtCompleto);
+    let hist = await buscarHistoricoComCache(num);
     hist = hist.filter(function(m){return m.content && m.content.trim();});
     if (hist.length === 0 || hist[hist.length-1].role !== 'user') {
       hist.push({ role: 'user', content: txtCompleto });
@@ -323,6 +344,7 @@ async function processarFila(num) {
     const pedirSecretaria = resp.includes('[SECRETARIA]');
     const final = limpar(resp).replace('[SECRETARIA]','').replace(/🔹.*?transferindo.*?[\n\r]?/gi,'').trim();
     await db.salvarMensagem(num, 'assistant', final);
+    cacheAdicionarMensagem(num, 'assistant', final);
     await enviar(num, final);
 
     if (pedirSecretaria) {
