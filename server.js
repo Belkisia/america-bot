@@ -1,4 +1,4 @@
-const express = require('express');
+  const express = require('express');
 const axios = require('axios');
 const db = require('./supabase');
 const app = express();
@@ -279,13 +279,16 @@ async function processarFila(num) {
     return;
   }
 
-  // Limite de conversas simultâneas — espera se já tem muitas rodando
-  if (conversasAtivas >= MAX_SIMULTANEAS) {
-    await new Promise(function(r) { setTimeout(r, 5000); });
+  // Limite de conversas simultâneas — espera com retry até ter vaga
+  let tentativas = 0;
+  while (conversasAtivas >= MAX_SIMULTANEAS && tentativas < 10) {
+    tentativas++;
+    await new Promise(function(r) { setTimeout(r, 3000); });
   }
 
   filas[num].rodando = true;
   conversasAtivas++;
+  console.log('PROC_START [' + num + '] ativas=' + conversasAtivas);
 
   // Aguarda 4s para agrupar mensagens fragmentadas
   await new Promise(function(r) { setTimeout(r, 4000); });
