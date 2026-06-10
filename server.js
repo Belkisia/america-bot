@@ -393,8 +393,12 @@ async function processarFila(num) {
 
     if (await emAtendimentoHumano(num)) { processarFila(num); return; }
 
+    if (!txtCompleto.trim()) { processarFila(num); return; }
+
     await db.salvarMensagem(num, 'user', txtCompleto);
     let hist = await db.buscarHistorico(num, 20);
+    // Remove mensagens vazias do histórico antes de enviar para a IA
+    hist = hist.filter(function(m) { return m.content && m.content.trim(); });
     if (hist.length === 0 || hist[hist.length - 1].role !== 'user') {
       hist.push({ role: 'user', content: txtCompleto });
     }
