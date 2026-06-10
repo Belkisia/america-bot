@@ -266,6 +266,7 @@ function cancelarFollowUp(num) { /* desativado */ }
 // Fila independente por número — serialização completa por número
 const filas = {};
 const processando = {}; // Lock por número — garante que só um processa por vez
+const msgProcessadas = new Set(); // Deduplica por messageId — evita reprocessamento
 
 function enfileirar(num, txt) {
   if (!filas[num]) filas[num] = { msgs: [], rodando: false };
@@ -536,9 +537,23 @@ app.post('/webhook', function(req, res) {
 
   if (b.type !== 'ReceivedCallback') return;
   if (b.isGroup) return;
+  if (b.waitingMessage) return; // Ignora mensagens em fila/notificações
+  if (b.isStatusReply) return; // Ignora status replies
   const num = b.phone || '';
   if (!num || num.includes('@lid') || num.includes('-group')) return;
   if (NUMEROS_IGNORAR.includes(num)) return;
+
+  // Deduplica por messageId — evita reprocessar a mesma mensagem
+  const msgId = b.messageId || '';
+  if (msgId && msgProcessadas.has(msgId)) {
+    console.log('DUPLICATA IGNORADA messageId=' + msgId);
+    return;
+  }
+  if (msgId) {
+    msgProcessadas.add(msgId);
+    // Limpa cache após 10 min para não crescer indefinidamente
+    setTimeout(function() { msgProcessadas.delete(msgId); }, 10 * 60 * 1000);
+  }
 
   // ── Secretaria humana digitou: pausa a CMA automaticamente por 15 min ──
   // fromMe = true significa que a mensagem foi enviada PELO WhatsApp Business (secretaria)
