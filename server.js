@@ -178,10 +178,10 @@ const MAX_SIMULTANEAS = 3;
 
 async function enviar(numero, texto) {
   try {
-    // Simula digitação: mínimo 2s, máximo 4s
-    const tempoDigitacao = Math.min(Math.max(Math.floor(texto.length / 200) * 1000, 2000), 4000);
-    // Adiciona variação aleatória para parecer mais humano
-    const variacao = Math.floor(Math.random() * 1000);
+    // Simula digitação: mínimo 1s, máximo 3s
+    const tempoDigitacao = Math.min(Math.max(Math.floor(texto.length / 300) * 1000, 1000), 3000);
+    // Adiciona variação aleatória
+    const variacao = Math.floor(Math.random() * 500);
     await new Promise(function(r) { setTimeout(r, tempoDigitacao + variacao); });
 
     await axios.post(EVOLUTION_API_URL, { phone: numero, message: texto },
@@ -310,8 +310,8 @@ async function processarFila(num) {
   conversasAtivas++;
   console.log('PROC_START [' + num + '] ativas=' + conversasAtivas);
 
-  // Aguarda 6s para agrupar mensagens fragmentadas
-  await new Promise(function(r) { setTimeout(r, 6000); });
+  // Aguarda 2s para agrupar mensagens fragmentadas
+  await new Promise(function(r) { setTimeout(r, 2000); });
 
   // Segurança: limpa fila se cresceu demais (evita acúmulo)
   if (filas[num].msgs.length > 10) {
