@@ -734,5 +734,18 @@ app.get('/test-quark', async function(req, res) {
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
 
+app.get('/test-db', async function(req, res) {
+  try {
+    const teste = 'teste_' + Date.now();
+    await db.salvarMensagem(teste, 'user', 'teste de conexao');
+    await new Promise(function(r) { setTimeout(r, 500); });
+    const hist = await db.buscarHistorico(teste, 5);
+    await db.supabase.from('conversas').delete().eq('telefone', teste);
+    res.json({ ok: true, salvou: hist.length > 0, hist: hist });
+  } catch(e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
 app.get('/', function(req, res) { res.json({ status: 'online', agente: 'CMA v2', uptime: Math.floor(process.uptime()) + 's' }); });
 app.listen(PORT, function() { console.log('América — Assistente CMA v2 | Porta: ' + PORT + ' | Online'); });
