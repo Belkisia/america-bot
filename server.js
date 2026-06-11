@@ -228,6 +228,50 @@ async function buscarHistoricoComCache(num) {
   return dbHist;
 }
 
+
+// Estado de conversa por número — persiste dados coletados
+const estadoConversa = {};
+
+function getEstado(num) {
+  if (!estadoConversa[num]) estadoConversa[num] = {};
+  return estadoConversa[num];
+}
+
+function atualizarEstado(num, dados) {
+  if (!estadoConversa[num]) estadoConversa[num] = {};
+  Object.assign(estadoConversa[num], dados);
+}
+
+function limparEstado(num) {
+  delete estadoConversa[num];
+}
+
+function extrairDadosMensagem(texto) {
+  const dados = {};
+  // Detecta data de nascimento
+  const nascMatch = texto.match(/\b(\d{2}[\/-]\d{2}[\/-]\d{4})\b/);
+  if (nascMatch) dados.nascimento = nascMatch[1].replace(/\//g, '/');
+  // Detecta nome (duas ou mais palavras capitalizadas antes ou depois da data)
+  const nomeMatch = texto.match(/([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Ú][a-zà-ú]+){1,4})(?:\s+\d|$)/);
+  if (nomeMatch) dados.nome = nomeMatch[1].trim();
+  // Detecta especialidade
+  const t = texto.toLowerCase();
+  if (t.match(/psiquiat/)) dados.especialidade = 'Psiquiatria';
+  else if (t.match(/ginecolog/)) dados.especialidade = 'Ginecologia';
+  else if (t.match(/endocrinolog/)) dados.especialidade = 'Endocrinologia';
+  else if (t.match(/otorrino/)) dados.especialidade = 'Otorrinolaringologia';
+  else if (t.match(/pediatr/)) dados.especialidade = 'Pediatria';
+  else if (t.match(/cl[íi]nico|clinico geral/)) dados.especialidade = 'Clínico Geral';
+  else if (t.match(/ultrassom|usg/)) dados.especialidade = 'Ultrassom';
+  // Detecta período
+  if (t.match(/\btarde\b|17h|13h|14h/)) dados.periodo = 'tarde';
+  else if (t.match(/\bmanh[ãa]\b|manha\b|08h|09h|10h|11h/)) dados.periodo = 'manha';
+  // Detecta data escolhida
+  const dataMatch = t.match(/\b(\d{1,2})\/?(\d{2})\b/);
+  if (dataMatch) dados.dataEscolhida = dataMatch[0];
+  return dados;
+}
+
 // Fila independente por número
 const filas = {};
 const msgProcessadas = new Set();
@@ -319,12 +363,19 @@ async function processarFila(num) {
     if (txtCompleto === '#cma') {
       await desativarHumano(num);
       delete historicoCache[num]; // limpa cache ao reativar
+      limparEstado(num); // limpa estado ao reativar
       console.log('CMA reativada [' + num + ']');
       filas[num].rodando = false; processarFila(num); return;
     }
 
     if (await emAtendimentoHumano(num)) { filas[num].rodando = false; processarFila(num); return; }
     if (!txtCompleto.trim()) { filas[num].rodando = false; processarFila(num); return; }
+
+    // Atualiza estado com dados desta mensagem
+    const dadosMsg = extrairDadosMensagem(txtCompleto);
+    atualizarEstado(num, dadosMsg);
+    const estado = getEstado(num);
+    console.log('ESTADO [' + num + ']:', JSON.stringify(estado));
 
     await db.salvarMensagem(num, 'user', txtCompleto);
     cacheAdicionarMensagem(num, 'user', txtCompleto);
@@ -335,41 +386,15 @@ async function processarFila(num) {
     }
     console.log('HIST [' + num + ']: ' + hist.length + ' msgs');
 
-    // Extrai dados do histórico — usa ÚLTIMAS mensagens para contexto atual
-    // Pega apenas as últimas 8 mensagens para evitar contaminação de conversas antigas
-    const histRecente = hist.slice(-8);
-    const todasMsgs = histRecente.map(function(m){return m.content;}).join(' ').toLowerCase();
-    const esp = todasMsgs.includes('psiquiatria') ? 'Psiquiatria' :
-      todasMsgs.includes('ginecolog') ? 'Ginecologia' :
-      todasMsgs.includes('endocrinolog') ? 'Endocrinologia' :
-      todasMsgs.includes('otorrino') ? 'Otorrinolaringologia' :
-      todasMsgs.includes('pediatr') ? 'Pediatria' :
-      (todasMsgs.includes('clínico')||todasMsgs.includes('clinico')) ? 'Clínico Geral' :
-      (todasMsgs.includes('ultrassom')||todasMsgs.includes('usg')) ? 'Ultrassom' : null;
+    // Verifica se tem todos os dados para agendar automaticamente
+    const temTudo = estado.especialidade && estado.nome && estado.nascimento && estado.periodo;
+    const confirmou = txtCompleto.toLowerCase().match(/\bsim\b|\bpode\b|\bconfirm/);
 
-    // Detecta nome e nascimento nas últimas mensagens do usuário
-    const msgsUser = histRecente.filter(function(m){return m.role==='user';}).map(function(m){return m.content;}).join(' ');
-    const nascMatch = msgsUser.match(/(\d{2}\/\d{2}\/\d{4})/);
-    const nascimento = nascMatch ? nascMatch[1] : null;
-    // Nome: tenta extrair da primeira msg com data
-    let nomeDetectado = null;
-    if (nascimento) {
-      histRecente.filter(function(m){return m.role==='user';}).forEach(function(m){
-        const r = m.content.match(/([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Ú][a-zà-ú]+)+)\s+\d{2}\/\d{2}\/\d{4}/);
-        if (r) nomeDetectado = r[1];
-      });
-    }
-
-    // Detecta período/data escolhida
-    const periodoTarde = todasMsgs.includes('tarde') || todasMsgs.includes('17h') || todasMsgs.includes('13h');
-    const periodoManha = todasMsgs.includes('manhã') || todasMsgs.includes('manha') || todasMsgs.includes('08h') || todasMsgs.includes('11h');
-    const periodo = periodoTarde ? 'tarde' : periodoManha ? 'manha' : null;
-
-    // Se confirmou e tem todos os dados — injeta instrução direta
-    const confirmou = txtCompleto.toLowerCase().match(/pode|sim|confirma|confirmar|agendar|ok|quero/);
-    if (confirmou && esp && nomeDetectado && nascimento && periodo) {
-      hist.push({ role: 'user', content: '[INSTRUÇÃO DO SISTEMA: Todos os dados foram coletados. Gere AGORA a tag de agendamento: [AGENDAR:nome=' + nomeDetectado + '|nascimento=' + nascimento + '|especialidade=' + esp + '|convenio=particular|periodo=' + periodo + '] e confirme o agendamento ao paciente com a mensagem de sucesso.]' });
-      console.log('AUTO-AGENDAR [' + num + ']:', esp, nomeDetectado, nascimento, periodo);
+    if (temTudo) {
+      // Injeta instrução para o Claude finalizar o agendamento com os dados do estado
+      const instrucao = '[DADOS COLETADOS - FINALIZE O AGENDAMENTO: nome=' + estado.nome + ' | nascimento=' + estado.nascimento + ' | especialidade=' + estado.especialidade + ' | periodo=' + estado.periodo + '. Gere a tag [AGENDAR:nome=' + estado.nome + '|nascimento=' + estado.nascimento + '|especialidade=' + estado.especialidade + '|convenio=particular|periodo=' + estado.periodo + '] e confirme com a mensagem de sucesso.]';
+      hist.push({ role: 'user', content: instrucao });
+      console.log('AUTO-AGENDAR [' + num + ']:', estado.especialidade, estado.nome, estado.nascimento, estado.periodo);
     }
 
     const resp = await chamarIA(hist);
@@ -388,6 +413,8 @@ async function processarFila(num) {
     await db.salvarMensagem(num, 'assistant', final);
     cacheAdicionarMensagem(num, 'assistant', final);
     await enviar(num, final);
+    // Limpa estado após agendamento confirmado
+    if (ag) limparEstado(num);
 
     if (pedirSecretaria) {
       await ativarHumano(num, 60);
