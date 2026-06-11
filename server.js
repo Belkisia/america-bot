@@ -246,12 +246,35 @@ function limparEstado(num) {
   delete estadoConversa[num];
 }
 
+// Períodos fixos por especialidade/data
+const PERIODOS_FIXOS = {
+  'Psiquiatria': 'tarde',
+  'Endocrinologia': 'tarde',
+  'Otorrinolaringologia': 'manha',
+  'Ginecologia_25': 'manha',  // 25/06
+  'Ginecologia_29': 'tarde',  // 29/06
+};
+
+function inferirPeriodo(especialidade, dataEscolhida) {
+  if (!especialidade) return null;
+  const esp = especialidade.toLowerCase();
+  const data = (dataEscolhida || '').toLowerCase();
+  if (esp.includes('psiquiatria')) return 'tarde';
+  if (esp.includes('endocrinolog')) return 'tarde';
+  if (esp.includes('otorrino')) return 'manha';
+  if (esp.includes('ginecolog')) {
+    if (data.includes('25')) return 'manha';
+    if (data.includes('29')) return 'tarde';
+  }
+  return null;
+}
+
 function extrairDadosMensagem(texto) {
   const dados = {};
   // Detecta data de nascimento
   const nascMatch = texto.match(/\b(\d{2}[\/-]\d{2}[\/-]\d{4})\b/);
   if (nascMatch) dados.nascimento = nascMatch[1].replace(/\//g, '/');
-  // Detecta nome (duas ou mais palavras capitalizadas antes ou depois da data)
+  // Detecta nome
   const nomeMatch = texto.match(/([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Ú][a-zà-ú]+){1,4})(?:\s+\d|$)/);
   if (nomeMatch) dados.nome = nomeMatch[1].trim();
   // Detecta especialidade
@@ -263,11 +286,11 @@ function extrairDadosMensagem(texto) {
   else if (t.match(/pediatr/)) dados.especialidade = 'Pediatria';
   else if (t.match(/cl[íi]nico|clinico geral/)) dados.especialidade = 'Clínico Geral';
   else if (t.match(/ultrassom|usg/)) dados.especialidade = 'Ultrassom';
-  // Detecta período
+  // Detecta período explícito
   if (t.match(/\btarde\b|17h|13h|14h/)) dados.periodo = 'tarde';
   else if (t.match(/\bmanh[ãa]\b|manha\b|08h|09h|10h|11h/)) dados.periodo = 'manha';
-  // Detecta data escolhida
-  const dataMatch = t.match(/\b(\d{1,2})\/?(\d{2})\b/);
+  // Detecta data escolhida (ex: 25/06, 29/06, dia 25, dia 29)
+  const dataMatch = texto.match(/\b(\d{1,2})[\/-](\d{2})\b/) || texto.match(/\bdia\s+(\d{1,2})/);
   if (dataMatch) dados.dataEscolhida = dataMatch[0];
   return dados;
 }
@@ -374,8 +397,13 @@ async function processarFila(num) {
     // Atualiza estado com dados desta mensagem
     const dadosMsg = extrairDadosMensagem(txtCompleto);
     atualizarEstado(num, dadosMsg);
+    // Infere período automaticamente se especialidade tem período fixo
     const estado = getEstado(num);
-    console.log('ESTADO [' + num + ']:', JSON.stringify(estado));
+    if (!estado.periodo && estado.especialidade) {
+      const periodoInferido = inferirPeriodo(estado.especialidade, estado.dataEscolhida || '');
+      if (periodoInferido) atualizarEstado(num, { periodo: periodoInferido });
+    }
+    console.log('ESTADO [' + num + ']:', JSON.stringify(getEstado(num)));
 
     await db.salvarMensagem(num, 'user', txtCompleto);
     cacheAdicionarMensagem(num, 'user', txtCompleto);
