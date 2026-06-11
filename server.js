@@ -273,7 +273,6 @@ function inferirPeriodo(especialidade, dataEscolhida) {
   }
   return null;
 }
-
 function extrairDadosMensagem(texto) {
   const dados = {};
   // Detecta data de nascimento
@@ -402,10 +401,10 @@ async function processarFila(num) {
     // Atualiza estado com dados desta mensagem
     const dadosMsg = extrairDadosMensagem(txtCompleto);
     await atualizarEstado(num, dadosMsg);
-    // Infere período automaticamente se especialidade tem período fixo
-    const estado = await getEstado(num);
-    if (!estado.periodo && estado.especialidade) {
-      const periodoInferido = inferirPeriodo(estado.especialidade, estado.dataEscolhida || '');
+    // Infere período pela especialidade+data — SEMPRE sobrescreve período do texto
+    const estadoTemp = await getEstado(num);
+    if (estadoTemp.especialidade) {
+      const periodoInferido = inferirPeriodo(estadoTemp.especialidade, estadoTemp.dataEscolhida || '');
       if (periodoInferido) await atualizarEstado(num, { periodo: periodoInferido });
     }
     const estadoAtual = await getEstado(num);
