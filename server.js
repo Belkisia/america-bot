@@ -422,17 +422,21 @@ async function processarFila(num) {
 
     // Verifica se tem todos os dados para agendar automaticamente
     const temTudo = estadoAtual.especialidade && estadoAtual.nome && estadoAtual.nascimento && estadoAtual.periodo;
-    const confirmou = txtCompleto.toLowerCase().match(/\bsim\b|\bpode\b|\bconfirm/);
 
     if (temTudo) {
-      // Injeta instrução para o Claude finalizar o agendamento com os dados do estado
-      const instrucao = '[DADOS COLETADOS - FINALIZE O AGENDAMENTO: nome=' + estadoAtual.nome + ' | nascimento=' + estadoAtual.nascimento + ' | especialidade=' + estadoAtual.especialidade + ' | periodo=' + estadoAtual.periodo + '. Gere a tag [AGENDAR:nome=' + estado.nome + '|nascimento=' + estadoAtual.nascimento + '|especialidade=' + estadoAtual.especialidade + '|convenio=particular|periodo=' + estadoAtual.periodo + '] e confirme com a mensagem de sucesso.]';
+      const instrucao = '[DADOS COLETADOS - FINALIZE O AGENDAMENTO: nome=' + estadoAtual.nome + ' | nascimento=' + estadoAtual.nascimento + ' | especialidade=' + estadoAtual.especialidade + ' | periodo=' + estadoAtual.periodo + '. Gere a tag [AGENDAR:nome=' + estadoAtual.nome + '|nascimento=' + estadoAtual.nascimento + '|especialidade=' + estadoAtual.especialidade + '|convenio=particular|periodo=' + estadoAtual.periodo + '] e confirme com a mensagem de sucesso.]';
       hist.push({ role: 'user', content: instrucao });
       console.log('AUTO-AGENDAR [' + num + ']:', estadoAtual.especialidade, estadoAtual.nome, estadoAtual.nascimento, estadoAtual.periodo);
+    } else if (estadoAtual.especialidade && estadoAtual.periodo) {
+      // Tem especialidade e período — só falta nome/nascimento
+      const faltaNome = !estadoAtual.nome;
+      const faltaNasc = !estadoAtual.nascimento;
+      const oque = faltaNome && faltaNasc ? 'nome completo e data de nascimento juntos (ex: João Silva 15/03/1990)' : faltaNome ? 'nome completo' : 'data de nascimento';
+      hist.push({ role: 'user', content: '[INSTRUÇÃO: Especialidade=' + estadoAtual.especialidade + ', período=' + estadoAtual.periodo + (estadoAtual.dataEscolhida ? ', data=' + estadoAtual.dataEscolhida : '') + '. NÃO pergunte especialidade, data ou período. APENAS peça: ' + oque + '.]' });
+      console.log('PEDIR_DADOS [' + num + ']: falta=' + oque);
     } else if (estadoAtual.especialidade) {
-      // Injeta lembrete de especialidade para o Claude não perguntar de novo
-      hist.push({ role: 'user', content: '[LEMBRETE: O paciente JÁ informou que quer ' + estadoAtual.especialidade + '. NÃO pergunte especialidade. ' + (estadoAtual.periodo ? 'Período: ' + estadoAtual.periodo + '. ' : '') + (estadoAtual.dataEscolhida ? 'Data escolhida: ' + estadoAtual.dataEscolhida + '. ' : '') + 'Próximo passo: solicite nome completo e data de nascimento juntos.]' });
-      console.log('LEMBRETE [' + num + ']: esp=' + estadoAtual.especialidade + ' periodo=' + (estadoAtual.periodo||'?') + ' data=' + (estadoAtual.dataEscolhida||'?'));
+      hist.push({ role: 'user', content: '[LEMBRETE: Especialidade já definida: ' + estadoAtual.especialidade + '. NÃO pergunte especialidade.' + (estadoAtual.periodo ? ' Período: ' + estadoAtual.periodo + '.' : '') + (estadoAtual.dataEscolhida ? ' Data: ' + estadoAtual.dataEscolhida + '.' : '') + ']' });
+      console.log('LEMBRETE [' + num + ']: esp=' + estadoAtual.especialidade);
     }
 
     const resp = await chamarIA(hist);
