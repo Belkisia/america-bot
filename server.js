@@ -229,21 +229,26 @@ async function buscarHistoricoComCache(num) {
 }
 
 
-// Estado de conversa por número — persiste dados coletados
-const estadoConversa = {};
-
-function getEstado(num) {
-  if (!estadoConversa[num]) estadoConversa[num] = {};
-  return estadoConversa[num];
+// Estado de conversa persistido no Supabase
+async function getEstado(num) {
+  try {
+    const { data } = await db.supabase.from('estado_conversa').select('dados').eq('telefone', num).single();
+    return (data && data.dados) ? data.dados : {};
+  } catch(e) { return {}; }
 }
 
-function atualizarEstado(num, dados) {
-  if (!estadoConversa[num]) estadoConversa[num] = {};
-  Object.assign(estadoConversa[num], dados);
+async function atualizarEstado(num, dados) {
+  try {
+    const atual = await getEstado(num);
+    const novo = Object.assign({}, atual, dados);
+    await db.supabase.from('estado_conversa').upsert({ telefone: num, dados: novo, updated_at: new Date().toISOString() });
+  } catch(e) { console.error('ERRO atualizarEstado:', e.message); }
 }
 
-function limparEstado(num) {
-  delete estadoConversa[num];
+async function limparEstado(num) {
+  try {
+    await db.supabase.from('estado_conversa').delete().eq('telefone', num);
+  } catch(e) {}
 }
 
 // Períodos fixos por especialidade/data
@@ -386,7 +391,7 @@ async function processarFila(num) {
     if (txtCompleto === '#cma') {
       await desativarHumano(num);
       delete historicoCache[num]; // limpa cache ao reativar
-      limparEstado(num); // limpa estado ao reativar
+      await limparEstado(num); // limpa estado ao reativar
       console.log('CMA reativada [' + num + ']');
       filas[num].rodando = false; processarFila(num); return;
     }
@@ -396,14 +401,15 @@ async function processarFila(num) {
 
     // Atualiza estado com dados desta mensagem
     const dadosMsg = extrairDadosMensagem(txtCompleto);
-    atualizarEstado(num, dadosMsg);
+    await atualizarEstado(num, dadosMsg);
     // Infere período automaticamente se especialidade tem período fixo
-    const estado = getEstado(num);
+    const estado = await getEstado(num);
     if (!estado.periodo && estado.especialidade) {
       const periodoInferido = inferirPeriodo(estado.especialidade, estado.dataEscolhida || '');
-      if (periodoInferido) atualizarEstado(num, { periodo: periodoInferido });
+      if (periodoInferido) await atualizarEstado(num, { periodo: periodoInferido });
     }
-    console.log('ESTADO [' + num + ']:', JSON.stringify(getEstado(num)));
+    const estadoAtual = await getEstado(num);
+    console.log('ESTADO [' + num + ']:', JSON.stringify(estadoAtual));
 
     await db.salvarMensagem(num, 'user', txtCompleto);
     cacheAdicionarMensagem(num, 'user', txtCompleto);
@@ -415,18 +421,18 @@ async function processarFila(num) {
     console.log('HIST [' + num + ']: ' + hist.length + ' msgs');
 
     // Verifica se tem todos os dados para agendar automaticamente
-    const temTudo = estado.especialidade && estado.nome && estado.nascimento && estado.periodo;
+    const temTudo = estadoAtual.especialidade && estadoAtual.nome && estadoAtual.nascimento && estadoAtual.periodo;
     const confirmou = txtCompleto.toLowerCase().match(/\bsim\b|\bpode\b|\bconfirm/);
 
     if (temTudo) {
       // Injeta instrução para o Claude finalizar o agendamento com os dados do estado
-      const instrucao = '[DADOS COLETADOS - FINALIZE O AGENDAMENTO: nome=' + estado.nome + ' | nascimento=' + estado.nascimento + ' | especialidade=' + estado.especialidade + ' | periodo=' + estado.periodo + '. Gere a tag [AGENDAR:nome=' + estado.nome + '|nascimento=' + estado.nascimento + '|especialidade=' + estado.especialidade + '|convenio=particular|periodo=' + estado.periodo + '] e confirme com a mensagem de sucesso.]';
+      const instrucao = '[DADOS COLETADOS - FINALIZE O AGENDAMENTO: nome=' + estadoAtual.nome + ' | nascimento=' + estadoAtual.nascimento + ' | especialidade=' + estadoAtual.especialidade + ' | periodo=' + estadoAtual.periodo + '. Gere a tag [AGENDAR:nome=' + estado.nome + '|nascimento=' + estadoAtual.nascimento + '|especialidade=' + estadoAtual.especialidade + '|convenio=particular|periodo=' + estadoAtual.periodo + '] e confirme com a mensagem de sucesso.]';
       hist.push({ role: 'user', content: instrucao });
-      console.log('AUTO-AGENDAR [' + num + ']:', estado.especialidade, estado.nome, estado.nascimento, estado.periodo);
-    } else if (estado.especialidade) {
+      console.log('AUTO-AGENDAR [' + num + ']:', estadoAtual.especialidade, estadoAtual.nome, estadoAtual.nascimento, estadoAtual.periodo);
+    } else if (estadoAtual.especialidade) {
       // Injeta lembrete de especialidade para o Claude não perguntar de novo
-      hist.push({ role: 'user', content: '[LEMBRETE: O paciente JÁ informou que quer ' + estado.especialidade + '. NÃO pergunte especialidade. ' + (estado.periodo ? 'Período: ' + estado.periodo + '. ' : '') + (estado.dataEscolhida ? 'Data escolhida: ' + estado.dataEscolhida + '. ' : '') + 'Próximo passo: solicite nome completo e data de nascimento juntos.]' });
-      console.log('LEMBRETE [' + num + ']: esp=' + estado.especialidade + ' periodo=' + (estado.periodo||'?') + ' data=' + (estado.dataEscolhida||'?'));
+      hist.push({ role: 'user', content: '[LEMBRETE: O paciente JÁ informou que quer ' + estadoAtual.especialidade + '. NÃO pergunte especialidade. ' + (estadoAtual.periodo ? 'Período: ' + estadoAtual.periodo + '. ' : '') + (estadoAtual.dataEscolhida ? 'Data escolhida: ' + estadoAtual.dataEscolhida + '. ' : '') + 'Próximo passo: solicite nome completo e data de nascimento juntos.]' });
+      console.log('LEMBRETE [' + num + ']: esp=' + estadoAtual.especialidade + ' periodo=' + (estadoAtual.periodo||'?') + ' data=' + (estadoAtual.dataEscolhida||'?'));
     }
 
     const resp = await chamarIA(hist);
@@ -446,7 +452,7 @@ async function processarFila(num) {
     cacheAdicionarMensagem(num, 'assistant', final);
     await enviar(num, final);
     // Limpa estado após agendamento confirmado
-    if (ag) limparEstado(num);
+    if (ag) await limparEstado(num);
 
     if (pedirSecretaria) {
       await ativarHumano(num, 60);
