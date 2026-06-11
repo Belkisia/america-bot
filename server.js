@@ -330,6 +330,41 @@ async function processarFila(num) {
     }
     console.log('HIST [' + num + ']: ' + hist.length + ' msgs');
 
+    // Extrai dados do histórico para detectar se já tem tudo para agendar
+    const todasMsgs = hist.map(function(m){return m.content;}).join(' ').toLowerCase();
+    const esp = todasMsgs.includes('psiquiatria') ? 'Psiquiatria' :
+      todasMsgs.includes('ginecolog') ? 'Ginecologia' :
+      todasMsgs.includes('endocrinolog') ? 'Endocrinologia' :
+      todasMsgs.includes('otorrino') ? 'Otorrinolaringologia' :
+      todasMsgs.includes('pediatr') ? 'Pediatria' :
+      (todasMsgs.includes('clínico')||todasMsgs.includes('clinico')) ? 'Clínico Geral' :
+      (todasMsgs.includes('ultrassom')||todasMsgs.includes('usg')) ? 'Ultrassom' : null;
+
+    // Detecta nome e nascimento nas mensagens do usuário
+    const msgsUser = hist.filter(function(m){return m.role==='user';}).map(function(m){return m.content;}).join(' ');
+    const nascMatch = msgsUser.match(/(\d{2}\/\d{2}\/\d{4})/);
+    const nascimento = nascMatch ? nascMatch[1] : null;
+    // Nome: tenta extrair da primeira msg com data
+    let nomeDetectado = null;
+    if (nascimento) {
+      hist.filter(function(m){return m.role==='user';}).forEach(function(m){
+        const r = m.content.match(/([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Ú][a-zà-ú]+)+)\s+\d{2}\/\d{2}\/\d{4}/);
+        if (r) nomeDetectado = r[1];
+      });
+    }
+
+    // Detecta período/data escolhida
+    const periodoTarde = todasMsgs.includes('tarde') || todasMsgs.includes('17h') || todasMsgs.includes('13h');
+    const periodoManha = todasMsgs.includes('manhã') || todasMsgs.includes('manha') || todasMsgs.includes('08h') || todasMsgs.includes('11h');
+    const periodo = periodoTarde ? 'tarde' : periodoManha ? 'manha' : null;
+
+    // Se confirmou e tem todos os dados — injeta instrução direta
+    const confirmou = txtCompleto.toLowerCase().match(/pode|sim|confirma|confirmar|agendar|ok|quero/);
+    if (confirmou && esp && nomeDetectado && nascimento && periodo) {
+      hist.push({ role: 'user', content: '[INSTRUÇÃO DO SISTEMA: Todos os dados foram coletados. Gere AGORA a tag de agendamento: [AGENDAR:nome=' + nomeDetectado + '|nascimento=' + nascimento + '|especialidade=' + esp + '|convenio=particular|periodo=' + periodo + '] e confirme o agendamento ao paciente com a mensagem de sucesso.]' });
+      console.log('AUTO-AGENDAR [' + num + ']:', esp, nomeDetectado, nascimento, periodo);
+    }
+
     const resp = await chamarIA(hist);
     const ag = extrairAgendamento(resp);
     if (ag) {
