@@ -54,10 +54,10 @@ AGENDA MÉDICOS
 • Psiquiatria: 24/06 das 13h30–17h30 — SOMENTE TARDE
 • Endocrinologia: 16/06 e 30/06 das 14h00–17h30 — SOMENTE TARDE
 • Otorrinolaringologia: 16/06 e 30/06 das 08h00–11h30 — SOMENTE MANHÃ
-• Ginecologia: 08/06, 22/06, 29/06 das 13h00–17h30 — SOMENTE TARDE
+• Ginecologia: 25/06 das 08h00–11h30 (manhã) | 29/06 das 13h00–17h30 (tarde)
 • Clínico Geral/Pediatria: 11/06 08h–11h45 e 13h30–17h30
 
-REGRA DE DATAS: Compare cada data com a DATA ATUAL do prompt. Mostre SOMENTE datas futuras. Se hoje é 10/06: Ginecologia tem 22/06 e 29/06 (08/06 passou). Se TODAS passaram: informe que não há agenda disponível no momento.
+REGRA DE DATAS: Compare cada data com a DATA ATUAL do prompt. Mostre SOMENTE datas futuras. Se hoje é 10/06: Ginecologia tem 25/06 manhã e 29/06 tarde. Cada data tem horário diferente — informe corretamente. Se TODAS passaram: informe que não há agenda disponível no momento.
 
 PERÍODO: Para Clínico Geral/Pediatria pergunte o dia e informe horários. Para demais use o período fixo sem perguntar.
 
@@ -128,7 +128,12 @@ async function chamarIA(msgs, tentativa) {
       dataFutura(24,6) ? '• Psiquiatria: 24/06 das 13h30–17h30 — SOMENTE TARDE' : '• Psiquiatria: sem agenda disponível no momento',
       '• Endocrinologia: ' + ([dataFutura(16,6)?'16/06':null, dataFutura(30,6)?'30/06':null].filter(Boolean).join(' e ') || 'sem agenda') + (dataFutura(16,6)||dataFutura(30,6) ? ' das 14h00–17h30 — SOMENTE TARDE' : ' no momento'),
       '• Otorrinolaringologia: ' + ([dataFutura(16,6)?'16/06':null, dataFutura(30,6)?'30/06':null].filter(Boolean).join(' e ') || 'sem agenda') + (dataFutura(16,6)||dataFutura(30,6) ? ' das 08h00–11h30 — SOMENTE MANHÃ' : ' no momento'),
-      '• Ginecologia: ' + ([dataFutura(8,6)?'08/06':null, dataFutura(22,6)?'22/06':null, dataFutura(29,6)?'29/06':null].filter(Boolean).join(', ') || 'sem agenda') + ([dataFutura(8,6),dataFutura(22,6),dataFutura(29,6)].some(Boolean) ? ' das 13h00–17h30 — SOMENTE TARDE' : ' no momento'),
+      '• Ginecologia: ' + (function() {
+        const datas = [];
+        if (dataFutura(25,6)) datas.push('25/06 das 08h00–11h30 (manhã)');
+        if (dataFutura(29,6)) datas.push('29/06 das 13h00–17h30 (tarde)');
+        return datas.length ? datas.join(' | ') : 'sem agenda no momento';
+      })(),
       '• Clínico Geral/Pediatria:' + (dataFutura(11,6) ? ' 11/06 08h–11h45 e 13h30–17h30' : ' sem agenda disponível no momento'),
     ].join('\n');
 
