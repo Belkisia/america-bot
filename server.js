@@ -335,8 +335,10 @@ async function processarFila(num) {
     }
     console.log('HIST [' + num + ']: ' + hist.length + ' msgs');
 
-    // Extrai dados do histórico para detectar se já tem tudo para agendar
-    const todasMsgs = hist.map(function(m){return m.content;}).join(' ').toLowerCase();
+    // Extrai dados do histórico — usa ÚLTIMAS mensagens para contexto atual
+    // Pega apenas as últimas 8 mensagens para evitar contaminação de conversas antigas
+    const histRecente = hist.slice(-8);
+    const todasMsgs = histRecente.map(function(m){return m.content;}).join(' ').toLowerCase();
     const esp = todasMsgs.includes('psiquiatria') ? 'Psiquiatria' :
       todasMsgs.includes('ginecolog') ? 'Ginecologia' :
       todasMsgs.includes('endocrinolog') ? 'Endocrinologia' :
@@ -345,14 +347,14 @@ async function processarFila(num) {
       (todasMsgs.includes('clínico')||todasMsgs.includes('clinico')) ? 'Clínico Geral' :
       (todasMsgs.includes('ultrassom')||todasMsgs.includes('usg')) ? 'Ultrassom' : null;
 
-    // Detecta nome e nascimento nas mensagens do usuário
-    const msgsUser = hist.filter(function(m){return m.role==='user';}).map(function(m){return m.content;}).join(' ');
+    // Detecta nome e nascimento nas últimas mensagens do usuário
+    const msgsUser = histRecente.filter(function(m){return m.role==='user';}).map(function(m){return m.content;}).join(' ');
     const nascMatch = msgsUser.match(/(\d{2}\/\d{2}\/\d{4})/);
     const nascimento = nascMatch ? nascMatch[1] : null;
     // Nome: tenta extrair da primeira msg com data
     let nomeDetectado = null;
     if (nascimento) {
-      hist.filter(function(m){return m.role==='user';}).forEach(function(m){
+      histRecente.filter(function(m){return m.role==='user';}).forEach(function(m){
         const r = m.content.match(/([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Ú][a-zà-ú]+)+)\s+\d{2}\/\d{2}\/\d{4}/);
         if (r) nomeDetectado = r[1];
       });
