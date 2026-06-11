@@ -395,6 +395,10 @@ async function processarFila(num) {
       const instrucao = '[DADOS COLETADOS - FINALIZE O AGENDAMENTO: nome=' + estado.nome + ' | nascimento=' + estado.nascimento + ' | especialidade=' + estado.especialidade + ' | periodo=' + estado.periodo + '. Gere a tag [AGENDAR:nome=' + estado.nome + '|nascimento=' + estado.nascimento + '|especialidade=' + estado.especialidade + '|convenio=particular|periodo=' + estado.periodo + '] e confirme com a mensagem de sucesso.]';
       hist.push({ role: 'user', content: instrucao });
       console.log('AUTO-AGENDAR [' + num + ']:', estado.especialidade, estado.nome, estado.nascimento, estado.periodo);
+    } else if (estado.especialidade) {
+      // Injeta lembrete de especialidade para o Claude não perguntar de novo
+      hist.push({ role: 'user', content: '[LEMBRETE: O paciente JÁ informou que quer ' + estado.especialidade + '. NÃO pergunte especialidade. ' + (estado.periodo ? 'Período: ' + estado.periodo + '. ' : '') + (estado.dataEscolhida ? 'Data escolhida: ' + estado.dataEscolhida + '. ' : '') + 'Próximo passo: solicite nome completo e data de nascimento juntos.]' });
+      console.log('LEMBRETE [' + num + ']: esp=' + estado.especialidade + ' periodo=' + (estado.periodo||'?') + ' data=' + (estado.dataEscolhida||'?'));
     }
 
     const resp = await chamarIA(hist);
