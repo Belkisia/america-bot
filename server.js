@@ -94,6 +94,14 @@ function extrairAgendamento(t) {
 }
 function limpar(t) { return t.replace(/\[AGENDAR:[^\]]+\]/g, '').trim(); }
 
+// Corrige saudação automaticamente caso o modelo erre
+function corrigirSaudacao(texto) {
+  const hora = parseInt(new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', hour12: false }));
+  const saudacaoCorreta = hora >= 5 && hora < 12 ? 'Bom dia' : hora >= 12 && hora < 18 ? 'Boa tarde' : 'Boa noite';
+  // Substitui saudação no início da mensagem, se houver
+  return texto.replace(/^(Bom dia|Boa tarde|Boa noite)([!,.])/i, saudacaoCorreta + '$2');
+}
+
 async function chamarIA(msgs, tentativa) {
   tentativa = tentativa || 1;
   try {
@@ -149,8 +157,8 @@ async function chamarIA(msgs, tentativa) {
 
     let systemFinal = SYSTEM_PROMPT
       + '\n\nAGENDA ATUAL (somente datas futuras):\n' + agendaFiltrada
-      + '\n\nDATA/HORA (Brasília): ' + agora + ' — Hoje é ' + diaSemana + ', ' + dataHoje
-      + '\nSAUDAÇÃO: "' + saudacao + '" | DESPEDIDA: "' + despedida + '"';
+      + '\n\nDATA/HORA ATUAL (Brasília): ' + agora + ' — Hoje é ' + diaSemana + ', ' + dataHoje
+      + '\n\nREGRA OBRIGATÓRIA DE SAUDAÇÃO: Agora são ' + hora + 'h em Brasília. Se a resposta começar com saudação, USE EXATAMENTE "' + saudacao + '". NUNCA use "Boa noite" se a hora atual for ' + hora + 'h. Se for encerrar a conversa, use "' + despedida + '".';
 
     if (esp) {
       systemFinal += '\n\nLEMBRETE CRÍTICO: O paciente JÁ informou que quer ' + esp + '. NÃO pergunte especialidade. Prossiga para o próximo dado necessário.';
@@ -450,7 +458,7 @@ async function processarFila(num) {
     }
 
     const pedirSecretaria = resp.includes('[SECRETARIA]');
-    const final = limpar(resp).replace('[SECRETARIA]','').replace(/🔹.*?transferindo.*?[\n\r]?/gi,'').trim();
+    const final = corrigirSaudacao(limpar(resp).replace('[SECRETARIA]','').replace(/🔹.*?transferindo.*?[\n\r]?/gi,'').trim());
     await db.salvarMensagem(num, 'assistant', final);
     cacheAdicionarMensagem(num, 'assistant', final);
     await enviar(num, final);
