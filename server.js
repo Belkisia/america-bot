@@ -132,6 +132,16 @@ async function chamarIA(msgs, tentativa) {
     const nowBR = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
     nowBR.setHours(0, 0, 0, 0);
     function dataFutura(dia, mes) { return new Date(2026, mes-1, dia) >= nowBR; }
+    function diaDaSemana(dia, mes) {
+      const dias = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+      return dias[new Date(2026, mes-1, dia).getDay()];
+    }
+    // Tabela de referência de dias da semana de junho/2026 para o modelo usar
+    const tabelaDias = [];
+    for (let d = 1; d <= 30; d++) {
+      tabelaDias.push(d.toString().padStart(2,'0') + '/06=' + diaDaSemana(d,6).slice(0,3));
+    }
+    const refDiasSemana = tabelaDias.join(', ');
     const agendaFiltrada = [
       dataFutura(24,6) ? '• Psiquiatria: 24/06 das 13h30–17h30 — SOMENTE TARDE' : '• Psiquiatria: sem agenda disponível no momento',
       '• Endocrinologia: ' + ([dataFutura(16,6)?'16/06':null, dataFutura(30,6)?'30/06':null].filter(Boolean).join(' e ') || 'sem agenda') + (dataFutura(16,6)||dataFutura(30,6) ? ' das 14h00–17h30 — SOMENTE TARDE' : ' no momento'),
@@ -158,6 +168,7 @@ async function chamarIA(msgs, tentativa) {
     let systemFinal = SYSTEM_PROMPT
       + '\n\nAGENDA ATUAL (somente datas futuras):\n' + agendaFiltrada
       + '\n\nDATA/HORA ATUAL (Brasília): ' + agora + ' — Hoje é ' + diaSemana + ', ' + dataHoje
+      + '\n\nTABELA DE DIAS DA SEMANA JUNHO/2026 (use SEMPRE esta tabela para informar dia da semana de qualquer data — NUNCA calcule de memória): ' + refDiasSemana
       + '\n\nREGRA OBRIGATÓRIA DE SAUDAÇÃO: Agora são ' + hora + 'h em Brasília. Se a resposta começar com saudação, USE EXATAMENTE "' + saudacao + '". NUNCA use "Boa noite" se a hora atual for ' + hora + 'h. Se for encerrar a conversa, use "' + despedida + '".';
 
     if (esp) {
