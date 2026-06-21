@@ -52,8 +52,8 @@ ANTI-DUPLICATA: Se histórico já tem confirmação da mesma especialidade, NÃO
 
 AGENDA MÉDICOS
 • Psiquiatria: 07/07 das 13h30–17h00 — SOMENTE TARDE
-• Endocrinologia: 30/06 das 08h00–17h00 — MANHÃ E TARDE
-• Otorrinolaringologia: 30/06 das 08h00–17h00 — MANHÃ E TARDE
+• Otorrinolaringologia: 30/06 das 08h00–11h30 — SOMENTE MANHÃ
+• Endocrinologia: 30/06 das 13h00–17h30 — SOMENTE TARDE
 • Ginecologia: 25/06 das 08h00–11h30 (manhã) | 29/06 das 13h30–17h00 (tarde)
 • Clínico Geral/Pediatria: 22/06 das 08h00–11h00 (manhã) | 25/06 das 08h00–11h30 (manhã) e 14h00–17h00 (tarde)
 
@@ -144,8 +144,8 @@ async function chamarIA(msgs, tentativa) {
     const refDiasSemana = tabelaDias.join(', ');
     const agendaFiltrada = [
       dataFutura(7,7) ? '• Psiquiatria: 07/07 das 13h30–17h00 — SOMENTE TARDE' : '• Psiquiatria: sem agenda disponível no momento',
-      dataFutura(30,6) ? '• Endocrinologia: 30/06 das 08h00–17h00 — MANHÃ E TARDE' : '• Endocrinologia: sem agenda disponível no momento',
-      dataFutura(30,6) ? '• Otorrinolaringologia: 30/06 das 08h00–17h00 — MANHÃ E TARDE' : '• Otorrinolaringologia: sem agenda disponível no momento',
+      dataFutura(30,6) ? '• Otorrinolaringologia: 30/06 das 08h00–11h30 — SOMENTE MANHÃ' : '• Otorrinolaringologia: sem agenda disponível no momento',
+      dataFutura(30,6) ? '• Endocrinologia: 30/06 das 13h00–17h30 — SOMENTE TARDE' : '• Endocrinologia: sem agenda disponível no momento',
       '• Ginecologia: ' + (function() {
         const datas = [];
         if (dataFutura(25,6)) datas.push('25/06 das 08h00–11h30 (manhã)');
@@ -290,7 +290,8 @@ function inferirPeriodo(especialidade, dataEscolhida) {
   const esp = especialidade.toLowerCase();
   const data = (dataEscolhida || '').toLowerCase();
   if (esp.includes('psiquiatria')) return 'tarde';
-  // Endocrinologia e Otorrino agora atendem dia inteiro — não infere período fixo
+  if (esp.includes('endocrinolog')) return 'tarde';
+  if (esp.includes('otorrino')) return 'manha';
   if (esp.includes('ginecolog')) {
     if (data.includes('25')) return 'manha';
     if (data.includes('29')) return 'tarde';
