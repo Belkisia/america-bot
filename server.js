@@ -51,13 +51,13 @@ Somente particular. NUNCA pergunte convênio.
 ANTI-DUPLICATA: Se histórico já tem confirmação da mesma especialidade, NÃO gere [AGENDAR] de novo.
 
 AGENDA MÉDICOS
-• Psiquiatria: 24/06 das 13h30–17h30 — SOMENTE TARDE
-• Endocrinologia: 16/06 e 30/06 das 14h00–17h30 — SOMENTE TARDE
-• Otorrinolaringologia: 16/06 e 30/06 das 08h00–11h30 — SOMENTE MANHÃ
-• Ginecologia: 25/06 das 08h00–11h30 (manhã) | 29/06 das 13h00–17h30 (tarde)
-• Clínico Geral/Pediatria: 11/06 08h–11h45 e 13h30–17h30
+• Psiquiatria: 07/07 das 13h30–17h00 — SOMENTE TARDE
+• Endocrinologia: 30/06 das 08h00–17h00 — MANHÃ E TARDE
+• Otorrinolaringologia: 30/06 das 08h00–17h00 — MANHÃ E TARDE
+• Ginecologia: 25/06 das 08h00–11h30 (manhã) | 29/06 das 13h30–17h00 (tarde)
+• Clínico Geral/Pediatria: 22/06 das 08h00–11h00 (manhã) | 25/06 das 08h00–11h30 (manhã) e 14h00–17h00 (tarde)
 
-REGRA DE DATAS: Compare cada data com a DATA ATUAL do prompt. Mostre SOMENTE datas futuras. Se hoje é 10/06: Ginecologia tem 25/06 manhã e 29/06 tarde. Cada data tem horário diferente — informe corretamente. Se TODAS passaram: informe que não há agenda disponível no momento.
+REGRA DE DATAS: Compare cada data com a DATA ATUAL do prompt. Mostre SOMENTE datas futuras. Cada data tem horário diferente — informe corretamente conforme a agenda acima. Se TODAS passaram: informe que não há agenda disponível no momento.
 
 PERÍODO: Para Clínico Geral/Pediatria pergunte o dia e informe horários. Para demais use o período fixo sem perguntar.
 
@@ -143,16 +143,22 @@ async function chamarIA(msgs, tentativa) {
     }
     const refDiasSemana = tabelaDias.join(', ');
     const agendaFiltrada = [
-      dataFutura(24,6) ? '• Psiquiatria: 24/06 das 13h30–17h30 — SOMENTE TARDE' : '• Psiquiatria: sem agenda disponível no momento',
-      '• Endocrinologia: ' + ([dataFutura(16,6)?'16/06':null, dataFutura(30,6)?'30/06':null].filter(Boolean).join(' e ') || 'sem agenda') + (dataFutura(16,6)||dataFutura(30,6) ? ' das 14h00–17h30 — SOMENTE TARDE' : ' no momento'),
-      '• Otorrinolaringologia: ' + ([dataFutura(16,6)?'16/06':null, dataFutura(30,6)?'30/06':null].filter(Boolean).join(' e ') || 'sem agenda') + (dataFutura(16,6)||dataFutura(30,6) ? ' das 08h00–11h30 — SOMENTE MANHÃ' : ' no momento'),
+      dataFutura(7,7) ? '• Psiquiatria: 07/07 das 13h30–17h00 — SOMENTE TARDE' : '• Psiquiatria: sem agenda disponível no momento',
+      dataFutura(30,6) ? '• Endocrinologia: 30/06 das 08h00–17h00 — MANHÃ E TARDE' : '• Endocrinologia: sem agenda disponível no momento',
+      dataFutura(30,6) ? '• Otorrinolaringologia: 30/06 das 08h00–17h00 — MANHÃ E TARDE' : '• Otorrinolaringologia: sem agenda disponível no momento',
       '• Ginecologia: ' + (function() {
         const datas = [];
         if (dataFutura(25,6)) datas.push('25/06 das 08h00–11h30 (manhã)');
-        if (dataFutura(29,6)) datas.push('29/06 das 13h00–17h30 (tarde)');
+        if (dataFutura(29,6)) datas.push('29/06 das 13h30–17h00 (tarde)');
         return datas.length ? datas.join(' | ') : 'sem agenda no momento';
       })(),
-      '• Clínico Geral/Pediatria:' + (dataFutura(11,6) ? ' 11/06 08h–11h45 e 13h30–17h30' : ' sem agenda disponível no momento'),
+      '• Clínico Geral/Pediatria: ' + (function() {
+        const datas = [];
+        if (dataFutura(22,6)) datas.push('22/06 das 08h00–11h00 (manhã)');
+        if (dataFutura(25,6)) datas.push('25/06 das 08h00–11h30 (manhã) e 14h00–17h00 (tarde)');
+        return datas.length ? datas.join(' | ') : 'sem agenda no momento';
+      })(),
+      '• Ultrassom: ' + (dataFutura(26,6) ? '26/06 das 07h30–09h15 e 17h00–18h00' : 'sem agenda no momento'),
     ].join('\n');
 
     // Detecta especialidade no histórico para injetar lembrete
@@ -284,11 +290,13 @@ function inferirPeriodo(especialidade, dataEscolhida) {
   const esp = especialidade.toLowerCase();
   const data = (dataEscolhida || '').toLowerCase();
   if (esp.includes('psiquiatria')) return 'tarde';
-  if (esp.includes('endocrinolog')) return 'tarde';
-  if (esp.includes('otorrino')) return 'manha';
+  // Endocrinologia e Otorrino agora atendem dia inteiro — não infere período fixo
   if (esp.includes('ginecolog')) {
     if (data.includes('25')) return 'manha';
     if (data.includes('29')) return 'tarde';
+  }
+  if (esp.includes('clínico') || esp.includes('clinico') || esp.includes('pediatr')) {
+    if (data.includes('22')) return 'manha'; // 22/06 só tem manhã
   }
   return null;
 }
