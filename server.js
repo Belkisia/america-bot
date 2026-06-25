@@ -55,7 +55,12 @@ AGENDA MÉDICOS
 • Otorrinolaringologia: 30/06 das 08h00–11h30 — SOMENTE MANHÃ
 • Endocrinologia: 30/06 das 13h00–17h30 — SOMENTE TARDE
 • Ginecologia: 25/06 das 08h00–11h30 (manhã) | 29/06 das 13h30–17h00 (tarde)
-• Clínico Geral/Pediatria: 22/06 das 08h00–11h00 (manhã) | 25/06 das 08h00–11h30 (manhã) e 14h00–17h00 (tarde)
+• Clínico Geral/Pediatria — agenda semanal:
+  - Segunda: 08h00–10h45 e 16h00–17h15
+  - Terça: 08h00–11h30
+  - Quarta: 08h00–11h30
+  - Quinta: 08h00–11h30 e 14h00–17h15
+  - Sexta: 08h00–11h30
 
 REGRA DE DATAS: Compare cada data com a DATA ATUAL do prompt. Mostre SOMENTE datas futuras. Cada data tem horário diferente — informe corretamente conforme a agenda acima. Se TODAS passaram: informe que não há agenda disponível no momento.
 
@@ -152,11 +157,27 @@ async function chamarIA(msgs, tentativa) {
         if (dataFutura(29,6)) datas.push('29/06 das 13h30–17h00 (tarde)');
         return datas.length ? datas.join(' | ') : 'sem agenda no momento';
       })(),
-      '• Clínico Geral/Pediatria: ' + (function() {
-        const datas = [];
-        if (dataFutura(22,6)) datas.push('22/06 das 08h00–11h00 (manhã)');
-        if (dataFutura(25,6)) datas.push('25/06 das 08h00–11h30 (manhã) e 14h00–17h00 (tarde)');
-        return datas.length ? datas.join(' | ') : 'sem agenda no momento';
+      (function() {
+        const dias = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+        const horarios = {
+          1: 'Segunda: 08h00–10h45 e 16h00–17h15',
+          2: 'Terça: 08h00–11h30',
+          3: 'Quarta: 08h00–11h30',
+          4: 'Quinta: 08h00–11h30 e 14h00–17h15',
+          5: 'Sexta: 08h00–11h30'
+        };
+        const disponiveis = [];
+        for (let i = 0; i <= 6; i++) {
+          const d = new Date(nowBR);
+          d.setDate(d.getDate() + i);
+          const dow = d.getDay();
+          if (horarios[dow]) {
+            const dd = String(d.getDate()).padStart(2,'0');
+            const mm = String(d.getMonth()+1).padStart(2,'0');
+            disponiveis.push(dd + '/' + mm + ' (' + horarios[dow] + ')');
+          }
+        }
+        return '• Clínico Geral/Pediatria (próximos dias): ' + (disponiveis.length ? disponiveis.slice(0,3).join(' | ') : 'sem agenda no momento');
       })(),
       '• Ultrassom: ' + (dataFutura(26,6) ? '26/06 das 07h30–09h15 e 17h00–18h00' : 'sem agenda no momento'),
     ].join('\n');
