@@ -617,5 +617,27 @@ app.get('/test-db', async function(req, res) {
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
 
+app.get('/test-quark', async function(req, res) {
+  try {
+    const QUARK_HEADERS = {
+      'Content-Type': 'application/json',
+      'Auth-token': 'bgdWIDWVoYDQBtFLLlblOQpDoalqBbWXJbezRxVhbujmivbakllRWcAoHcxMHqbk',
+      'X-Chave-Key': '5196e91382b959a96f18aa61485c30de2a6b9f42241d4b0d5b3fe5426758dc95',
+      'X-Secret-Key': 'f7c217f2aeeef1ea6fc2db2aa22a028dee1246989e52c21866515b2de25bbecb'
+    };
+    const BASE = 'https://api.quark.tec.br/clinic/ext';
+    const testes = {};
+    for (const ep of ['paciente','pacientes','agendamento','agendamentos','v1/paciente','v1/agendamento','v2/paciente','v2/agendamento','clinica','especialidade','profissional','agenda','externo/paciente','externo/agendamento']) {
+      try {
+        const r = await axios.get(BASE + '/' + ep, { headers: QUARK_HEADERS, timeout: 6000 });
+        testes[ep] = { status: r.status, data: JSON.stringify(r.data).slice(0, 300) };
+      } catch(e) {
+        testes[ep] = { status: e.response ? e.response.status : 'ERR', msg: e.response ? JSON.stringify(e.response.data).slice(0,150) : e.message };
+      }
+    }
+    res.json({ quark: 'teste', resultados: testes });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
 app.get('/', function(req, res) { res.json({ status: 'online', agente: 'CMA v3', uptime: Math.floor(process.uptime())+'s' }); });
 app.listen(PORT, function() { console.log('América — CMA v3 | Porta: ' + PORT + ' | Online'); });
