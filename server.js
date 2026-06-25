@@ -54,7 +54,7 @@ AGENDA MÉDICOS
 • Psiquiatria: 07/07 das 13h30–17h00 — SOMENTE TARDE
 • Otorrinolaringologia: 30/06 das 08h00–11h30 — SOMENTE MANHÃ
 • Endocrinologia: 30/06 das 13h00–17h30 — SOMENTE TARDE
-• Ginecologia: 25/06 das 08h00–11h30 (manhã) | 29/06 das 13h30–17h00 (tarde)
+• Ginecologia: 25/06 das 08h00–11h30 (manhã) | 06/07 das 13h30–17h15 (tarde)
 • Clínico Geral/Pediatria — agenda semanal:
   - Segunda: 08h00–10h45 e 16h00–17h15
   - Terça: 08h00–11h30
@@ -154,7 +154,7 @@ async function chamarIA(msgs, tentativa) {
       '• Ginecologia: ' + (function() {
         const datas = [];
         if (dataFutura(25,6)) datas.push('25/06 das 08h00–11h30 (manhã)');
-        if (dataFutura(29,6)) datas.push('29/06 das 13h30–17h00 (tarde)');
+        if (dataFutura(6,7)) datas.push('06/07 das 13h30–17h15 (tarde)');
         return datas.length ? datas.join(' | ') : 'sem agenda no momento';
       })(),
       (function() {
@@ -315,7 +315,7 @@ function inferirPeriodo(especialidade, dataEscolhida) {
   if (esp.includes('otorrino')) return 'manha';
   if (esp.includes('ginecolog')) {
     if (data.includes('25')) return 'manha';
-    if (data.includes('29')) return 'tarde';
+    if (data.includes('06') || data.includes('6/07') || data.includes('06/07')) return 'tarde';
   }
   if (esp.includes('clínico') || esp.includes('clinico') || esp.includes('pediatr')) {
     if (data.includes('22')) return 'manha'; // 22/06 só tem manhã
