@@ -18,7 +18,12 @@ const NUMEROS_IGNORAR = [
   '5562981958856',
 ];
 
-const cacheHumano = {};
+// MODO TESTE — só esses números recebem resposta da América
+const NUMEROS_TESTE = [
+  '5562984227156',
+  '5562984271335',
+];
+const MODO_TESTE = true; // muda para false quando quiser liberar para todos
 async function emAtendimentoHumano(num) {
   const agora = Date.now();
   if (cacheHumano[num] && cacheHumano[num].expira > agora) return cacheHumano[num].valor;
@@ -534,6 +539,7 @@ app.post('/webhook', function(req, res) {
   const num = b.phone || '';
   if (!num || num.includes('@lid') || num.includes('-group')) return;
   if (NUMEROS_IGNORAR.includes(num)) return;
+  if (MODO_TESTE && !NUMEROS_TESTE.includes(num)) return; // modo teste: só números autorizados
 
   // Deduplica por messageId
   const msgId = b.messageId || '';
