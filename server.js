@@ -20,8 +20,8 @@ const NUMEROS_IGNORAR = [
 
 // MODO TESTE — só esses números recebem resposta da América
 const NUMEROS_TESTE = [
-  '5562984227156',
-  '5562984271335',
+  '556284227156',
+  '556284271335',
 ];
 const MODO_TESTE = true; // muda para false quando quiser liberar para todos
 async function emAtendimentoHumano(num) {
