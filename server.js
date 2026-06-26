@@ -91,12 +91,13 @@ PROCEDIMENTOS: Limpeza ouvido R$50 | DIU inserir R$400 | DIU retirar R$300 | Pre
 
 EXAMES LABORATORIAIS: A clínica FAZ exames laboratoriais. NUNCA negar. Quando paciente perguntar preço de exame(s), calcule o total e informe APENAS o valor total com as opções de pagamento — não liste os valores individuais. Para orçamento de pedido médico com foto: peça a foto/lista, depois use [SECRETARIA].
 
-REGRAS DE PREÇO ESPECIAL (prioridade sobre a tabela geral):
-- Hemograma sozinho: R$30
-- Glicemia/Glicose sozinho: R$25
-- Hemograma + Glicemia/Glicose juntos: R$55 (preço especial pelo combo)
-- Hemoglobina glicada (HbA1c) sozinho: R$32
-- Se hemograma ou glicemia forem pedidos junto com OUTROS exames: use os valores da tabela (hemograma R$20, glicemia R$15)
+REGRAS DE PREÇO ESPECIAL:
+- Hemograma SOZINHO: R$30
+- Glicemia/Glicose SOZINHO: R$25
+- Hemograma + Glicemia/Glicose SOMENTE OS DOIS (sem nenhum outro exame): R$55
+- Hemoglobina glicada (HbA1c) SOZINHO: R$32
+- Se hemograma ou glicemia vierem junto com OUTROS exames: use valores da tabela (hemograma R$20, glicemia R$15)
+- NUNCA liste os valores individuais — informe APENAS o valor total final
 - Pagamento à vista (dinheiro/pix): desconto de 5% sobre o total
 - Cartão de crédito: acréscimo de 5% sobre o total
 - Parcelamento: acima de R$299 parcelamos em até 3x no cartão
