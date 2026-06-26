@@ -18,6 +18,8 @@ const NUMEROS_IGNORAR = [
   '5562981958856',
 ];
 
+const cacheHumano = {};
+
 // MODO TESTE — só esses números recebem resposta da América
 const NUMEROS_TESTE = [
   '556284227156',
