@@ -438,12 +438,12 @@ async function processarFila(num) {
         await db.salvarMensagem(num, 'user', '[imagem enviada]');
         let hist = await db.buscarHistorico(num, 20);
         hist = hist.filter(function(m){return m.content && m.content.trim();});
-        hist.push({ role: 'user', content: 'O paciente enviou uma imagem. Análise: ' + leitura + '\n\nResponda em UMA mensagem: confirme o que identificou, informe se realizamos esses exames e que a secretaria confirmará detalhes. Finalize com 📞 (62) 3636-3536 | 📱 (62) 99504-9138' });
+        hist.push({ role: 'user', content: 'O paciente enviou uma imagem/receita médica. Análise da imagem: ' + leitura + '\n\nCom base nos exames identificados, siga estas instruções:\n1. Confirme quais exames foram identificados\n2. Calcule o orçamento usando a tabela de preços (aplique as regras de preço especial se necessário)\n3. Informe APENAS os valores finais: 💳 Cartão e 💵 Pix/Dinheiro (sem mostrar valores individuais, sem mencionar percentuais)\n4. Convide para agendar\nSe não conseguir calcular algum exame por não estar na tabela, mencione que entrará em contato para complementar o orçamento.' });
         const resp = await chamarIA(hist);
         const final = limpar(resp).replace('[SECRETARIA]', '').trim();
         await db.salvarMensagem(num, 'assistant', final);
         await enviar(num, final);
-        if (leitura.toLowerCase().match(/laboratori|sangue|urina|exame/)) await ativarHumano(num, 60);
+        console.log('IMAGEM [' + num + ']: orçamento enviado');
       } else {
         await ativarHumano(num, 60);
         await enviar(num, 'Olá! 😊 Recebemos seu documento.\n\nVou encaminhar para nossa *secretaria* que te orientará! 🏥\n\n📞 (62) 3636-3536 | 📱 (62) 99504-9138\n\n🔹 *Transferindo para a secretaria...*');
