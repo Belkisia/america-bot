@@ -9,25 +9,24 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL;
 const PORT = process.env.PORT || 3000;
 const NUMEROS_IGNORAR = [
-  '556284271335',  // Dr. Wilder
   '5562982797221',
   '5562998079861',
   '5562981604381',
   '5562981764258',
   '5562993598081',
   '5562981958856',
-  '5562999609263', // 62 99609-2636 (sem o 6 extra)
-  '556299609263',  // 62 99609-2636
-  '5562991199066', // 62 99119-9066
-  '5562984463157', // 62 98446-3157
+  '5562999609263',
+  '556299609263',
+  '5562991199066',
+  '5562984463157',
 ];
 
 const cacheHumano = {};
 
 // MODO TESTE — só esses números recebem resposta da América
 const NUMEROS_TESTE = [
-  '556284227156',
-  '556284271335',
+  '556284227156',  // 984227156
+  '556284271335',  // 984271335
 ];
 const MODO_TESTE = true; // muda para false quando quiser liberar para todos
 async function emAtendimentoHumano(num) {
