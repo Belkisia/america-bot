@@ -23,7 +23,7 @@ const NUMEROS_TESTE = [
   '556284227156',
   '556284271335',
 ];
-const MODO_TESTE = true; // muda para false quando quiser liberar para todos
+const MODO_TESTE = false; // muda para false quando quiser liberar para todos
 async function emAtendimentoHumano(num) {
   const agora = Date.now();
   if (cacheHumano[num] && cacheHumano[num].expira > agora) return cacheHumano[num].valor;
