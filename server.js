@@ -89,6 +89,18 @@ PREÇOS ULTRASSOM: Abdome Inf R$70|c/Dop R$160 | Abdome Sup R$70|c/Dop R$160 | A
 CONSULTAS: Clínico Geral R$80 | Ginecologia R$120 | Endocrinologia R$120 | Psiquiatria R$120 | Pediatria R$100 | Otorrino R$140.
 PROCEDIMENTOS: Limpeza ouvido R$50 | DIU inserir R$400 | DIU retirar R$300 | Prevenção R$80 | Retirada pontos R$50.
 
+AGENDA DE COLETA LABORATORIAL — 07h00 às 09h45:
+O laboratório funciona em semanas alternadas:
+• Semana A (29/06, 13/07, 27/07...): Segunda, Quarta e Sexta
+• Semana B (07/07, 21/07...): Terça e Quinta
+
+Para saber qual semana é qual, use a DATA ATUAL do prompt:
+- Semana iniciada em 29/06 = Semana A (seg/qua/sex)
+- Semana iniciada em 07/07 = Semana B (ter/qui)
+- Alterna a cada semana a partir daí
+
+Quando paciente perguntar sobre coleta/exames laboratoriais, informe os dias disponíveis da semana atual e da próxima, sempre das 07h00 às 09h45.
+
 EXAMES LABORATORIAIS: A clínica FAZ exames laboratoriais. NUNCA negar. Quando paciente perguntar preço de exame(s), calcule o total e informe APENAS o valor total com as opções de pagamento — não liste os valores individuais. Para orçamento de pedido médico com foto: peça a foto/lista, depois use [SECRETARIA].
 
 REGRAS DE PREÇO ESPECIAL:
