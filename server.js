@@ -97,6 +97,8 @@ REGRAS DE PREÇO ESPECIAL:
 - Hemograma + Glicemia/Glicose SOMENTE OS DOIS (sem nenhum outro exame): R$55
 - Hemoglobina glicada (HbA1c) SOZINHO: R$32
 - Se hemograma ou glicemia vierem junto com OUTROS exames: use valores da tabela (hemograma R$20, glicemia R$15)
+- COMBO LIPÍDICO: quando o pedido incluir Colesterol + LDL + HDL + VLDL + Triglicerídeos junto com OUTROS exames adicionais → cobrar esse conjunto como Lipidograma R$38 (não somar individualmente)
+- Se o pedido for SOMENTE Colesterol + LDL + HDL + VLDL + Triglicerídeos (sem outros exames) → somar individualmente (R$12+R$14+R$14+R$14+R$14 = R$68) e mostrar só o total final
 - NUNCA liste os valores individuais — informe APENAS os valores finais de pagamento
 - NUNCA informe o valor base/total dos exames
 - NUNCA explique como calculou os preços ou mencione regras internas de precificação
