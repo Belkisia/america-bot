@@ -194,8 +194,10 @@ const TABELA_PRECOS = {
   'coombs direto': 15, 'coombs indireto': 15, 'eletroforese hemoglobinas': 25,
   'eletroforese de hemoglobinas': 25, 'coagulograma': 35, 'tp': 12,
   'tempo de protrombina': 12, 'ttpa': 18, 'dimero-d': 90, 'dímero-d': 90,
-  'ecg': 50, 'espermograma': 30, 'grupo sanguineo': 20, 'grupo sanguíneo': 20,
-  'fator rh': 20, 'tipagem sanguinea': 20, 'tipagem sanguínea': 20,
+  'ecg': 50, 'espermograma': 30,
+  'grupo sanguineo e fator rh': 20, 'grupo sanguíneo e fator rh': 20,
+  'grupo sanguineo': 20, 'grupo sanguíneo': 20, 'fator rh': 20,
+  'tipagem sanguinea': 20, 'tipagem sanguínea': 20,
   'eritrograma': 14, 'reticulocitos': 14, 'reticulócitos': 14,
 };
 
@@ -223,6 +225,10 @@ function calcularOrcamento(textoExames) {
       // Evita contar subitens do lipidograma separadamente
       if (['colesterol','hdl','ldl','vldl','triglicerides','triglicerídeos'].includes(exame)) {
         if (txtProcessado.includes('lipidograma')) continue;
+      }
+      // Evita contar grupo sanguíneo e fator rh separadamente
+      if (['grupo sanguineo','grupo sanguíneo','fator rh'].includes(exame)) {
+        if (jaContados.has('grupo sanguineo e fator rh') || jaContados.has('grupo sanguíneo e fator rh')) continue;
       }
       jaContados.add(exame);
       total += TABELA_PRECOS[exame];
@@ -557,7 +563,14 @@ async function processarFila(num) {
         await db.salvarMensagem(num, 'user', '[imagem enviada]');
         let hist = await db.buscarHistorico(num, 20);
         hist = hist.filter(function(m){return m.content && m.content.trim();});
-        hist.push({ role: 'user', content: 'O paciente enviou uma imagem/receita médica. Análise da imagem: ' + leitura + '\n\nCom base nos exames identificados, siga estas instruções:\n1. Confirme quais exames foram identificados\n2. Calcule o orçamento usando a tabela de preços (aplique as regras de preço especial se necessário)\n3. Informe APENAS os valores finais: 💳 Cartão e 💵 Pix/Dinheiro (sem mostrar valores individuais, sem mencionar percentuais)\n4. Convide para agendar\nSe não conseguir calcular algum exame por não estar na tabela, mencione que entrará em contato para complementar o orçamento.' });
+        // Calcula orçamento no código usando a leitura da imagem
+        const orcamentoImg = calcularOrcamento(leitura);
+        let instrucaoOrcamento = '';
+        if (orcamentoImg && orcamentoImg.total > 0) {
+          instrucaoOrcamento = '\n\nORÇAMENTO CALCULADO PELO SISTEMA — USE ESTES VALORES EXATOS: 💳 Cartão: R$' + orcamentoImg.cartao.toFixed(2) + ' | 💵 Pix/Dinheiro: R$' + orcamentoImg.pix.toFixed(2) + '. NÃO recalcule. NÃO modifique esses valores.';
+          console.log('ORÇAMENTO IMAGEM [' + num + ']: base=R$' + orcamentoImg.total + ' cartão=R$' + orcamentoImg.cartao.toFixed(2));
+        }
+        hist.push({ role: 'user', content: 'O paciente enviou uma imagem/receita médica. Análise da imagem: ' + leitura + instrucaoOrcamento + '\n\nInstruções:\n1. Confirme o nome do paciente e os exames identificados de forma calorosa\n2. Informe os valores calculados acima (use exatamente esses valores)\n3. Convide para agendar\nSe algum exame não tiver valor calculado, mencione que entrará em contato para complementar.' });
         const resp = await chamarIA(hist);
         const final = limpar(resp).replace('[SECRETARIA]', '').trim();
         await db.salvarMensagem(num, 'assistant', final);
