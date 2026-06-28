@@ -176,7 +176,7 @@ const TABELA_PRECOS = {
   'ferro': 12, 'acido folico': 30, 'ácido fólico': 30, 'vitamina b12': 30,
   'vitamina d': 36, 'vitamina b6': 80, 'vitamina c': 45, 'vitamina a': 55,
   'vitamina e': 110, 'zinco': 25, 'selenio': 18, 'selênio': 18,
-  'magnesio': 10, 'magnésio': 10, 'litio': 26, 'lítio': 26,
+  'magnesio': 10, 'magnésio': 10, 'litio': 26, 'lítio': 26, 'litemia': 26, 'litemia serica': 26,
   'calcio': 10, 'cálcio': 10, 'sodio': 10, 'sódio': 10,
   'potassio': 10, 'potássio': 10, 'fsh': 15, 'lh': 15, 'estradiol': 20,
   'progesterona': 22, 'prolactina': 20, 'testosterona total': 22,
