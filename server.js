@@ -159,6 +159,85 @@ REGRAS FINAIS
 - Ao confirmar: *Seu atendimento foi solicitado com sucesso!* ✅ + endereço + aviso que equipe confirmará.
 - Endereço: Av. Frei Miguelino, 247 - Bairro Goiá, Goiânia-GO, CEP 74485-055.`;
 
+
+// Tabela de preços para cálculo preciso
+const TABELA_PRECOS = {
+  'hemograma': 20, 'glicemia': 15, 'glicose': 15, 'glicemia de jejum': 15,
+  'glicemia casual': 10, 'glicemia pos-prandial': 10, 'hba1c': 24,
+  'hemoglobina glicada': 24, 'hb glicada': 24, 'colesterol': 12,
+  'hdl': 14, 'ldl': 14, 'vldl': 14, 'triglicerides': 14, 'triglicerídeos': 14,
+  'lipidograma': 38, 'creatinina': 12, 'ureia': 12, 'acido urico': 12,
+  'ácido úrico': 12, 'tgo': 15, 'tgp': 15, 'gama-gt': 15, 'gama gt': 15,
+  'fosfatase alcalina': 12, 'bilirrubinas': 12, 'bilirrubina total': 12,
+  'bilirrubina direta': 12, 'pcr': 14, 'proteina c reativa': 14,
+  'proteína c reativa': 14, 'pcr ultrassensivel': 25, 'tsh': 26,
+  't3 livre': 28, 't4 livre': 25, 't3 total': 25, 't4 total': 25,
+  'anti-tpo': 35, 'anti tpo': 35, 'tireoglobulina': 30, 'ferritina': 22,
+  'ferro': 12, 'acido folico': 30, 'ácido fólico': 30, 'vitamina b12': 30,
+  'vitamina d': 36, 'vitamina b6': 80, 'vitamina c': 45, 'vitamina a': 55,
+  'vitamina e': 110, 'zinco': 25, 'selenio': 18, 'selênio': 18,
+  'magnesio': 10, 'magnésio': 10, 'litio': 26, 'lítio': 26,
+  'calcio': 10, 'cálcio': 10, 'sodio': 10, 'sódio': 10,
+  'potassio': 10, 'potássio': 10, 'fsh': 15, 'lh': 15, 'estradiol': 20,
+  'progesterona': 22, 'prolactina': 20, 'testosterona total': 22,
+  'testosterona livre': 28, 'dhea': 25, 'shbg': 36, 'anti-mulleriano': 110,
+  'anti mülleriano': 110, 'cortisol': 20, 'acth': 35, 'insulina': 15,
+  'beta-hcg': 50, 'beta hcg': 50, 'psa total': 38, 'psa livre': 40,
+  'psa livre/total': 40, 'vhs': 15, 'hemossedimentacao': 15,
+  'hemossedimentação': 15, 'fator reumatoide': 14, 'fator reumatóide': 14,
+  'urina i': 14, 'eas': 14, 'uranalise': 14, 'urinálise': 14,
+  'urocultura': 18, 'urocultura + antibiograma': 30, 'urocultura antibiograma': 30,
+  'antibiograma': 20, 'parasitologico': 15, 'parasitológico': 15,
+  'vdrl': 12, 'hiv': 35, 'hbsag': 25, 'anti-hbs': 25, 'anti hbs': 25,
+  'hepatite b': 25, 'hepatite c': 30, 'anti-hcv': 30, 'dengue': 50,
+  'toxoplasmose': 25, 'rubeola': 40, 'rubéola': 40, 'cmv': 25,
+  'coombs direto': 15, 'coombs indireto': 15, 'eletroforese hemoglobinas': 25,
+  'eletroforese de hemoglobinas': 25, 'coagulograma': 35, 'tp': 12,
+  'tempo de protrombina': 12, 'ttpa': 18, 'dimero-d': 90, 'dímero-d': 90,
+  'ecg': 50, 'espermograma': 30, 'grupo sanguineo': 20, 'grupo sanguíneo': 20,
+  'fator rh': 20, 'tipagem sanguinea': 20, 'tipagem sanguínea': 20,
+  'eritrograma': 14, 'reticulocitos': 14, 'reticulócitos': 14,
+};
+
+function calcularOrcamento(textoExames) {
+  const txt = textoExames.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/hemoglobina glicada|hb glicada|hba1c/g, 'hba1c');
+
+  let total = 0;
+  const encontrados = [];
+  const naoEncontrados = [];
+
+  // Verifica regras especiais primeiro
+  const temHemograma = /hemograma/.test(txt);
+  const temGlicose = /glicos[ae]|glicemia/.test(txt);
+  const temOutros = txt.replace(/hemograma|glicos[ae]|glicemia/g, '').trim().length > 5;
+
+  // Conta exames identificados
+  const examesOrdenados = Object.keys(TABELA_PRECOS).sort((a,b) => b.length - a.length);
+  const txtProcessado = txt;
+  const jaContados = new Set();
+
+  for (const exame of examesOrdenados) {
+    if (txtProcessado.includes(exame) && !jaContados.has(exame)) {
+      // Evita contar subitens do lipidograma separadamente
+      if (['colesterol','hdl','ldl','vldl','triglicerides','triglicerídeos'].includes(exame)) {
+        if (txtProcessado.includes('lipidograma')) continue;
+      }
+      jaContados.add(exame);
+      total += TABELA_PRECOS[exame];
+      encontrados.push(exame);
+    }
+  }
+
+  if (total === 0) return null;
+
+  const cartao = Math.round(total * 1.05 * 100) / 100;
+  const pix = Math.round(total * 0.95 * 100) / 100;
+
+  return { total, cartao, pix, encontrados };
+}
+
 function extrairAgendamento(t) {
   const m = t.match(/\[AGENDAR:([^\]]+)\]/);
   if (!m) return null;
@@ -528,6 +607,17 @@ async function processarFila(num) {
       hist.push({ role: 'user', content: txtCompleto });
     }
     console.log('HIST [' + num + ']: ' + hist.length + ' msgs');
+
+    // Calcula orçamento no código se a mensagem contém exames
+    const orcamento = calcularOrcamento(txtCompleto);
+    if (orcamento && orcamento.total > 0) {
+      const infoOrcamento = '[ORÇAMENTO CALCULADO PELO SISTEMA — USE ESTES VALORES EXATOS: ' +
+        '💳 Cartão: R$' + orcamento.cartao.toFixed(2) + ' | ' +
+        '💵 Pix/Dinheiro: R$' + orcamento.pix.toFixed(2) + '. ' +
+        'NÃO recalcule. Use estes valores exatos na resposta.]';
+      hist.push({ role: 'user', content: infoOrcamento });
+      console.log('ORÇAMENTO [' + num + ']: base=R$' + orcamento.total + ' cartão=R$' + orcamento.cartao + ' pix=R$' + orcamento.pix);
+    }
 
     // Verifica se tem todos os dados para agendar automaticamente
     const temTudo = estadoAtual.especialidade && estadoAtual.nome && estadoAtual.nascimento && estadoAtual.periodo;
