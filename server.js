@@ -227,6 +227,10 @@ function calcularOrcamento(textoExames) {
       if (['colesterol','hdl','ldl','vldl','triglicerides','triglicerídeos'].includes(exame)) {
         if (txtProcessado.includes('lipidograma') || txtProcessado.includes('lipodograma')) continue;
       }
+      // Evita contar litemia e lítio como dois exames
+      if (['litio','lítio'].includes(exame)) {
+        if (jaContados.has('litemia') || jaContados.has('litemia serica')) continue;
+      }
       // Evita contar grupo sanguíneo e fator rh separadamente
       if (['grupo sanguineo','grupo sanguíneo','fator rh'].includes(exame)) {
         if (jaContados.has('grupo sanguineo e fator rh') || jaContados.has('grupo sanguíneo e fator rh')) continue;
