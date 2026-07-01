@@ -62,10 +62,10 @@ Somente particular. NUNCA pergunte convênio.
 ANTI-DUPLICATA: Se histórico já tem confirmação da mesma especialidade, NÃO gere [AGENDAR] de novo.
 
 AGENDA MÉDICOS
-• Psiquiatria: 07/07 das 13h30–17h00 — SOMENTE TARDE
+• Psiquiatria: 07/07, 21/07, 07/08 e 21/08 das 13h30–17h00 — SOMENTE TARDE
 • Otorrinolaringologia: 30/06 das 08h00–11h30 — SOMENTE MANHÃ
-• Endocrinologia: 30/06 das 13h00–17h30 — SOMENTE TARDE
-• Ginecologia: 06/07 das 13h30–17h15 — SOMENTE TARDE
+• Endocrinologia: 14/07 e 21/07 das 13h00–17h30 — SOMENTE TARDE
+• Ginecologia: 13/07 das 13h30–17h15 — SOMENTE TARDE
 • Clínico Geral/Pediatria — agenda semanal:
   - Segunda: 08h00–10h45 e 16h00–17h15
   - Terça: 08h00–11h30
@@ -164,10 +164,11 @@ REGRAS FINAIS
 // Tabela de preços para cálculo preciso
 const TABELA_PRECOS = {
   'hemograma': 20, 'glicemia': 15, 'glicose': 15, 'glicemia de jejum': 15,
-  'glicemia casual': 10, 'glicemia pos-prandial': 10, 'hba1c': 24,
+  'glicemia casual': 10, 'glicemia pos-prandial': 10, 'glicose de jejum': 15, 'glicose pos-prandial': 10, 'glicose casual': 10, 'hba1c': 24,
   'hemoglobina glicada': 24, 'hb glicada': 24, 'colesterol': 12,
   'hdl': 14, 'ldl': 14, 'vldl': 14, 'triglicerides': 14, 'triglicerídeos': 14,
-  'lipidograma': 38, 'lipodograma': 38, 'lipidograma completo': 38, 'perfil lipidico': 38, 'perfil lipídico': 38, 'creatinina': 12, 'ureia': 12, 'acido urico': 12,
+  'lipidograma': 38, 'lipodograma': 38, 'lipidograma completo': 38, 'perfil lipidico': 38, 'perfil lipídico': 38,
+  'creatinina': 12, 'ureia': 12, 'acido urico': 12,
   'ácido úrico': 12, 'tgo': 15, 'tgp': 15, 'gama-gt': 15, 'gama gt': 15,
   'fosfatase alcalina': 12, 'bilirrubinas': 12, 'bilirrubina total': 12,
   'bilirrubina direta': 12, 'pcr': 14, 'proteina c reativa': 14,
@@ -206,43 +207,83 @@ const TABELA_PRECOS = {
 function calcularOrcamento(textoExames) {
   const txt = textoExames.toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/hemoglobina glicada|hb glicada|hba1c/g, 'hba1c');
+    // pega "hemoglobina glicada", "hb glicada", "hb a1c", "hb-a1c", "hba1c" com ou sem espaço/hífen
+    .replace(/hemoglobina\s*glicada|hb\s*glicada|hb\s*-?\s*a1\s*c|hba1c/g, 'hba1c');
 
-  let total = 0;
-  const encontrados = [];
-  const naoEncontrados = [];
-
-  // Verifica regras especiais primeiro
-  const temHemograma = /hemograma/.test(txt);
-  const temGlicose = /glicos[ae]|glicemia/.test(txt);
-  const temOutros = txt.replace(/hemograma|glicos[ae]|glicemia/g, '').trim().length > 5;
-
-  // Conta exames identificados
-  const examesOrdenados = Object.keys(TABELA_PRECOS).sort((a,b) => b.length - a.length);
-  const txtProcessado = txt;
-  const jaContados = new Set();
+  // PASSO 1: encontra todos os exames da tabela, sem sobreposição de texto
+  let txtRestante = txt;
+  const achados = [];
+  const examesOrdenados = Object.keys(TABELA_PRECOS).sort((a, b) => b.length - a.length);
 
   for (const exame of examesOrdenados) {
-    if (txtProcessado.includes(exame) && !jaContados.has(exame)) {
-      // Evita contar subitens do lipidograma separadamente
-      if (['colesterol','hdl','ldl','vldl','triglicerides','triglicerídeos'].includes(exame)) {
-        if (txtProcessado.includes('lipidograma') || txtProcessado.includes('lipodograma')) continue;
-      }
-      // Evita contar litemia e lítio como dois exames
-      if (['litio','lítio'].includes(exame)) {
-        if (jaContados.has('litemia') || jaContados.has('litemia serica')) continue;
-      }
-      // Evita contar grupo sanguíneo e fator rh separadamente
-      if (['grupo sanguineo','grupo sanguíneo','fator rh'].includes(exame)) {
-        if (jaContados.has('grupo sanguineo e fator rh') || jaContados.has('grupo sanguíneo e fator rh')) continue;
-      }
-      jaContados.add(exame);
-      total += TABELA_PRECOS[exame];
-      encontrados.push(exame);
+    if (txtRestante.includes(exame)) {
+      achados.push({ chave: exame, valor: TABELA_PRECOS[exame] });
+      // "consome" o trecho encontrado, para que uma chave genérica (ex: "glicemia")
+      // não seja contada de novo em cima de uma chave mais específica já encontrada
+      // (ex: "glicemia de jejum")
+      txtRestante = txtRestante.split(exame).join(' '.repeat(exame.length));
     }
   }
 
-  if (total === 0) return null;
+  if (achados.length === 0) return null;
+
+  const chaves = achados.map(a => a.chave);
+  const tem = (c) => chaves.includes(c);
+
+  const removidos = new Set();
+  const extras = [];
+
+  // PASSO 2: regras especiais, baseadas na CONTAGEM de exames encontrados
+  // (não em texto residual — evita falso positivo com palavras como "solicito", "completo" etc.)
+
+  const VARIANTES_GLICEMIA = ['glicemia de jejum', 'glicemia pos-prandial', 'glicemia pos-sobrecarga com glicose',
+    'glicemia casual', 'glicose de jejum', 'glicose pos-prandial', 'glicose casual', 'glicemia', 'glicose'];
+  const temHemograma = tem('hemograma');
+  const glicemiaAchada = VARIANTES_GLICEMIA.find(tem);
+  const temHba1c = tem('hba1c');
+
+  if (temHemograma && glicemiaAchada && achados.length === 2) {
+    removidos.add('hemograma'); removidos.add(glicemiaAchada);
+    extras.push({ nome: 'hemograma + glicemia (combo)', valor: 55 });
+  } else if (temHemograma && achados.length === 1) {
+    removidos.add('hemograma');
+    extras.push({ nome: 'hemograma (sozinho)', valor: 30 });
+  } else if (glicemiaAchada && achados.length === 1) {
+    removidos.add(glicemiaAchada);
+    extras.push({ nome: 'glicemia (sozinho)', valor: 25 });
+  }
+
+  if (temHba1c && achados.length === 1) {
+    removidos.add('hba1c');
+    extras.push({ nome: 'hba1c (sozinho)', valor: 32 });
+  }
+
+  const temLipidoCompleto = ['colesterol', 'hdl', 'ldl', 'vldl'].every(tem) &&
+    (tem('triglicerides') || tem('triglicerídeos'));
+  if (temLipidoCompleto) {
+    const lipidosAchados = ['colesterol', 'hdl', 'ldl', 'vldl', 'triglicerides', 'triglicerídeos'].filter(tem);
+    lipidosAchados.forEach(c => removidos.add(c));
+    const soLipido = achados.length === lipidosAchados.length;
+    extras.push({ nome: 'lipidograma' + (soLipido ? ' (isolado)' : ''), valor: soLipido ? 68 : 38 });
+  }
+
+  if (!(tem('grupo sanguineo e fator rh') || tem('grupo sanguíneo e fator rh')) &&
+      (tem('grupo sanguineo') || tem('grupo sanguíneo')) && tem('fator rh')) {
+    removidos.add('grupo sanguineo'); removidos.add('grupo sanguíneo'); removidos.add('fator rh');
+    extras.push({ nome: 'grupo sanguineo e fator rh', valor: 20 });
+  }
+
+  if (tem('toxoplasmose') && /igm/.test(txt) && /igg/.test(txt)) {
+    removidos.add('toxoplasmose');
+    extras.push({ nome: 'toxoplasmose (igm+igg)', valor: 50 });
+  }
+
+  // PASSO 3: total final
+  let total = achados.filter(a => !removidos.has(a.chave)).reduce((s, a) => s + a.valor, 0);
+  total += extras.reduce((s, e) => s + e.valor, 0);
+
+  const encontrados = achados.filter(a => !removidos.has(a.chave)).map(a => a.chave)
+    .concat(extras.map(e => e.nome));
 
   const cartao = Math.round(total * 1.05 * 100) / 100;
   const pix = Math.round(total * 0.95 * 100) / 100;
@@ -307,11 +348,31 @@ async function chamarIA(msgs, tentativa) {
       tabelaDias.push(d.toString().padStart(2,'0') + '/06=' + diaDaSemana(d,6).slice(0,3));
     }
     const refDiasSemana = tabelaDias.join(', ');
+
+    // Agenda com suporte a múltiplas datas por especialidade — filtra automaticamente as que já passaram
+    const AGENDA_ESPECIALIDADES = {
+      'Psiquiatria': { horario: '13h30–17h00', periodo: 'SOMENTE TARDE', datas: [{dia:7,mes:7},{dia:21,mes:7},{dia:7,mes:8},{dia:21,mes:8}] },
+      'Otorrinolaringologia': { horario: '08h00–11h30', periodo: 'SOMENTE MANHÃ', datas: [{dia:30,mes:6}] },
+      'Endocrinologia': { horario: '13h00–17h30', periodo: 'SOMENTE TARDE', datas: [{dia:14,mes:7},{dia:21,mes:7}] },
+      'Ginecologia': { horario: '13h30–17h15', periodo: 'SOMENTE TARDE', datas: [{dia:13,mes:7}] },
+    };
+    function formatarListaDatas(lista) {
+      if (lista.length === 1) return lista[0];
+      if (lista.length === 2) return lista.join(' e ');
+      return lista.slice(0, -1).join(', ') + ' e ' + lista[lista.length - 1];
+    }
+    function formatarLinhaAgenda(nome, cfg) {
+      const futuras = cfg.datas.filter(function (d) { return dataFutura(d.dia, d.mes); })
+        .map(function (d) { return String(d.dia).padStart(2, '0') + '/' + String(d.mes).padStart(2, '0'); });
+      if (futuras.length === 0) return '• ' + nome + ': sem agenda disponível no momento';
+      return '• ' + nome + ': ' + formatarListaDatas(futuras) + ' das ' + cfg.horario + ' — ' + cfg.periodo;
+    }
+
     const agendaFiltrada = [
-      dataFutura(7,7) ? '• Psiquiatria: 07/07 das 13h30–17h00 — SOMENTE TARDE' : '• Psiquiatria: sem agenda disponível no momento',
-      dataFutura(30,6) ? '• Otorrinolaringologia: 30/06 das 08h00–11h30 — SOMENTE MANHÃ' : '• Otorrinolaringologia: sem agenda disponível no momento',
-      dataFutura(30,6) ? '• Endocrinologia: 30/06 das 13h00–17h30 — SOMENTE TARDE' : '• Endocrinologia: sem agenda disponível no momento',
-      dataFutura(6,7) ? '• Ginecologia: 06/07 das 13h30–17h15 — SOMENTE TARDE' : '• Ginecologia: sem agenda disponível no momento',
+      formatarLinhaAgenda('Psiquiatria', AGENDA_ESPECIALIDADES['Psiquiatria']),
+      formatarLinhaAgenda('Otorrinolaringologia', AGENDA_ESPECIALIDADES['Otorrinolaringologia']),
+      formatarLinhaAgenda('Endocrinologia', AGENDA_ESPECIALIDADES['Endocrinologia']),
+      formatarLinhaAgenda('Ginecologia', AGENDA_ESPECIALIDADES['Ginecologia']),
       (function() {
         const dias = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
         const horarios = {
