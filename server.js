@@ -23,12 +23,13 @@ const NUMEROS_IGNORAR = [
 
 const cacheHumano = {};
 
-// MODO TESTE — só esses números recebem resposta da América
-const NUMEROS_TESTE = [
-  '556284227156',  // 984227156
-  '556284271335',  // 984271335
+// MODO TESTE LABORATORIAL — orçamentos de exames só para esses números
+const NUMEROS_TESTE_LAB = [
+  '556284227156',
+  '556284271335',
 ];
-const MODO_TESTE = true; // muda para false quando quiser liberar para todos
+const MODO_TESTE = false; // quando true, bloqueia TUDO para não listados
+const MODO_TESTE_LAB = true; // quando true, restringe orçamentos lab aos números de teste
 async function emAtendimentoHumano(num) {
   const agora = Date.now();
   if (cacheHumano[num] && cacheHumano[num].expira > agora) return cacheHumano[num].valor;
@@ -171,7 +172,7 @@ const TABELA_PRECOS = {
   'fosfatase alcalina': 12, 'bilirrubinas': 12, 'bilirrubina total': 12,
   'bilirrubina direta': 12, 'pcr': 14, 'proteina c reativa': 14,
   'proteína c reativa': 14, 'pcr ultrassensivel': 25, 'tsh': 26,
-  't3 livre': 28, 't4 livre': 25, 't3 total': 25, 't4 total': 25,
+  't3 livre': 28, 't4 livre': 25, 't4l': 25, 't3 total': 25, 't4 total': 25,
   'anti-tpo': 35, 'anti tpo': 35, 'tireoglobulina': 30, 'ferritina': 22,
   'ferro': 12, 'acido folico': 30, 'ácido fólico': 30, 'vitamina b12': 30,
   'vitamina d': 36, 'vitamina b6': 80, 'vitamina c': 45, 'vitamina a': 55,
@@ -187,7 +188,7 @@ const TABELA_PRECOS = {
   'hemossedimentação': 15, 'fator reumatoide': 14, 'fator reumatóide': 14,
   'urina i': 14, 'eas': 14, 'uranalise': 14, 'urinálise': 14,
   'urocultura': 18, 'urocultura + antibiograma': 30, 'urocultura antibiograma': 30,
-  'antibiograma': 20, 'parasitologico': 15, 'parasitológico': 15,
+  'antibiograma': 20, 'parasitologico': 15, 'parasitológico': 15, 'epf': 15, 'gpf': 15, 'epf3': 38, 'parasitologico 3 amostras': 38,
   'vdrl': 12, 'hiv': 35, 'hbsag': 25, 'anti-hbs': 25, 'anti hbs': 25,
   'hepatite b': 25, 'hepatite c': 30, 'anti-hcv': 30, 'dengue': 50,
   'toxoplasmose': 25, 'rubeola': 40, 'rubéola': 40, 'cmv': 25,
@@ -622,7 +623,7 @@ async function processarFila(num) {
     console.log('HIST [' + num + ']: ' + hist.length + ' msgs');
 
     // Calcula orçamento no código se a mensagem contém exames
-    const orcamento = calcularOrcamento(txtCompleto);
+    const orcamento = (!MODO_TESTE_LAB || NUMEROS_TESTE_LAB.includes(num)) ? calcularOrcamento(txtCompleto) : null;
     if (orcamento && orcamento.total > 0) {
       const infoOrcamento = '[ORÇAMENTO CALCULADO PELO SISTEMA — USE ESTES VALORES EXATOS: ' +
         '💳 Cartão: R$' + orcamento.cartao.toFixed(2) + ' | ' +
@@ -698,7 +699,7 @@ app.post('/webhook', function(req, res) {
   const num = b.phone || '';
   if (!num || num.includes('@lid') || num.includes('-group')) return;
   if (NUMEROS_IGNORAR.includes(num)) return;
-  if (MODO_TESTE && !NUMEROS_TESTE.includes(num)) return; // modo teste: só números autorizados
+  if (MODO_TESTE && !NUMEROS_TESTE_LAB.includes(num)) return;
 
   // Deduplica por messageId
   const msgId = b.messageId || '';
