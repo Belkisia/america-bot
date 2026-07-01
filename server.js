@@ -204,24 +204,25 @@ const TABELA_PRECOS = {
   'eritrograma': 14, 'reticulocitos': 14, 'reticulócitos': 14,
 };
 
+function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
 function calcularOrcamento(textoExames) {
   const txt = textoExames.toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    // pega "hemoglobina glicada", "hb glicada", "hb a1c", "hb-a1c", "hba1c" com ou sem espaço/hífen
     .replace(/hemoglobina\s*glicada|hb\s*glicada|hb\s*-?\s*a1\s*c|hba1c/g, 'hba1c');
 
-  // PASSO 1: encontra todos os exames da tabela, sem sobreposição de texto
+  // PASSO 1: encontra exames da tabela, exigindo BORDA DE PALAVRA (evita "lh" dentro de "conselho" etc.)
   let txtRestante = txt;
   const achados = [];
   const examesOrdenados = Object.keys(TABELA_PRECOS).sort((a, b) => b.length - a.length);
 
   for (const exame of examesOrdenados) {
-    if (txtRestante.includes(exame)) {
+    const re = new RegExp('(?:^|[^a-z0-9])(' + escapeRegex(exame) + ')(?:$|[^a-z0-9])');
+    const m = re.exec(txtRestante);
+    if (m) {
       achados.push({ chave: exame, valor: TABELA_PRECOS[exame] });
-      // "consome" o trecho encontrado, para que uma chave genérica (ex: "glicemia")
-      // não seja contada de novo em cima de uma chave mais específica já encontrada
-      // (ex: "glicemia de jejum")
-      txtRestante = txtRestante.split(exame).join(' '.repeat(exame.length));
+      const start = m.index + m[0].indexOf(m[1]);
+      txtRestante = txtRestante.slice(0, start) + ' '.repeat(exame.length) + txtRestante.slice(start + exame.length);
     }
   }
 
@@ -232,9 +233,6 @@ function calcularOrcamento(textoExames) {
 
   const removidos = new Set();
   const extras = [];
-
-  // PASSO 2: regras especiais, baseadas na CONTAGEM de exames encontrados
-  // (não em texto residual — evita falso positivo com palavras como "solicito", "completo" etc.)
 
   const VARIANTES_GLICEMIA = ['glicemia de jejum', 'glicemia pos-prandial', 'glicemia pos-sobrecarga com glicose',
     'glicemia casual', 'glicose de jejum', 'glicose pos-prandial', 'glicose casual', 'glicemia', 'glicose'];
@@ -278,7 +276,6 @@ function calcularOrcamento(textoExames) {
     extras.push({ nome: 'toxoplasmose (igm+igg)', valor: 50 });
   }
 
-  // PASSO 3: total final
   let total = achados.filter(a => !removidos.has(a.chave)).reduce((s, a) => s + a.valor, 0);
   total += extras.reduce((s, e) => s + e.valor, 0);
 
