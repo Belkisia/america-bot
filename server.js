@@ -172,7 +172,7 @@ const TABELA_PRECOS = {
   'fosfatase alcalina': 12, 'bilirrubinas': 12, 'bilirrubina total': 12,
   'bilirrubina direta': 12, 'pcr': 14, 'proteina c reativa': 14,
   'proteína c reativa': 14, 'pcr ultrassensivel': 25, 'tsh': 26,
-  't3 livre': 28, 't4 livre': 25, 't4l': 25, 't3 total': 25, 't4 total': 25,
+  't3 livre': 28, 't4 livre': 25, 't4l': 25, 't3 total': 25, 't4 total': 25, 't4': 25, 't3': 25,
   'anti-tpo': 35, 'anti tpo': 35, 'tireoglobulina': 30, 'ferritina': 22,
   'ferro': 12, 'acido folico': 30, 'ácido fólico': 30, 'vitamina b12': 30,
   'vitamina d': 36, 'vitamina b6': 80, 'vitamina c': 45, 'vitamina a': 55,
