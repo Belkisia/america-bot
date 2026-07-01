@@ -167,7 +167,7 @@ const TABELA_PRECOS = {
   'glicemia casual': 10, 'glicemia pos-prandial': 10, 'hba1c': 24,
   'hemoglobina glicada': 24, 'hb glicada': 24, 'colesterol': 12,
   'hdl': 14, 'ldl': 14, 'vldl': 14, 'triglicerides': 14, 'triglicerídeos': 14,
-  'lipidograma': 38, 'creatinina': 12, 'ureia': 12, 'acido urico': 12,
+  'lipidograma': 38, 'lipodograma': 38, 'lipidograma completo': 38, 'perfil lipidico': 38, 'perfil lipídico': 38, 'creatinina': 12, 'ureia': 12, 'acido urico': 12,
   'ácido úrico': 12, 'tgo': 15, 'tgp': 15, 'gama-gt': 15, 'gama gt': 15,
   'fosfatase alcalina': 12, 'bilirrubinas': 12, 'bilirrubina total': 12,
   'bilirrubina direta': 12, 'pcr': 14, 'proteina c reativa': 14,
@@ -225,7 +225,7 @@ function calcularOrcamento(textoExames) {
     if (txtProcessado.includes(exame) && !jaContados.has(exame)) {
       // Evita contar subitens do lipidograma separadamente
       if (['colesterol','hdl','ldl','vldl','triglicerides','triglicerídeos'].includes(exame)) {
-        if (txtProcessado.includes('lipidograma')) continue;
+        if (txtProcessado.includes('lipidograma') || txtProcessado.includes('lipodograma')) continue;
       }
       // Evita contar grupo sanguíneo e fator rh separadamente
       if (['grupo sanguineo','grupo sanguíneo','fator rh'].includes(exame)) {
