@@ -118,7 +118,7 @@ REGRAS DE PREÇO ESPECIAL:
 - As regras de cartão (+5%) e pix (-5%) se aplicam SOMENTE a exames laboratoriais
 - Para ultrassom, consultas e procedimentos: informe o preço fixo diretamente, SEM aplicar percentuais, SEM mencionar desconto ou acréscimo
 - Para exames laboratoriais: calcule internamente cartão = total × 1.05 | pix = total × 0.95 — mostre apenas os dois valores finais SEM mencionar percentuais
-- Acima de R$299 no cartão: parcela em até 3x (mencione isso)
+- Acima de R$299 no cartão: parcela em até 3x (mencione isso). Abaixo de R$299: NUNCA mencione parcelamento, nem para dizer que "não se aplica" — simplesmente não toque no assunto
 - Seja calorosa, humanizada e faça uma chamada para agendamento ao final, como neste exemplo:
 "Olá! 😊 Segue o orçamento para os exames solicitados:
 💳 Cartão de crédito: R$XX,XX
@@ -828,6 +828,18 @@ app.post('/api/chat', async function(req, res) {
     await db.salvarMensagem(tel, 'user', msg);
     let hist = await db.buscarHistorico(tel, 20);
     if (!hist.length || hist[hist.length-1].role !== 'user') hist.push({ role: 'user', content: msg });
+
+    // Calcula orçamento no código (mesmo comportamento do fluxo de WhatsApp) — NUNCA deixa a IA calcular de cabeça
+    const orcamentoChat = calcularOrcamento(msg);
+    if (orcamentoChat && orcamentoChat.total > 0) {
+      const infoOrcamentoChat = '[ORÇAMENTO CALCULADO PELO SISTEMA — USE ESTES VALORES EXATOS: ' +
+        '💳 Cartão: R$' + orcamentoChat.cartao.toFixed(2) + ' | ' +
+        '💵 Pix/Dinheiro: R$' + orcamentoChat.pix.toFixed(2) + '. ' +
+        'NÃO recalcule. Use estes valores exatos na resposta.]';
+      hist.push({ role: 'user', content: infoOrcamentoChat });
+      console.log('ORÇAMENTO CHAT [' + tel + ']: base=R$' + orcamentoChat.total + ' cartão=R$' + orcamentoChat.cartao + ' pix=R$' + orcamentoChat.pix);
+    }
+
     const resp = await chamarIA(hist);
     const ag = extrairAgendamento(resp);
     if (ag) await db.salvarAgendamento({ nome_paciente: ag.nome, data_nascimento: ag.nascimento||null, telefone: tel, especialidade: ag.especialidade, convenio: 'particular', periodo: ag.periodo, origem: 'chat' });
