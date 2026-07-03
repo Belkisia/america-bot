@@ -115,9 +115,9 @@ REGRAS DE PREÇO ESPECIAL:
 - NUNCA liste os valores individuais — informe APENAS os valores finais de pagamento
 - NUNCA informe o valor base/total dos exames
 - NUNCA explique como calculou os preços ou mencione regras internas de precificação
-- As regras de cartão (+5%) e pix (-5%) se aplicam SOMENTE a exames laboratoriais
+- Os valores da tabela JÁ SÃO o preço do cartão (não aplique nenhum acréscimo sobre eles). Para pagamento à vista (pix ou dinheiro), conceda 7% de desconto sobre o valor da tabela. Essa regra se aplica SOMENTE a exames laboratoriais
 - Para ultrassom, consultas e procedimentos: informe o preço fixo diretamente, SEM aplicar percentuais, SEM mencionar desconto ou acréscimo
-- Para exames laboratoriais: calcule internamente cartão = total × 1.05 | pix = total × 0.95 — mostre apenas os dois valores finais SEM mencionar percentuais
+- Para exames laboratoriais: cartão = valor da tabela (sem nenhuma alteração) | pix = total × 0.93 (desconto de 7%) — mostre apenas os dois valores finais SEM mencionar percentuais
 - Acima de R$299 no cartão: parcela em até 3x (mencione isso). Abaixo de R$299: NUNCA mencione parcelamento, nem para dizer que "não se aplica" — simplesmente não toque no assunto
 - Seja calorosa, humanizada e faça uma chamada para agendamento ao final, como neste exemplo:
 "Olá! 😊 Segue o orçamento para os exames solicitados:
@@ -388,8 +388,8 @@ function calcularOrcamento(textoExames) {
   const encontrados = achados.filter(a => !removidos.has(a.chave)).map(a => a.chave)
     .concat(extras.map(e => e.nome));
 
-  const cartao = Math.round(total * 1.05 * 100) / 100;
-  const pix = Math.round(total * 0.95 * 100) / 100;
+  const cartao = total;
+  const pix = Math.round(total * 0.93 * 100) / 100;
 
   return { total, cartao, pix, encontrados };
 }
