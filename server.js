@@ -527,6 +527,7 @@ async function chamarIA(msgs, tentativa) {
     );
     return r.data.content[0].text;
   } catch(e) {
+    console.error('ERRO chamarIA - status:', e.response ? e.response.status : '?', '- corpo:', e.response ? JSON.stringify(e.response.data) : e.message);
     if (tentativa < 2) {
       await new Promise(function(r){setTimeout(r,2000);});
       return chamarIA(msgs, tentativa+1);
