@@ -159,7 +159,15 @@ Contatos: 📞 (62) 3636-3536 | 📱 (62) 99504-9138
 REGRAS FINAIS
 - UMA única mensagem por resposta. Máximo 3 parágrafos. Sem markdown #.
 - Nome+nascimento: pergunte juntos, extraia juntos.
-- Ao confirmar: *Seu atendimento foi solicitado com sucesso!* ✅ + endereço + aviso que equipe confirmará.
+- Ao confirmar um agendamento, use SEMPRE este formato estruturado (preencha com os dados reais da conversa — NUNCA invente horário exato, nome de médico ou consultório, pois o sistema não tem esses dados):
+"*Seu atendimento foi confirmado!* ✅
+📅 [dia da semana por extenso], [DD/MM/AAAA]
+⏰ [Manhã ou Tarde]
+🏥 [Especialidade/Exame]
+📍 Av. Frei Miguelino, 247 - Bairro Goiá, Goiânia-GO, CEP 74485-055
+
+Chegue com uns 20 minutinhos de antecedência, tá bom? 😉 Nossa equipe vai confirmar tudo em breve. Posso ajudar em mais alguma coisa?"
+- A data SEMPRE vem com o dia da semana por extenso na frente (ex: "Terça-feira, 14/07/2026") — use a TABELA DE DIAS DA SEMANA fornecida para acertar o dia certo, NUNCA calcule de memória.
 - Endereço: Av. Frei Miguelino, 247 - Bairro Goiá, Goiânia-GO, CEP 74485-055.`;
 
 
@@ -479,10 +487,14 @@ async function chamarIA(msgs, tentativa) {
       const dias = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
       return dias[new Date(2026, mes-1, dia).getDay()];
     }
-    // Tabela de referência de dias da semana de junho/2026 para o modelo usar
+    // Tabela de referência de dias da semana — dinâmica, cobre os próximos 45 dias a partir de hoje
     const tabelaDias = [];
-    for (let d = 1; d <= 30; d++) {
-      tabelaDias.push(d.toString().padStart(2,'0') + '/06=' + diaDaSemana(d,6).slice(0,3));
+    for (let i = 0; i < 45; i++) {
+      const d = new Date(nowBR);
+      d.setDate(d.getDate() + i);
+      const dd = String(d.getDate()).padStart(2,'0');
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      tabelaDias.push(dd + '/' + mm + '=' + diaDaSemana(d.getDate(), d.getMonth()+1).slice(0,3));
     }
     const refDiasSemana = tabelaDias.join(', ');
 
@@ -790,6 +802,7 @@ async function processarFila(num) {
       const imageUrl = imagemMsg.replace('__IMAGEM__:', '').trim();
       const leitura = imageUrl ? await lerImagem(imageUrl) : null;
       if (leitura) {
+        console.log('LEITURA_IMAGEM [' + num + ']: ' + leitura);
         await db.salvarMensagem(num, 'user', '[imagem enviada]');
         let hist = await db.buscarHistorico(num, 20);
         hist = hist.filter(function(m){return m.content && m.content.trim();});
@@ -798,9 +811,9 @@ async function processarFila(num) {
         let instrucaoOrcamento = '';
         if (orcamentoImg && orcamentoImg.total > 0) {
           instrucaoOrcamento = '\n\nORÇAMENTO CALCULADO PELO SISTEMA — USE ESTES VALORES EXATOS: 💳 Cartão: R$' + orcamentoImg.cartao.toFixed(2) + ' | 💵 Pix/Dinheiro: R$' + orcamentoImg.pix.toFixed(2) + '. NÃO recalcule. NÃO modifique esses valores.';
-          console.log('ORÇAMENTO IMAGEM [' + num + ']: base=R$' + orcamentoImg.total + ' cartão=R$' + orcamentoImg.cartao.toFixed(2));
+          console.log('ORÇAMENTO IMAGEM [' + num + ']: base=R$' + orcamentoImg.total + ' cartão=R$' + orcamentoImg.cartao.toFixed(2) + ' — EXAMES ENCONTRADOS: ' + JSON.stringify(orcamentoImg.encontrados));
         }
-        hist.push({ role: 'user', content: 'O paciente enviou uma imagem/receita médica. Análise da imagem: ' + leitura + instrucaoOrcamento + '\n\nInstruções:\n1. Confirme o nome do paciente e os exames identificados de forma calorosa\n2. Informe os valores calculados acima (use exatamente esses valores)\n3. Avise de forma natural que é uma prévia e que a secretaria vai confirmar o valor final e os exames identificados\n4. Convide para agendar\nSe algum exame não tiver valor calculado, mencione que entrará em contato para complementar.' });
+        hist.push({ role: 'user', content: 'O paciente enviou uma imagem/receita médica. Análise da imagem: ' + leitura + instrucaoOrcamento + '\n\nInstruções:\n1. Confirme o nome do paciente e LISTE cada exame identificado individualmente pelo nome (NUNCA agrupe em categorias como "função renal", "perfil hormonal" etc.)\n2. Informe os valores calculados acima (use exatamente esses valores)\n3. Avise de forma natural que é uma prévia e que a secretaria vai confirmar o valor final e os exames identificados\n4. Convide para agendar\nSe algum exame não tiver valor calculado, mencione que entrará em contato para complementar.' });
         const resp = await chamarIA(hist);
         const final = limpar(resp).replace('[SECRETARIA]', '').trim();
         await db.salvarMensagem(num, 'assistant', final);
