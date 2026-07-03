@@ -830,6 +830,16 @@ async function processarFila(num) {
       console.log('ORÇAMENTO [' + num + ']: base=R$' + orcamento.total + ' cartão=R$' + orcamento.cartao + ' pix=R$' + orcamento.pix);
     }
 
+    // Detecta se o paciente está recusando/adiando o agendamento nesta mensagem
+    const recusouAgendar = /n[ãa]o quero (agendar|marcar)|n[ãa]o vou agendar|agora n[ãa]o|n[ãa]o agora|depois eu (agendo|marco|confirmo)|vou pensar|s[óo] confirmar depois|talvez depois|ainda n[ãa]o/i.test(txtCompleto);
+
+    if (recusouAgendar) {
+      // Limpa o "empurrão" de nome/nascimento para não insistir nas próximas mensagens também
+      await atualizarEstado(num, { periodo: null, dataEscolhida: null });
+      hist.push({ role: 'user', content: '[INSTRUÇÃO: O paciente disse que não quer agendar agora. Responda de forma acolhedora, SEM insistir, SEM pedir nome ou data de nascimento. Apenas avise que fica à disposição quando ele quiser agendar.]' });
+      console.log('RECUSOU_AGENDAR [' + num + ']');
+    } else {
+
     // Verifica se tem todos os dados para agendar automaticamente
     const temTudo = estadoAtual.especialidade && estadoAtual.nome && estadoAtual.nascimento && estadoAtual.periodo;
 
@@ -847,6 +857,7 @@ async function processarFila(num) {
     } else if (estadoAtual.especialidade) {
       hist.push({ role: 'user', content: '[LEMBRETE: Especialidade já definida: ' + estadoAtual.especialidade + '. NÃO pergunte especialidade.' + (estadoAtual.periodo ? ' Período: ' + estadoAtual.periodo + '.' : '') + (estadoAtual.dataEscolhida ? ' Data: ' + estadoAtual.dataEscolhida + '.' : '') + ']' });
       console.log('LEMBRETE [' + num + ']: esp=' + estadoAtual.especialidade);
+    }
     }
 
     const resp = await chamarIA(hist);
