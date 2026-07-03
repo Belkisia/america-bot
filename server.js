@@ -183,6 +183,9 @@ const TABELA_PRECOS = {
   'vldl': 15,
   'triglicerides': 15.5,
   'triglicerídeos': 15.5,
+  'triglicerideos': 15.5,
+  'dht': 42,
+  'dehidrotestosterona': 42,
   'lipidograma': 40,
   'lipodograma': 40,
   'lipidograma completo': 40,
@@ -200,6 +203,9 @@ const TABELA_PRECOS = {
   'bilirrubinas': 13,
   'bilirrubina total': 13,
   'bilirrubina direta': 13,
+  'proteinas totais e fracoes sericas': 13,
+  'proteinas totais': 13,
+  'proteinas totais e fracoes': 13,
   'pcr ultrassensivel': 16,
   'tsh': 28.5,
   't3 livre': 30,
@@ -244,6 +250,7 @@ const TABELA_PRECOS = {
   'prolactina': 21,
   'testosterona total': 23.5,
   'testosterona livre': 29.5,
+  'testosterona': 0,
   'dhea': 26,
   'shbg': 38,
   'anti-mulleriano': 115,
@@ -256,6 +263,7 @@ const TABELA_PRECOS = {
   'psa total': 40,
   'psa livre': 42,
   'psa livre/total': 42,
+  'psa': 42,
   'vhs': 16,
   'hemossedimentacao': 16,
   'hemossedimentação': 16,
@@ -264,6 +272,9 @@ const TABELA_PRECOS = {
   'urina i': 15,
   'eas': 15,
   'uranalise': 15,
+  'sedimento da urina': 15,
+  'sedimentoscopia': 15,
+  'elementos anormais e sedimentoscopia': 15,
   'urinálise': 15,
   'urocultura + antibiograma': 32,
   'urocultura com antibiograma': 32,
@@ -317,7 +328,7 @@ function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 function calcularOrcamento(textoExames) {
   const txt = textoExames.toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/hemoglobina\s*glicada|hb\s*glicada|hb\s*-?\s*a1\s*c|hba1c/g, 'hba1c');
+    .replace(/hemoglobina\s*glic[ao]s?ilada|hemoglobina\s*glicada|hb\s*glicada|hb\s*-?\s*a1\s*c|hba1c/g, 'hba1c');
 
   // PASSO 1: encontra exames da tabela, exigindo BORDA DE PALAVRA (evita "lh" dentro de "conselho" etc.)
   let txtRestante = txt;
@@ -364,13 +375,17 @@ function calcularOrcamento(textoExames) {
     extras.push({ nome: 'hba1c (sozinho)', valor: 32 });
   }
 
-  const temLipidoCompleto = ['colesterol', 'hdl', 'ldl', 'vldl'].every(tem) &&
-    (tem('triglicerides') || tem('triglicerídeos'));
+  const temLipidoCompleto = ['colesterol', 'hdl', 'ldl'].every(tem) &&
+    (tem('vldl') || tem('triglicerides') || tem('triglicerídeos') || tem('triglicerideos'));
   if (temLipidoCompleto) {
-    const lipidosAchados = ['colesterol', 'hdl', 'ldl', 'vldl', 'triglicerides', 'triglicerídeos'].filter(tem);
-    lipidosAchados.forEach(c => removidos.add(c));
+    const lipidosAchados = achados.filter(a => ['colesterol', 'hdl', 'ldl', 'vldl', 'triglicerides', 'triglicerídeos', 'triglicerideos'].includes(a.chave));
+    lipidosAchados.forEach(a => removidos.add(a.chave));
     const soLipido = achados.length === lipidosAchados.length;
-    extras.push({ nome: 'lipidograma' + (soLipido ? ' (isolado)' : ''), valor: soLipido ? 68 : 38 });
+    const somaComponentes = lipidosAchados.reduce((s, a) => s + a.valor, 0);
+    extras.push({
+      nome: 'lipidograma' + (soLipido ? ' (isolado)' : ''),
+      valor: soLipido ? somaComponentes : TABELA_PRECOS['lipidograma']
+    });
   }
 
   if (!(tem('grupo sanguineo e fator rh') || tem('grupo sanguíneo e fator rh')) &&
@@ -382,6 +397,23 @@ function calcularOrcamento(textoExames) {
   if (tem('toxoplasmose') && /igm/.test(txt) && /igg/.test(txt)) {
     removidos.add('toxoplasmose');
     extras.push({ nome: 'toxoplasmose (igm+igg)', valor: 50 });
+  }
+
+  // Testosterona pedida sem especificar livre/total -> cobra as duas (convenção da clínica)
+  // Se além da menção genérica também aparecer "livre" ou "total" específico em outra linha da
+  // mesma receita, não cobra de novo — já está incluído no combo.
+  if (tem('testosterona')) {
+    removidos.add('testosterona');
+    removidos.add('testosterona total');
+    removidos.add('testosterona livre');
+    extras.push({ nome: 'testosterona total + livre (combo)', valor: 23.5 + 29.5 });
+  }
+
+  // Antibiograma + cultura de bactérias (fraseado típico do SUS, sem a palavra "urocultura") -> combo
+  if (tem('antibiograma') && /cultura/.test(txt) && !tem('urocultura + antibiograma') &&
+      !tem('urocultura com antibiograma') && !tem('urocultura antibiograma')) {
+    removidos.add('antibiograma');
+    extras.push({ nome: 'urocultura + antibiograma (combo)', valor: 32 });
   }
 
   let total = achados.filter(a => !removidos.has(a.chave)).reduce((s, a) => s + a.valor, 0);
@@ -568,9 +600,9 @@ async function lerImagem(imageUrl) {
     const base64 = Buffer.from(imgResp.data).toString('base64');
     const mediaType = (imgResp.headers['content-type'] || 'image/jpeg').split(';')[0].trim();
     const r = await axios.post('https://api.anthropic.com/v1/messages',
-      { model: 'claude-sonnet-5', max_tokens: 400, messages: [{ role: 'user', content: [
+      { model: 'claude-sonnet-5', max_tokens: 800, messages: [{ role: 'user', content: [
         { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-        { type: 'text', text: 'Analise esta imagem. Se for receita/pedido médico: extraia médico, CRM e exames solicitados. Se for resultado: identifique o tipo. Responda simples e direto, sem markdown.' }
+        { type: 'text', text: 'Analise esta imagem. Se for receita/pedido médico: extraia nome do médico, CRM e a lista de exames solicitados. REGRA CRÍTICA: liste CADA exame individualmente, numerado, com o nome EXATO/LITERAL como está escrito ou impresso no documento (ex: "Dosagem de Creatinina", "Transaminase Glutâmico-Oxalacética (TGO)", "Hemograma Completo"). NUNCA agrupe, resuma ou generalize exames em categorias como "função renal", "função hepática", "perfil lipídico" ou "entre outros" — mesmo que a lista seja longa (10, 20, 30+ itens), liste TODOS sem exceção e sem abreviar a lista. Se for resultado de exame (não pedido): identifique o tipo. Responda simples e direto, sem markdown.' }
       ]}]},
       { headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' }, timeout: 30000 }
     );
