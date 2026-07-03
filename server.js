@@ -367,6 +367,13 @@ function calcularOrcamento(textoExames) {
   const glicemiaAchada = VARIANTES_GLICEMIA.find(tem);
   const temHba1c = tem('hba1c');
 
+  // Eritrograma é um componente do Hemograma Completo — se os dois aparecem juntos no texto,
+  // é a descrição do que compõe o hemograma (ex: "hemograma... eritrograma, leucograma, plaquetas"),
+  // não um pedido separado. Não cobra os dois.
+  if (temHemograma && tem('eritrograma')) {
+    removidos.add('eritrograma');
+  }
+
   if (temHemograma && glicemiaAchada && achados.length === 2) {
     removidos.add('hemograma'); removidos.add(glicemiaAchada);
     extras.push({ nome: 'hemograma + glicemia (combo)', valor: 55 });
