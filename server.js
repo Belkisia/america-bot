@@ -714,8 +714,17 @@ async function processarFila(num) {
   }
   filas[num].rodando = true;
 
-  // Aguarda 2s para agrupar mensagens fragmentadas
-  await new Promise(function(r) { setTimeout(r, 2000); });
+  // Debounce real: espera até NÃO chegar mensagem nova por 2.5s seguidos
+  // (evita responder duas vezes quando o paciente manda mensagens com intervalo maior que o antigo timer fixo)
+  let tamanhoAnterior = -1;
+  while (filas[num] && filas[num].msgs.length !== tamanhoAnterior) {
+    tamanhoAnterior = filas[num].msgs.length;
+    await new Promise(function(r) { setTimeout(r, 2500); });
+  }
+  if (!filas[num] || filas[num].msgs.length === 0) {
+    if (filas[num]) filas[num].rodando = false;
+    return;
+  }
 
   if (filas[num].msgs.length > 10) filas[num].msgs = filas[num].msgs.slice(-3);
 
