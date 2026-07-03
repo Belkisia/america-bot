@@ -907,7 +907,15 @@ app.get('/setup-zapi', async function(req, res) {
       { headers: { 'Content-Type': 'application/json', 'Client-Token': process.env.ZAPI_CLIENT_TOKEN } }
     );
     res.json({ ok: true, resultado: r.data });
-  } catch(e) { res.json({ erro: e.message }); }
+  } catch(e) {
+    res.json({
+      erro: e.message,
+      status: e.response ? e.response.status : null,
+      corpo_resposta_zapi: e.response ? e.response.data : null,
+      client_token_configurado: !!process.env.ZAPI_CLIENT_TOKEN,
+      client_token_tamanho: process.env.ZAPI_CLIENT_TOKEN ? process.env.ZAPI_CLIENT_TOKEN.length : 0
+    });
+  }
 });
 
 app.get('/api/agendamentos', async function(req, res) {
