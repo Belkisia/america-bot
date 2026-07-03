@@ -81,7 +81,7 @@ ULTRASSOM
 Não é especialidade — é exame. Colete: nome, nascimento, qual exame.
 Tag: [AGENDAR:nome=X|nascimento=X|especialidade=Ultrassom|convenio=particular|periodo=manha]
 TERÇA 07h30–11h30: Transvaginal, Obstétrica, Obstétrica Endovaginal, Morfológica 2ºTri, Abdome Total/Superior/Inferior, Pélvica, Mamas, Axilas, Próstata Abdominal, Tireoide.
-SEXTA 07h30–09h30 e 17h–18h: TODOS os exames.
+SEXTA 07h00–09h45 e 17h00–18h: TODOS os exames.
 SOMENTE SEXTA: Morfológica 1º/3ºTri, Doppler qualquer tipo, Articulação, Bolsa Escrotal, Transfontanela, Quadril, Punho, Pé, Orelha, Cervical, Ombro, Inguinal, Parótidas, Partes Moles, Parede Abdominal, Gestação Múltipla, Vias Urinárias, Abdome c/Doppler.
 MORFOLÓGICO: 1ºTri=11–13sem6d(R$230) | 2ºTri=20–23sem6d(R$280) | 3ºTri=32–34sem6d.
 REGRA CRÍTICA MORFOLÓGICO: se o paciente responder diretamente "1º trimestre", "1 trimestre", "primeiro trimestre", "2º trimestre", "segundo trimestre" (sem informar semanas exatas), ACEITE essa resposta como suficiente para identificar qual exame ele quer. NÃO peça semanas exatas de novo — isso já responde qual dos dois exames é. Prossiga direto para confirmar e pedir nome+nascimento. Só peça semanas exatas se o paciente não souber dizer o trimestre.
@@ -499,7 +499,22 @@ async function chamarIA(msgs, tentativa) {
         }
         return '• Clínico Geral/Pediatria (próximos dias): ' + (disponiveis.length ? disponiveis.slice(0,3).join(' | ') : 'sem agenda no momento');
       })(),
-      '• Ultrassom: ' + (dataFutura(26,6) ? '26/06 das 07h30–09h15 e 17h00–18h00' : 'sem agenda no momento'),
+      (function() {
+        const horariosUSG = { 2: 'Terça: 07h30–11h30', 5: 'Sexta: 07h00–09h45 e 17h00–18h00' };
+        const disponiveisUSG = [];
+        for (let i = 0; i <= 10; i++) {
+          const d = new Date(nowBR);
+          d.setDate(d.getDate() + i);
+          const dow = d.getDay();
+          if (horariosUSG[dow]) {
+            const dd = String(d.getDate()).padStart(2,'0');
+            const mm = String(d.getMonth()+1).padStart(2,'0');
+            disponiveisUSG.push(dd + '/' + mm + ' (' + horariosUSG[dow] + ')');
+          }
+          if (disponiveisUSG.length >= 2) break;
+        }
+        return '• Ultrassom (próximos dias): ' + (disponiveisUSG.length ? disponiveisUSG.join(' | ') : 'sem agenda no momento');
+      })(),
     ].join('\n');
 
     // Detecta especialidade no histórico para injetar lembrete
