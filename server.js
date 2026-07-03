@@ -522,7 +522,7 @@ async function chamarIA(msgs, tentativa) {
     }
 
     const r = await axios.post('https://api.anthropic.com/v1/messages',
-      { model: 'claude-sonnet-4-6', max_tokens: 600, system: systemFinal, messages: hist },
+      { model: 'claude-sonnet-5', max_tokens: 600, system: systemFinal, messages: hist },
       { headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' }, timeout: 30000 }
     );
     return r.data.content[0].text;
@@ -550,7 +550,7 @@ async function lerImagem(imageUrl) {
     const base64 = Buffer.from(imgResp.data).toString('base64');
     const mediaType = (imgResp.headers['content-type'] || 'image/jpeg').split(';')[0].trim();
     const r = await axios.post('https://api.anthropic.com/v1/messages',
-      { model: 'claude-sonnet-4-6', max_tokens: 400, messages: [{ role: 'user', content: [
+      { model: 'claude-sonnet-5', max_tokens: 400, messages: [{ role: 'user', content: [
         { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
         { type: 'text', text: 'Analise esta imagem. Se for receita/pedido médico: extraia médico, CRM e exames solicitados. Se for resultado: identifique o tipo. Responda simples e direto, sem markdown.' }
       ]}]},
