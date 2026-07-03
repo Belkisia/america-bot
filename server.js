@@ -176,6 +176,7 @@ Chegue com uns 20 minutinhos de antecedência, tá bom? 😉 Nossa equipe vai co
 // Tabela de preços para cálculo preciso
 const TABELA_PRECOS = {
   'hemograma': 21,
+  'hmg': 21,
   'glicemia': 16,
   'glicose': 16,
   'glicemia de jejum': 16,
@@ -208,6 +209,10 @@ const TABELA_PRECOS = {
   'tgo': 16,
   'tgp': 16,
   'gama-gt': 16,
+  'g.gt': 16,
+  'ggt': 16,
+  'ur e cr': 26,
+  'ur/cr': 26,
   'gama gt': 16,
   'fosfatase alcalina': 13,
   'bilirrubinas': 13,
