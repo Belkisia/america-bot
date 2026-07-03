@@ -525,7 +525,9 @@ async function chamarIA(msgs, tentativa) {
       { model: 'claude-sonnet-5', max_tokens: 600, system: systemFinal, messages: hist },
       { headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' }, timeout: 30000 }
     );
-    return r.data.content[0].text;
+    const blocoTexto = (r.data.content || []).find(function(b) { return b.type === 'text'; });
+    if (!blocoTexto || !blocoTexto.text) throw new Error('Resposta da IA sem bloco de texto: ' + JSON.stringify(r.data.content));
+    return blocoTexto.text;
   } catch(e) {
     console.error('ERRO chamarIA - status:', e.response ? e.response.status : '?', '- corpo:', e.response ? JSON.stringify(e.response.data) : e.message);
     if (tentativa < 2) {
@@ -557,7 +559,8 @@ async function lerImagem(imageUrl) {
       ]}]},
       { headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' }, timeout: 30000 }
     );
-    return r.data.content[0].text;
+    const blocoTexto = (r.data.content || []).find(function(b) { return b.type === 'text'; });
+    return blocoTexto ? blocoTexto.text : null;
   } catch(e) { console.error('Erro lerImagem:', e.message); return null; }
 }
 
