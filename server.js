@@ -253,6 +253,8 @@ const TABELA_PRECOS = {
   'ácido fólico': 32,
   'vitamina b12': 32,
   'vitamina d': 38,
+  '25 hidroxivitamina d': 38,
+  'hidroxivitamina d': 38,
   'vitamina b6': 84,
   'vitamina c': 50,
   'vitamina a': 58,
