@@ -226,6 +226,8 @@ const TABELA_PRECOS = {
   'proteina c reativa': 23,
   'proteína c reativa': 23,
   'tsh': 28.5,
+  'trab': 63,
+  'anti-receptor de tsh': 63,
   't3 livre': 30,
   't4 livre': 26,
   't4l': 26,
