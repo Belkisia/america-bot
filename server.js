@@ -203,6 +203,7 @@ const TABELA_PRECOS = {
   'perfil lipidico': 40,
   'perfil lipídico': 40,
   'creatinina': 13,
+  'creatina': 13,
   'ureia': 13,
   'acido urico': 13,
   'ácido úrico': 13,
@@ -409,6 +410,12 @@ function calcularOrcamento(textoExames) {
   // não um pedido separado. Não cobra os dois.
   if (temHemograma && tem('eritrograma')) {
     removidos.add('eritrograma');
+  }
+
+  // Perfil Lipídico e Lipidograma são o mesmo exame (sinônimos) — não cobra os dois se aparecerem juntos
+  if (tem('lipidograma') && (tem('perfil lipidico') || tem('perfil lipídico'))) {
+    removidos.add('perfil lipidico');
+    removidos.add('perfil lipídico');
   }
 
   if (temHemograma && glicemiaAchada && achados.length === 2) {
