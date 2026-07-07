@@ -1033,7 +1033,7 @@ app.post('/webhook', function(req, res) {
   if (b.fromMe && !b.fromApi) {
     const t = (b.text && b.text.message) || '';
     if (t.trim() !== '#cma') {
-      ativarHumano(num, 60).then(function(){ console.log('SECRETARIA [' + num + ']: CMA pausada 60min'); });
+      ativarHumano(num, 10).then(function(){ console.log('SECRETARIA [' + num + ']: CMA pausada 10min'); });
     }
     return;
   }
