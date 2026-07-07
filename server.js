@@ -83,11 +83,17 @@ AGENDA MÉDICOS
 • Otorrinolaringologia: 13/07 e 27/07 das 08h00–11h30 — SOMENTE MANHÃ
 • Endocrinologia: 14/07 e 21/07 das 13h00–17h30 — SOMENTE TARDE
 • Ginecologia: 13/07 e 27/07 das 13h30–17h15 — SOMENTE TARDE
-• Clínico Geral/Pediatria — SOMENTE QUINTA-FEIRA, das 09h00–11h30 e das 14h00–17h15
+• Clínico Geral/Pediatria — datas específicas (cada uma com seu horário):
+  - 09/07: manhã 09h00–11h30 e tarde 14h00–17h15
+  - 13/07: manhã 08h30–10h30 e tarde 16h00–17h15
+  - 14/07: manhã 08h00–11h30 (sem tarde)
+  - 15/07: manhã 08h00–11h30 (sem tarde)
+  - 16/07: manhã 09h00–11h30 e tarde 14h00–17h15
+  - 17/07: manhã 08h00–11h30 (sem tarde)
 
 REGRA DE DATAS: Compare cada data com a DATA ATUAL do prompt. Mostre SOMENTE datas futuras. Cada data tem horário diferente — informe corretamente conforme a agenda acima. Se TODAS passaram: informe que não há agenda disponível no momento.
 
-PERÍODO: Para Clínico Geral/Pediatria pergunte se prefere manhã (09h00–11h30) ou tarde (14h00–17h15) na próxima quinta-feira disponível. Para demais use o período fixo sem perguntar.
+PERÍODO: Para Clínico Geral/Pediatria, mostre as datas futuras disponíveis e os horários de cada uma (algumas só têm manhã, outras têm manhã e tarde) — pergunte qual data e período o paciente prefere, dentro do que está disponível para cada dia. Para demais especialidades use o período fixo sem perguntar.
 
 ULTRASSOM
 Não é especialidade — é exame. Colete: nome, nascimento, qual exame.
@@ -588,18 +594,22 @@ async function chamarIA(msgs, tentativa) {
       formatarLinhaAgenda('Endocrinologia', AGENDA_ESPECIALIDADES['Endocrinologia']),
       formatarLinhaAgenda('Ginecologia', AGENDA_ESPECIALIDADES['Ginecologia']),
       (function() {
-        const disponiveis = [];
-        for (let i = 0; i <= 13; i++) {
-          const d = new Date(nowBR);
-          d.setDate(d.getDate() + i);
-          if (d.getDay() === 4) {
-            const dd = String(d.getDate()).padStart(2,'0');
-            const mm = String(d.getMonth()+1).padStart(2,'0');
-            disponiveis.push(dd + '/' + mm + ' (Quinta: 09h00–11h30 e 14h00–17h15)');
-          }
-          if (disponiveis.length >= 2) break;
-        }
-        return '• Clínico Geral/Pediatria (SOMENTE QUINTA-FEIRA): ' + (disponiveis.length ? disponiveis.join(' | ') : 'sem agenda no momento');
+        const AGENDA_CLINICO = [
+          { dia: 9, mes: 7, manha: '09h00–11h30', tarde: '14h00–17h15' },
+          { dia: 13, mes: 7, manha: '08h30–10h30', tarde: '16h00–17h15' },
+          { dia: 14, mes: 7, manha: '08h00–11h30', tarde: null },
+          { dia: 15, mes: 7, manha: '08h00–11h30', tarde: null },
+          { dia: 16, mes: 7, manha: '09h00–11h30', tarde: '14h00–17h15' },
+          { dia: 17, mes: 7, manha: '08h00–11h30', tarde: null },
+        ];
+        const disponiveis = AGENDA_CLINICO
+          .filter(function (d) { return dataFutura(d.dia, d.mes); })
+          .map(function (d) {
+            const dd = String(d.dia).padStart(2, '0') + '/' + String(d.mes).padStart(2, '0');
+            const periodos = 'manhã ' + d.manha + (d.tarde ? ' e tarde ' + d.tarde : ' (sem tarde)');
+            return dd + ' (' + periodos + ')';
+          });
+        return '• Clínico Geral/Pediatria (datas específicas): ' + (disponiveis.length ? disponiveis.join(' | ') : 'sem agenda no momento');
       })(),
       (function() {
         const disponiveisUSG = [];
