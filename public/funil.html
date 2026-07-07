@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Funil de Vendas — Centro Médico América</title>
+<style>
+  :root {
+    --vermelho: #C4392B;
+    --vermelho-escuro: #9E2E22;
+    --creme: #FAF6F1;
+    --papel: #FFFFFF;
+    --tinta: #2B2420;
+    --tinta-suave: #6B6055;
+    --linha: #E8DFD5;
+    --verde: #3F7D5C;
+    --ambar: #B8863B;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--creme);
+    color: var(--tinta);
+  }
+  header {
+    background: var(--vermelho);
+    color: white;
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  header h1 {
+    font-size: 20px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header .sub {
+    font-size: 13px;
+    opacity: 0.85;
+    margin-top: 2px;
+  }
+  .stats {
+    display: flex;
+    gap: 10px;
+  }
+  .stat {
+    background: rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 8px 16px;
+    text-align: center;
+    min-width: 74px;
+  }
+  .stat .num { font-size: 20px; font-weight: 700; line-height: 1; }
+  .stat .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.85; margin-top: 4px; }
+
+  main {
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+  @media (max-width: 900px) {
+    .board { grid-template-columns: 1fr; }
+  }
+
+  .coluna {
+    background: var(--papel);
+    border-radius: 14px;
+    border: 1px solid var(--linha);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+  }
+  .coluna-header {
+    padding: 14px 16px;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 3px solid;
+  }
+  .coluna-header .badge {
+    background: rgba(0,0,0,0.06);
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .coluna[data-status="orcamento_enviado"] .coluna-header { border-color: var(--ambar); color: var(--ambar); }
+  .coluna[data-status="agendado"] .coluna-header { border-color: var(--verde); color: var(--verde); }
+  .coluna[data-status="perdido"] .coluna-header { border-color: var(--tinta-suave); color: var(--tinta-suave); }
+
+  .cartoes {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+  }
+  .vazio {
+    color: var(--tinta-suave);
+    font-size: 13px;
+    text-align: center;
+    padding: 30px 10px;
+    font-style: italic;
+  }
+
+  .cartao {
+    background: var(--creme);
+    border: 1px solid var(--linha);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .cartao .telefone {
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .cartao .nome {
+    font-size: 12px;
+    color: var(--tinta-suave);
+  }
+  .cartao .valores {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    font-size: 13px;
+  }
+  .cartao .valores b { color: var(--vermelho-escuro); }
+  .cartao .exames {
+    font-size: 11px;
+    color: var(--tinta-suave);
+    margin-top: 6px;
+    line-height: 1.4;
+  }
+  .cartao .rodape {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+  }
+  .cartao .data {
+    font-size: 11px;
+    color: var(--tinta-suave);
+  }
+  .cartao select {
+    font-size: 11px;
+    padding: 3px 6px;
+    border-radius: 6px;
+    border: 1px solid var(--linha);
+    background: white;
+    color: var(--tinta);
+  }
+
+  .carregando, .erro {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--tinta-suave);
+  }
+  .erro { color: var(--vermelho-escuro); }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Funil de Vendas — Orçamentos Laboratoriais</h1>
+    <div class="sub">Centro Médico América</div>
+  </div>
+  <div class="stats" id="stats"></div>
+</header>
+
+<main>
+  <div id="conteudo" class="carregando">Carregando...</div>
+</main>
+
+<script>
+const COLUNAS = [
+  { status: 'orcamento_enviado', titulo: 'Orçamento Enviado' },
+  { status: 'agendado', titulo: 'Agendado' },
+  { status: 'perdido', titulo: 'Perdido' },
+];
+
+function formatarData(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatarTelefone(t) {
+  if (!t) return '';
+  const digitos = String(t).replace(/\D/g, '');
+  if (digitos.length >= 10) {
+    const ddd = digitos.slice(-11, -9);
+    const resto = digitos.slice(-9);
+    return '(' + ddd + ') ' + resto;
+  }
+  return t;
+}
+
+async function mudarStatus(id, novoStatus) {
+  try {
+    await fetch('/api/funil/' + id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: novoStatus }),
+    });
+    carregar();
+  } catch (e) {
+    alert('Erro ao atualizar: ' + e.message);
+  }
+}
+
+function criarCartao(lead) {
+  const div = document.createElement('div');
+  div.className = 'cartao';
+
+  let exames = [];
+  try { exames = JSON.parse(lead.exames || '[]'); } catch(e) {}
+
+  div.innerHTML = `
+    <div class="telefone">${formatarTelefone(lead.telefone)}</div>
+    <div class="nome">${lead.nome || 'Nome não identificado'}</div>
+    <div class="valores">
+      <span>💳 <b>R$${Number(lead.valor_cartao || 0).toFixed(2)}</b></span>
+      <span>💵 <b>R$${Number(lead.valor_pix || 0).toFixed(2)}</b></span>
+    </div>
+    ${exames.length ? `<div class="exames">${exames.length} exame(s): ${exames.slice(0,4).join(', ')}${exames.length > 4 ? '...' : ''}</div>` : ''}
+    <div class="rodape">
+      <span class="data">${formatarData(lead.criado_em)}</span>
+      <select onchange="mudarStatus(${lead.id}, this.value)">
+        <option value="">Mover para...</option>
+        <option value="orcamento_enviado">Orçamento Enviado</option>
+        <option value="agendado">Agendado</option>
+        <option value="perdido">Perdido</option>
+      </select>
+    </div>
+  `;
+  return div;
+}
+
+async function carregar() {
+  const conteudo = document.getElementById('conteudo');
+  try {
+    const res = await fetch('/api/funil');
+    const data = await res.json();
+    if (data.erro) throw new Error(data.erro);
+
+    document.getElementById('stats').innerHTML = `
+      <div class="stat"><div class="num">${data.resumo.orcamento_enviado}</div><div class="lbl">Enviados</div></div>
+      <div class="stat"><div class="num">${data.resumo.agendado}</div><div class="lbl">Agendados</div></div>
+      <div class="stat"><div class="num">${data.resumo.perdido}</div><div class="lbl">Perdidos</div></div>
+    `;
+
+    const board = document.createElement('div');
+    board.className = 'board';
+
+    COLUNAS.forEach(col => {
+      const leadsColuna = data.leads.filter(l => l.status === col.status);
+      const coluna = document.createElement('div');
+      coluna.className = 'coluna';
+      coluna.dataset.status = col.status;
+      coluna.innerHTML = `<div class="coluna-header">${col.titulo}<span class="badge">${leadsColuna.length}</span></div>`;
+      const cartoes = document.createElement('div');
+      cartoes.className = 'cartoes';
+      if (leadsColuna.length === 0) {
+        cartoes.innerHTML = '<div class="vazio">Nenhum lead aqui</div>';
+      } else {
+        leadsColuna.forEach(l => cartoes.appendChild(criarCartao(l)));
+      }
+      coluna.appendChild(cartoes);
+      board.appendChild(coluna);
+    });
+
+    conteudo.innerHTML = '';
+    conteudo.className = '';
+    conteudo.appendChild(board);
+  } catch (e) {
+    conteudo.className = 'erro';
+    conteudo.textContent = 'Erro ao carregar funil: ' + e.message;
+  }
+}
+
+carregar();
+setInterval(carregar, 30000); // atualiza a cada 30s
+</script>
+
+</body>
+</html>
