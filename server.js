@@ -746,6 +746,31 @@ async function limparEstado(num) {
   } catch(e) {}
 }
 
+// CRM — Funil de vendas: registra cada orçamento laboratorial enviado
+async function registrarLeadOrcamento(num, nome, orcamento, origem) {
+  try {
+    await db.supabase.from('leads_orcamento').insert({
+      telefone: num,
+      nome: nome || null,
+      valor_cartao: orcamento.cartao,
+      valor_pix: orcamento.pix,
+      exames: JSON.stringify(orcamento.encontrados || []),
+      status: 'orcamento_enviado',
+      origem: origem,
+    });
+  } catch(e) { console.error('ERRO registrarLeadOrcamento:', e.message); }
+}
+
+// CRM — Funil de vendas: marca leads recentes desse telefone como convertidos ao agendar
+async function marcarLeadAgendado(num) {
+  try {
+    await db.supabase.from('leads_orcamento')
+      .update({ status: 'agendado', atualizado_em: new Date().toISOString() })
+      .eq('telefone', num)
+      .eq('status', 'orcamento_enviado');
+  } catch(e) { console.error('ERRO marcarLeadAgendado:', e.message); }
+}
+
 // Períodos fixos por especialidade/data
 const PERIODOS_FIXOS = {
   'Psiquiatria': 'tarde',
@@ -876,6 +901,7 @@ async function processarFila(num) {
         if (orcamentoImg && orcamentoImg.total > 0) {
           instrucaoOrcamento = '\n\nORÇAMENTO CALCULADO PELO SISTEMA — USE ESTES VALORES EXATOS: 💳 Cartão: R$' + orcamentoImg.cartao.toFixed(2) + ' | 💵 Pix/Dinheiro: R$' + orcamentoImg.pix.toFixed(2) + '. NÃO recalcule. NÃO modifique esses valores.';
           console.log('ORÇAMENTO IMAGEM [' + num + ']: base=R$' + orcamentoImg.total + ' cartão=R$' + orcamentoImg.cartao.toFixed(2) + ' — EXAMES ENCONTRADOS: ' + JSON.stringify(orcamentoImg.encontrados));
+          await registrarLeadOrcamento(num, null, orcamentoImg, 'whatsapp');
         }
         hist.push({ role: 'user', content: 'O paciente enviou uma imagem/receita médica. Análise da imagem: ' + leitura + instrucaoOrcamento + '\n\nInstruções:\n1. Confirme o nome do paciente e LISTE cada exame identificado individualmente pelo nome, NUMERADO (1. 2. 3. ...) para o paciente ver de forma clara quantos exames são (NUNCA agrupe em categorias como "função renal", "perfil hormonal" etc.)\n2. Informe os valores calculados acima (use exatamente esses valores)\n3. Avise de forma natural que é uma prévia e que a secretaria vai confirmar o valor final e os exames identificados\n4. Se houver Tomografia (TC/TAC) ou Ressonância (RM/RNM) na lista, avise CLARAMENTE que a clínica não realiza esse exame específico e que o paciente precisa procurar outro local — não diga apenas "será tratado à parte"\n5. Convide para agendar os exames que a clínica faz\nSe algum exame não tiver valor calculado, mencione que entrará em contato para complementar.' });
         const resp = await chamarIA(hist);
@@ -937,6 +963,7 @@ async function processarFila(num) {
         'NÃO recalcule. Use estes valores exatos na resposta.]';
       hist.push({ role: 'user', content: infoOrcamento });
       console.log('ORÇAMENTO [' + num + ']: base=R$' + orcamento.total + ' cartão=R$' + orcamento.cartao + ' pix=R$' + orcamento.pix);
+      await registrarLeadOrcamento(num, null, orcamento, 'whatsapp');
     }
 
     // Detecta se o paciente está recusando/adiando o agendamento nesta mensagem
@@ -978,6 +1005,7 @@ async function processarFila(num) {
         await db.salvarAgendamento({ nome_paciente: ag.nome, data_nascimento: ag.nascimento||null, telefone: num, especialidade: ag.especialidade, convenio: 'particular', periodo: ag.periodo, origem: 'whatsapp' });
         console.log('AGENDADO:', ag.nome, ag.especialidade);
       }
+      await marcarLeadAgendado(num);
     }
 
     const pedirSecretaria = resp.includes('[SECRETARIA]');
@@ -1100,14 +1128,32 @@ app.post('/api/chat', async function(req, res) {
         'NÃO recalcule. Use estes valores exatos na resposta.]';
       hist.push({ role: 'user', content: infoOrcamentoChat });
       console.log('ORÇAMENTO CHAT [' + tel + ']: base=R$' + orcamentoChat.total + ' cartão=R$' + orcamentoChat.cartao + ' pix=R$' + orcamentoChat.pix);
+      await registrarLeadOrcamento(tel, null, orcamentoChat, 'chat');
     }
 
     const resp = await chamarIA(hist);
     const ag = extrairAgendamento(resp);
-    if (ag) await db.salvarAgendamento({ nome_paciente: ag.nome, data_nascimento: ag.nascimento||null, telefone: tel, especialidade: ag.especialidade, convenio: 'particular', periodo: ag.periodo, origem: 'chat' });
+    if (ag) {
+      await db.salvarAgendamento({ nome_paciente: ag.nome, data_nascimento: ag.nascimento||null, telefone: tel, especialidade: ag.especialidade, convenio: 'particular', periodo: ag.periodo, origem: 'chat' });
+      await marcarLeadAgendado(tel);
+    }
     const final = limpar(resp);
     await db.salvarMensagem(tel, 'assistant', final);
     res.json({ resposta: final, agendamento: ag||null });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+app.get('/api/funil', async function(req, res) {
+  try {
+    const r = await db.supabase.from('leads_orcamento').select('*').order('criado_em', { ascending: false }).limit(200);
+    const leads = r.data || [];
+    const resumo = {
+      orcamento_enviado: leads.filter(function(l){ return l.status === 'orcamento_enviado'; }).length,
+      agendado: leads.filter(function(l){ return l.status === 'agendado'; }).length,
+      perdido: leads.filter(function(l){ return l.status === 'perdido'; }).length,
+      total: leads.length,
+    };
+    res.json({ resumo: resumo, leads: leads });
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
 
