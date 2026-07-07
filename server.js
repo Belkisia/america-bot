@@ -19,7 +19,24 @@ const NUMEROS_IGNORAR = [
   '556299609263',
   '5562991199066',
   '5562984463157',
+  '5562996092636',
 ];
+
+// Normaliza telefone para comparação: remove tudo que não é dígito e tira o "9" extra
+// do celular (Brasil) quando presente, para números baterem independente do formato
+// que a Z-API mandar (com ou sem esse dígito).
+function normalizarTelefone(num) {
+  const digitos = String(num || '').replace(/\D/g, '');
+  let semPais = digitos.startsWith('55') ? digitos.slice(2) : digitos;
+  const ddd = semPais.slice(0, 2);
+  let local = semPais.slice(2);
+  if (local.length === 9 && local[0] === '9') local = local.slice(1);
+  return ddd + local;
+}
+const NUMEROS_IGNORAR_NORMALIZADOS = NUMEROS_IGNORAR.map(normalizarTelefone);
+function numeroEstaIgnorado(num) {
+  return NUMEROS_IGNORAR_NORMALIZADOS.includes(normalizarTelefone(num));
+}
 
 const cacheHumano = {};
 
@@ -1004,7 +1021,7 @@ app.post('/webhook', function(req, res) {
   if (b.waitingMessage || b.isStatusReply) return;
   const num = b.phone || '';
   if (!num || num.includes('@lid') || num.includes('-group')) return;
-  if (NUMEROS_IGNORAR.includes(num)) return;
+  if (numeroEstaIgnorado(num)) return;
   if (MODO_TESTE && !NUMEROS_TESTE_LAB.includes(num)) return;
 
   // Deduplica por messageId
