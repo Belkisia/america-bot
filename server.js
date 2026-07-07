@@ -1143,8 +1143,24 @@ app.post('/api/chat', async function(req, res) {
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
 
+app.patch('/api/funil/:id', async function(req, res) {
+  try {
+    await db.supabase.from('leads_orcamento')
+      .update({ status: req.body.status, atualizado_em: new Date().toISOString() })
+      .eq('id', req.params.id);
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
 app.get('/api/funil', async function(req, res) {
   try {
+    // Marca automaticamente como "perdido" quem recebeu orçamento há mais de 7 dias e não agendou
+    const seteDiasAtras = new Date(Date.now() - 7*24*60*60*1000).toISOString();
+    await db.supabase.from('leads_orcamento')
+      .update({ status: 'perdido', atualizado_em: new Date().toISOString() })
+      .eq('status', 'orcamento_enviado')
+      .lt('criado_em', seteDiasAtras);
+
     const r = await db.supabase.from('leads_orcamento').select('*').order('criado_em', { ascending: false }).limit(200);
     const leads = r.data || [];
     const resumo = {
