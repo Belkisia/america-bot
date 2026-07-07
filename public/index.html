@@ -113,6 +113,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text-bo
 .stat-val.good{color:#2dbd7a}.stat-val.gold{color:var(--gold)}
 .toast{position:fixed;bottom:20px;right:20px;background:#1a3d2e;border:1px solid rgba(45,189,122,0.3);border-radius:8px;padding:10px 16px;font-size:12px;color:#5dd49a;display:none;z-index:999;animation:fadeIn .3s}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+/* FUNIL DE VENDAS */
+.funil-board{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.funil-col{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;min-height:160px}
+.funil-col-hdr{padding:10px 14px;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid}
+.funil-col[data-status="orcamento_enviado"] .funil-col-hdr{border-color:var(--gold);color:var(--gold-light)}
+.funil-col[data-status="agendado"] .funil-col-hdr{border-color:#2dbd7a;color:#5dd49a}
+.funil-col[data-status="perdido"] .funil-col-hdr{border-color:#e07070;color:#e07070}
+.funil-col-badge{background:rgba(255,255,255,0.06);border-radius:14px;padding:1px 8px;font-size:10px}
+.funil-cards{padding:10px;display:flex;flex-direction:column;gap:8px;flex:1}
+.funil-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+.funil-card .ftel{font-size:12px;font-weight:500;color:#f8f6f0}
+.funil-card .fnome{font-size:10px;color:var(--text-muted)}
+.funil-card .fvalores{display:flex;gap:10px;margin-top:6px;font-size:11px;color:var(--text-body)}
+.funil-card .fvalores b{color:var(--gold)}
+.funil-card .fexames{font-size:10px;color:var(--text-muted);margin-top:5px;line-height:1.4}
+.funil-card .frodape{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.funil-card .fdata{font-size:9px;color:var(--text-muted)}
 </style>
 </head>
 <body>
@@ -134,6 +151,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text-bo
       <div class="nav-item" onclick="go('agenda',this)"><i class="ti ti-calendar-event"></i>Agenda</div>
       <div class="nav-item" onclick="go('pacientes',this)"><i class="ti ti-users"></i>Pacientes</div>
       <div class="nav-item" onclick="go('orcamento',this)"><i class="ti ti-receipt"></i>Tabela de Preços</div>
+      <div class="nav-item" onclick="go('funil',this)"><i class="ti ti-filter"></i>Funil de Vendas</div>
       <div class="nav-section">Análise</div>
       <div class="nav-item" onclick="go('relatorios',this)"><i class="ti ti-chart-bar"></i>Relatórios</div>
       <div class="nav-item" onclick="go('config',this)"><i class="ti ti-settings"></i>Configurações</div>
@@ -246,6 +264,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text-bo
       </table>
     </div>
   </div>
+
+  <!-- FUNIL DE VENDAS -->
+  <main class="page" id="p-funil">
+    <div class="ph">Funil de Vendas</div>
+    <div class="ps">Orçamentos de exames laboratoriais — do envio até o agendamento (ou perda)</div>
+    <div class="gl"></div>
+
+    <div class="kgrid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="kcard k1"><div class="kicon"><i class="ti ti-send"></i></div><div class="kval" id="funil-k-enviado">--</div><div class="klbl">Orçamento enviado</div></div>
+      <div class="kcard k2"><div class="kicon"><i class="ti ti-calendar-check"></i></div><div class="kval" id="funil-k-agendado">--</div><div class="klbl">Agendado</div></div>
+      <div class="kcard k4"><div class="kicon"><i class="ti ti-circle-x"></i></div><div class="kval" id="funil-k-perdido">--</div><div class="klbl">Perdido (7+ dias sem agendar)</div></div>
+    </div>
+
+    <div class="funil-board" id="funil-board">
+      <div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--text-muted)">Carregando funil...</div>
+    </div>
+  </main>
 
   <!-- TABELA DE PREÇOS -->
   <main class="page" id="p-orcamento">
@@ -414,8 +449,8 @@ function formatarData(iso) {
 }
 
 // ── NAVEGAÇÃO ─────────────────────────────────────────────────
-const pages = { dash:'p-dash', chat:'p-chat', agenda:'p-agenda', pacientes:'p-pacientes', orcamento:'p-orcamento', relatorios:'p-relatorios', config:'p-config' };
-const titles = { dash:'Dashboard · visão geral', chat:'CMA Assistente · chat em tempo real', agenda:'Agenda · tempo real', pacientes:'Pacientes', orcamento:'Tabela de Preços · valores particulares', relatorios:'Relatórios', config:'Configurações' };
+const pages = { dash:'p-dash', chat:'p-chat', agenda:'p-agenda', pacientes:'p-pacientes', orcamento:'p-orcamento', funil:'p-funil', relatorios:'p-relatorios', config:'p-config' };
+const titles = { dash:'Dashboard · visão geral', chat:'CMA Assistente · chat em tempo real', agenda:'Agenda · tempo real', pacientes:'Pacientes', orcamento:'Tabela de Preços · valores particulares', funil:'Funil de Vendas · orçamentos e conversões', relatorios:'Relatórios', config:'Configurações' };
 
 function go(id, el) {
   Object.values(pages).forEach(pid => {
@@ -433,6 +468,7 @@ function go(id, el) {
   if (id === 'agenda') carregarAgenda();
   if (id === 'dash') carregarDashboard();
   if (id === 'pacientes') carregarPacientes();
+  if (id === 'funil') carregarFunil();
 }
 
 // ── PACIENTES ─────────────────────────────────────────────────
@@ -580,6 +616,93 @@ async function mudarStatus(id, status) {
   }
 }
 
+// ── FUNIL DE VENDAS ───────────────────────────────────────────
+const FUNIL_COLUNAS = [
+  { status: 'orcamento_enviado', titulo: 'Orçamento Enviado' },
+  { status: 'agendado', titulo: 'Agendado' },
+  { status: 'perdido', titulo: 'Perdido' },
+];
+
+function formatarTelefoneFunil(t) {
+  if (!t) return '—';
+  const d = String(t).replace(/\D/g, '');
+  if (d.length >= 10) return '(' + d.slice(-11, -9) + ') ' + d.slice(-9);
+  return t;
+}
+
+async function mudarStatusFunil(id, status) {
+  if (!status) return;
+  try {
+    await fetch(API_BASE + '/api/funil/' + id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    showToast('✅ Lead movido para: ' + status);
+    carregarFunil();
+  } catch (e) {
+    showToast('❌ Erro ao atualizar lead');
+  }
+}
+
+function criarCartaoFunil(lead) {
+  let exames = [];
+  try { exames = JSON.parse(lead.exames || '[]'); } catch(e) {}
+  const div = document.createElement('div');
+  div.className = 'funil-card';
+  div.innerHTML = `
+    <div class="ftel">${formatarTelefoneFunil(lead.telefone)}</div>
+    <div class="fnome">${lead.nome || 'Nome não identificado'}</div>
+    <div class="fvalores">
+      <span>💳 <b>R$${Number(lead.valor_cartao || 0).toFixed(2)}</b></span>
+      <span>💵 <b>R$${Number(lead.valor_pix || 0).toFixed(2)}</b></span>
+    </div>
+    ${exames.length ? `<div class="fexames">${exames.length} exame(s): ${exames.slice(0,4).join(', ')}${exames.length > 4 ? '...' : ''}</div>` : ''}
+    <div class="frodape">
+      <span class="fdata">${formatarData(lead.criado_em)}</span>
+      <select class="status-sel" onchange="mudarStatusFunil(${lead.id}, this.value)">
+        <option value="">Mover...</option>
+        <option value="orcamento_enviado">Enviado</option>
+        <option value="agendado">Agendado</option>
+        <option value="perdido">Perdido</option>
+      </select>
+    </div>
+  `;
+  return div;
+}
+
+async function carregarFunil() {
+  const board = document.getElementById('funil-board');
+  try {
+    const data = await fetch(API_BASE + '/api/funil').then(r => r.json());
+    if (data.erro) throw new Error(data.erro);
+
+    document.getElementById('funil-k-enviado').textContent = data.resumo.orcamento_enviado;
+    document.getElementById('funil-k-agendado').textContent = data.resumo.agendado;
+    document.getElementById('funil-k-perdido').textContent = data.resumo.perdido;
+
+    board.innerHTML = '';
+    FUNIL_COLUNAS.forEach(col => {
+      const leadsColuna = data.leads.filter(l => l.status === col.status);
+      const coluna = document.createElement('div');
+      coluna.className = 'funil-col';
+      coluna.dataset.status = col.status;
+      coluna.innerHTML = `<div class="funil-col-hdr">${col.titulo}<span class="funil-col-badge">${leadsColuna.length}</span></div>`;
+      const cartoes = document.createElement('div');
+      cartoes.className = 'funil-cards';
+      if (!leadsColuna.length) {
+        cartoes.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:11px;font-style:italic">Nenhum lead aqui</div>';
+      } else {
+        leadsColuna.forEach(l => cartoes.appendChild(criarCartaoFunil(l)));
+      }
+      coluna.appendChild(cartoes);
+      board.appendChild(coluna);
+    });
+  } catch (e) {
+    board.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:#e07070">Erro ao carregar funil: ${e.message}</div>`;
+  }
+}
+
 // ── CHAT ──────────────────────────────────────────────────────
 let sessionAgendamentos = 0;
 
@@ -689,6 +812,9 @@ carregarDashboard();
 setInterval(() => {
   if (document.getElementById('p-agenda').classList.contains('active')) {
     carregarAgenda();
+  }
+  if (document.getElementById('p-funil').classList.contains('active')) {
+    carregarFunil();
   }
   carregarDashboard();
 }, 30000);
