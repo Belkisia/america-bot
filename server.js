@@ -29,7 +29,7 @@ const NUMEROS_TESTE_LAB = [
   '556284271335',
 ];
 const MODO_TESTE = false; // quando true, bloqueia TUDO para não listados
-const MODO_TESTE_LAB = true; // quando true, restringe orçamentos lab aos números de teste
+const MODO_TESTE_LAB = false; // liberado para todos os clientes
 async function emAtendimentoHumano(num) {
   const agora = Date.now();
   if (cacheHumano[num] && cacheHumano[num].expira > agora) return cacheHumano[num].valor;
