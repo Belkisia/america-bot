@@ -311,6 +311,7 @@ const TABELA_PRECOS = {
   'acth': 37,
   'insulina': 16,
   'beta-hcg': 50,
+  'sexagem fetal': 165,
   'beta hcg': 50,
   'psa total': 40,
   'psa livre': 42,
@@ -495,14 +496,22 @@ function calcularOrcamento(textoExames) {
     extras.push({ nome: 'urocultura + antibiograma (combo)', valor: 32 });
   }
 
-  let total = achados.filter(a => !removidos.has(a.chave)).reduce((s, a) => s + a.valor, 0);
+  const achadosFinais = achados.filter(a => !removidos.has(a.chave));
+  let total = achadosFinais.reduce((s, a) => s + a.valor, 0);
   total += extras.reduce((s, e) => s + e.valor, 0);
 
-  const encontrados = achados.filter(a => !removidos.has(a.chave)).map(a => a.chave)
+  const encontrados = achadosFinais.map(a => a.chave)
     .concat(extras.map(e => e.nome));
 
+  // Sexagem Fetal e Beta-HCG: preço fixo, sem desconto no pix (mesmo valor nas duas formas de pagamento)
+  const SEM_DESCONTO_PIX = ['sexagem fetal', 'beta-hcg', 'beta hcg'];
+  const valorSemDesconto = achadosFinais
+    .filter(a => SEM_DESCONTO_PIX.includes(a.chave))
+    .reduce((s, a) => s + a.valor, 0);
+  const valorComDesconto = total - valorSemDesconto;
+
   const cartao = total;
-  const pix = Math.round(total * 0.90 * 100) / 100;
+  const pix = Math.round((valorComDesconto * 0.90 + valorSemDesconto) * 100) / 100;
 
   return { total, cartao, pix, encontrados };
 }
@@ -746,6 +755,65 @@ async function limparEstado(num) {
   } catch(e) {}
 }
 
+// Tabela de serviços NÃO-laboratoriais (ultrassom, consultas, procedimentos) — preço fixo,
+// usada só para detectar e registrar no funil de vendas (o preço narrado ao paciente já vem do prompt)
+const TABELA_SERVICOS = {
+  'abdome inferior com doppler': 160, 'abdome inferior': 70,
+  'abdome superior com doppler': 160, 'abdome superior': 70,
+  'abdome total com doppler': 350, 'abdome total': 100,
+  'usg articulacao': 80,
+  'bolsa escrotal com doppler': 150, 'bolsa escrotal': 80,
+  'usg mamas': 90,
+  'morfologica 1 trimestre': 230, 'morfologica 1º trimestre': 230,
+  'morfologica 2 trimestre': 280, 'morfologica 2º trimestre': 280,
+  'obstetrica com doppler': 280, 'obstetrica endovaginal': 100,
+  'obstetrica gestacao multipla': 180, 'obstetrica': 100,
+  'usg partes moles': 70,
+  'usg prostata': 90,
+  'quadril pediatrico': 80, 'quadril adulto': 80,
+  'tireoide com doppler': 150, 'usg tireoide': 90,
+  'transvaginal com doppler': 160, 'usg transvaginal': 90,
+  'vias urinarias': 80,
+  'usg transfontanela': 130,
+  'usg pelvica': 80,
+  'usg punho': 80,
+  'parede abdominal': 80,
+  'parotidas com doppler': 160, 'usg parotidas': 70,
+  'usg orelha': 70,
+  'usg cervical': 80,
+  'usg ombro': 90,
+  'usg inguinal': 80,
+  'doppler isolado': 140, 'doppler carotidas': 150,
+  'consulta clinico geral': 80,
+  'consulta ginecologia': 120,
+  'consulta endocrinologia': 120,
+  'consulta psiquiatria': 120,
+  'consulta pediatria': 100,
+  'consulta otorrino': 140,
+  'limpeza de ouvido': 50,
+  'inserir diu': 400, 'diu inserir': 400,
+  'retirar diu': 300, 'diu retirar': 300,
+  'prevencao': 80,
+  'retirada de pontos': 50,
+};
+
+function calcularServico(textoExames) {
+  const txt = textoExames.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  let txtRestante = txt;
+  const encontrados = [];
+  const chavesOrdenadas = Object.keys(TABELA_SERVICOS).sort((a, b) => b.length - a.length);
+  for (const chave of chavesOrdenadas) {
+    const re = new RegExp('(?:^|[^a-z0-9])(' + escapeRegex(chave) + ')(?:$|[^a-z0-9])');
+    const m = re.exec(txtRestante);
+    if (m) {
+      encontrados.push({ item: chave, valor: TABELA_SERVICOS[chave] });
+      const start = m.index + m[0].indexOf(m[1]);
+      txtRestante = txtRestante.slice(0, start) + ' '.repeat(chave.length) + txtRestante.slice(start + chave.length);
+    }
+  }
+  return encontrados.length ? encontrados[0] : null; // registra só o primeiro serviço mencionado
+}
+
 // CRM — Funil de vendas: registra cada orçamento laboratorial enviado
 async function registrarLeadOrcamento(num, nome, orcamento, origem) {
   try {
@@ -902,6 +970,12 @@ async function processarFila(num) {
           instrucaoOrcamento = '\n\nORÇAMENTO CALCULADO PELO SISTEMA — USE ESTES VALORES EXATOS: 💳 Cartão: R$' + orcamentoImg.cartao.toFixed(2) + ' | 💵 Pix/Dinheiro: R$' + orcamentoImg.pix.toFixed(2) + '. NÃO recalcule. NÃO modifique esses valores.';
           console.log('ORÇAMENTO IMAGEM [' + num + ']: base=R$' + orcamentoImg.total + ' cartão=R$' + orcamentoImg.cartao.toFixed(2) + ' — EXAMES ENCONTRADOS: ' + JSON.stringify(orcamentoImg.encontrados));
           await registrarLeadOrcamento(num, null, orcamentoImg, 'whatsapp');
+        } else {
+          const servicoImg = calcularServico(leitura);
+          if (servicoImg) {
+            console.log('SERVIÇO IMAGEM [' + num + ']: ' + servicoImg.item + ' = R$' + servicoImg.valor);
+            await registrarLeadOrcamento(num, null, { cartao: servicoImg.valor, pix: servicoImg.valor, encontrados: [servicoImg.item] }, 'whatsapp');
+          }
         }
         hist.push({ role: 'user', content: 'O paciente enviou uma imagem/receita médica. Análise da imagem: ' + leitura + instrucaoOrcamento + '\n\nInstruções:\n1. Confirme o nome do paciente e LISTE cada exame identificado individualmente pelo nome, NUMERADO (1. 2. 3. ...) para o paciente ver de forma clara quantos exames são (NUNCA agrupe em categorias como "função renal", "perfil hormonal" etc.)\n2. Informe os valores calculados acima (use exatamente esses valores)\n3. Avise de forma natural que é uma prévia e que a secretaria vai confirmar o valor final e os exames identificados\n4. Se houver Tomografia (TC/TAC) ou Ressonância (RM/RNM) na lista, avise CLARAMENTE que a clínica não realiza esse exame específico e que o paciente precisa procurar outro local — não diga apenas "será tratado à parte"\n5. Convide para agendar os exames que a clínica faz\nSe algum exame não tiver valor calculado, mencione que entrará em contato para complementar.' });
         const resp = await chamarIA(hist);
@@ -964,6 +1038,13 @@ async function processarFila(num) {
       hist.push({ role: 'user', content: infoOrcamento });
       console.log('ORÇAMENTO [' + num + ']: base=R$' + orcamento.total + ' cartão=R$' + orcamento.cartao + ' pix=R$' + orcamento.pix);
       await registrarLeadOrcamento(num, null, orcamento, 'whatsapp');
+    } else {
+      // Não é exame de laboratório — verifica se é ultrassom/consulta/procedimento, para o funil de vendas
+      const servico = calcularServico(txtCompleto);
+      if (servico) {
+        console.log('SERVIÇO [' + num + ']: ' + servico.item + ' = R$' + servico.valor);
+        await registrarLeadOrcamento(num, null, { cartao: servico.valor, pix: servico.valor, encontrados: [servico.item] }, 'whatsapp');
+      }
     }
 
     // Detecta se o paciente está recusando/adiando o agendamento nesta mensagem
@@ -1129,6 +1210,12 @@ app.post('/api/chat', async function(req, res) {
       hist.push({ role: 'user', content: infoOrcamentoChat });
       console.log('ORÇAMENTO CHAT [' + tel + ']: base=R$' + orcamentoChat.total + ' cartão=R$' + orcamentoChat.cartao + ' pix=R$' + orcamentoChat.pix);
       await registrarLeadOrcamento(tel, null, orcamentoChat, 'chat');
+    } else {
+      const servicoChat = calcularServico(msg);
+      if (servicoChat) {
+        console.log('SERVIÇO CHAT [' + tel + ']: ' + servicoChat.item + ' = R$' + servicoChat.valor);
+        await registrarLeadOrcamento(tel, null, { cartao: servicoChat.valor, pix: servicoChat.valor, encontrados: [servicoChat.item] }, 'chat');
+      }
     }
 
     const resp = await chamarIA(hist);
