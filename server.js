@@ -108,6 +108,8 @@ CONSULTAS: Clínico Geral R$80 | Ginecologia R$120 | Endocrinologia R$120 | Psiq
 PROCEDIMENTOS: Limpeza ouvido R$50 | DIU inserir R$400 | DIU retirar R$300 | Prevenção R$80 | Retirada pontos R$50.
 EXAMES CARDIOLÓGICOS: Holter 24h R$150 | MAPA 24h R$140 | Eletrocardiograma R$50.
 
+ATENÇÃO — SEXAGEM FETAL: nesta clínica, Sexagem Fetal é um EXAME DE SANGUE laboratorial (coleta de sangue materno), NÃO é ultrassom. NÃO trate como exame de imagem, NÃO aplique a agenda de ultrassom (sexta-feira) para ele. Ele segue a AGENDA DE COLETA LABORATORIAL normal (abaixo), disponível nos dias de coleta, não só sexta-feira. Valor: R$165,00, sem desconto no pix (mesmo valor no cartão e à vista).
+
 AGENDA DE COLETA LABORATORIAL — 07h00 às 09h45:
 O laboratório funciona em semanas alternadas:
 • Semana A (29/06, 13/07, 27/07...): Segunda, Quarta e Sexta
