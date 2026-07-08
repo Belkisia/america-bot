@@ -244,9 +244,10 @@ const TABELA_PRECOS = {
   'proteinas totais': 13,
   'proteinas totais e fracoes': 13,
   'pcr ultrassensivel': 16,
-  'pcr': 23,
-  'proteina c reativa': 23,
-  'proteína c reativa': 23,
+  'pcr': 15,
+  'proteina c reativa': 15,
+  'proteína c reativa': 15,
+  'mucoproteinas': 16, 'muco-proteinas': 16, 'muco proteinas': 16,
   'tsh': 28.5,
   'trab': 63,
   'anti-receptor de tsh': 63,
@@ -364,6 +365,10 @@ const TABELA_PRECOS = {
   'coombs direto': 16,
   'coombs indireto': 16,
   'eletroforese hemoglobinas': 26,
+  'eletroforese de proteinas': 27,
+  'anti-dna': 44,
+  'antiestreptolisina o': 13, 'aslo': 13,
+  'anti-nucleossomo': 78, 'antinucleo': 78, 'anticorpos antinucleo': 78,
   'eletroforese de hemoglobinas': 26,
   'eletroforese de hemoglobina': 26,
   'transferrina': 16,
@@ -376,6 +381,7 @@ const TABELA_PRECOS = {
   'coagulograma': 37,
   'tp': 13,
   'tempo de protrombina': 13,
+  'tempo e atividade da protrombina': 13, 'tap': 13,
   'ttpa': 20,
   'dimero-d': 94.5,
   'dímero-d': 94.5,
@@ -438,6 +444,16 @@ function calcularOrcamento(textoExames) {
   if (tem('lipidograma') && (tem('perfil lipidico') || tem('perfil lipídico'))) {
     removidos.add('perfil lipidico');
     removidos.add('perfil lipídico');
+  }
+
+  // Antiestreptolisina O e ASLO são o mesmo exame (sigla) — não cobra os dois se aparecerem juntos
+  if (tem('antiestreptolisina o') && tem('aslo')) {
+    removidos.add('aslo');
+  }
+
+  // Tempo/Atividade da Protrombina e TAP são o mesmo exame (sigla) — não cobra os dois se aparecerem juntos
+  if ((tem('tempo de protrombina') || tem('tempo e atividade da protrombina')) && tem('tap')) {
+    removidos.add('tap');
   }
 
   if (temHemograma && glicemiaAchada && achados.length === 2) {
