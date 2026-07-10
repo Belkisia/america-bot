@@ -882,9 +882,17 @@ function inferirPeriodo(especialidade, dataEscolhida) {
 }
 function extrairDadosMensagem(texto) {
   const dados = {};
-  // Detecta data de nascimento
-  const nascMatch = texto.match(/\b(\d{2}[\/-]\d{2}[\/-]\d{4})\b/);
-  if (nascMatch) dados.nascimento = nascMatch[1].replace(/\//g, '/');
+  // Detecta data de nascimento em vários formatos: DD/MM/AAAA, DD-MM-AAAA, DD.MM.AAAA,
+  // DD MM AAAA (com espaço), ou DDMMAAAA (colado, sem separador nenhum)
+  const nascMatch = texto.match(/\b(\d{1,2})[\/\-\.\s]?(\d{1,2})[\/\-\.\s]?(\d{4})\b/);
+  if (nascMatch) {
+    const dia = parseInt(nascMatch[1], 10);
+    const mes = parseInt(nascMatch[2], 10);
+    const ano = parseInt(nascMatch[3], 10);
+    if (dia >= 1 && dia <= 31 && mes >= 1 && mes <= 12 && ano >= 1900 && ano <= 2026) {
+      dados.nascimento = String(dia).padStart(2, '0') + '/' + String(mes).padStart(2, '0') + '/' + ano;
+    }
+  }
   // Detecta nome
   const nomeMatch = texto.match(/([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Ú][a-zà-ú]+){1,4})(?:\s+\d|$)/);
   if (nomeMatch) dados.nome = nomeMatch[1].trim();
