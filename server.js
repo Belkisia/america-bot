@@ -876,6 +876,53 @@ async function marcarLeadAgendado(num) {
   } catch(e) { console.error('ERRO marcarLeadAgendado:', e.message); }
 }
 
+// AGENTE DE VENDAS — Follow-up automático de leads que não converteram
+// Regras de segurança (pra não repetir a suspensão do WhatsApp de antes):
+// - só contata quem está "orcamento_enviado" há mais de 24h (nunca 10 minutos)
+// - manda no máximo 4 mensagens por execução (roda a cada 1h = no máx ~4/hora)
+// - espera real entre cada envio (não manda tudo de uma vez)
+// - nunca contata o mesmo lead duas vezes (marca followup_enviado_em)
+// - respeita a lista de números ignorados
+const FOLLOWUP_MAX_POR_EXECUCAO = 4;
+const FOLLOWUP_DELAY_ENTRE_ENVIOS_MS = 45 * 1000; // 45s entre cada mensagem
+const FOLLOWUP_ESPERA_MINIMA_HORAS = 24;
+
+async function executarFollowUpVendas() {
+  try {
+    const limiteData = new Date(Date.now() - FOLLOWUP_ESPERA_MINIMA_HORAS * 60 * 60 * 1000).toISOString();
+    const { data: leads } = await db.supabase.from('leads_orcamento')
+      .select('*')
+      .eq('status', 'orcamento_enviado')
+      .is('followup_enviado_em', null)
+      .lt('criado_em', limiteData)
+      .order('criado_em', { ascending: true })
+      .limit(FOLLOWUP_MAX_POR_EXECUCAO);
+
+    if (!leads || leads.length === 0) return;
+    console.log('FOLLOWUP_VENDAS: ' + leads.length + ' lead(s) para contatar nesta execução');
+
+    for (const lead of leads) {
+      if (numeroEstaIgnorado(lead.telefone)) continue;
+      if (await emAtendimentoHumano(lead.telefone)) continue; // não interrompe atendimento humano em andamento
+
+      const saudacaoNome = lead.nome ? lead.nome.split(' ')[0] : '';
+      const msg = (saudacaoNome ? 'Oi, ' + saudacaoNome + '! 😊' : 'Oi! 😊') +
+        ' Vi que você pediu um orçamento aqui no Centro Médico América e a gente não chegou a continuar. ' +
+        'Ainda tem interesse? Fico à disposição se quiser agendar ou tirar alguma dúvida, sem pressa nenhuma! 💙';
+
+      await enviar(lead.telefone, msg);
+      await db.supabase.from('leads_orcamento')
+        .update({ followup_enviado_em: new Date().toISOString() })
+        .eq('id', lead.id);
+      console.log('FOLLOWUP_VENDAS: mensagem enviada para ' + lead.telefone);
+
+      await new Promise(function(r) { setTimeout(r, FOLLOWUP_DELAY_ENTRE_ENVIOS_MS); });
+    }
+  } catch(e) {
+    console.error('ERRO executarFollowUpVendas:', e.message);
+  }
+}
+
 // Períodos fixos por especialidade/data
 const PERIODOS_FIXOS = {
   'Psiquiatria': 'tarde',
@@ -1275,6 +1322,13 @@ app.post('/api/chat', async function(req, res) {
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
 
+app.post('/api/funil/followup', async function(req, res) {
+  try {
+    await executarFollowUpVendas();
+    res.json({ ok: true, mensagem: 'Follow-up executado (respeitando o limite de ' + FOLLOWUP_MAX_POR_EXECUCAO + ' mensagens por execução).' });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
 app.patch('/api/funil/:id', async function(req, res) {
   try {
     await db.supabase.from('leads_orcamento')
@@ -1352,4 +1406,8 @@ app.get('/test-quark', async function(req, res) {
 });
 
 app.get('/', function(req, res) { res.json({ status: 'online', agente: 'CMA v3', uptime: Math.floor(process.uptime())+'s' }); });
-app.listen(PORT, function() { console.log('América — CMA v3 | Porta: ' + PORT + ' | Online'); });
+app.listen(PORT, function() {
+  console.log('América — CMA v3 | Porta: ' + PORT + ' | Online');
+  // Agente de vendas: roda a cada 1 hora, verifica se tem leads pra contatar (respeitando os limites de segurança)
+  setInterval(executarFollowUpVendas, 60 * 60 * 1000);
+});
