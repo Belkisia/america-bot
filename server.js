@@ -211,9 +211,10 @@ const TABELA_PRECOS = {
   'hemoglobina glicada': 25,
   'hb glicada': 25,
   'colesterol': 13,
-  'hdl': 15,
-  'ldl': 15,
-  'vldl': 15,
+  'colesterol total': 13,
+  'colesterol hdl': 15, 'hdl': 15,
+  'colesterol ldl': 15, 'ldl': 15,
+  'colesterol vldl': 15, 'vldl': 15,
   'triglicerides': 15.5,
   'triglicerídeos': 15.5,
   'triglicerideos': 15.5,
@@ -277,8 +278,9 @@ const TABELA_PRECOS = {
   'acido folico': 32,
   'folato': 32,
   'ácido fólico': 32,
-  'vitamina b12': 32,
-  'vitamina d': 38,
+  'vitamina b12': 32, 'vit b12': 32,
+  'vitamina d': 38, 'vit d': 38,
+  'microalbuminuria': 21, 'microalbuminuria u24h': 21, 'microalbuminuria urina amostra isolada': 21,
   '25 hidroxivitamina d': 38,
   'hidroxivitamina d': 38,
   'vitamina b6': 84,
@@ -475,10 +477,17 @@ function calcularOrcamento(textoExames) {
     extras.push({ nome: 'hba1c (sozinho)', valor: 32 });
   }
 
-  const temLipidoCompleto = ['colesterol', 'hdl', 'ldl'].every(tem) &&
-    (tem('vldl') || tem('triglicerides') || tem('triglicerídeos') || tem('triglicerideos'));
+  const CHAVES_COLESTEROL = ['colesterol', 'colesterol total'];
+  const CHAVES_HDL = ['hdl', 'colesterol hdl'];
+  const CHAVES_LDL = ['ldl', 'colesterol ldl'];
+  const CHAVES_VLDL = ['vldl', 'colesterol vldl'];
+  const CHAVES_TRIG = ['triglicerides', 'triglicerídeos', 'triglicerideos'];
+  const CHAVES_LIPIDO_TODAS = CHAVES_COLESTEROL.concat(CHAVES_HDL, CHAVES_LDL, CHAVES_VLDL, CHAVES_TRIG);
+
+  const temLipidoCompleto = CHAVES_HDL.some(tem) && CHAVES_LDL.some(tem) &&
+    (CHAVES_VLDL.some(tem) || CHAVES_TRIG.some(tem));
   if (temLipidoCompleto) {
-    const lipidosAchados = achados.filter(a => ['colesterol', 'hdl', 'ldl', 'vldl', 'triglicerides', 'triglicerídeos', 'triglicerideos'].includes(a.chave));
+    const lipidosAchados = achados.filter(a => CHAVES_LIPIDO_TODAS.includes(a.chave));
     lipidosAchados.forEach(a => removidos.add(a.chave));
     const soLipido = achados.length === lipidosAchados.length;
     const somaComponentes = lipidosAchados.reduce((s, a) => s + a.valor, 0);
@@ -509,8 +518,9 @@ function calcularOrcamento(textoExames) {
     extras.push({ nome: 'testosterona total + livre (combo)', valor: 23.5 + 29.5 });
   }
 
-  // Antibiograma + cultura de bactérias (fraseado típico do SUS, sem a palavra "urocultura") -> combo
-  if (tem('antibiograma') && /cultura/.test(txt) && !tem('urocultura + antibiograma') &&
+  // Antibiograma + cultura de bactérias (fraseado típico do SUS, sem a palavra "urocultura",
+  // e às vezes truncado como "ANTIBIOGR" em guias de convênio) -> combo
+  if ((tem('antibiograma') || /\bantibiogr\w*/.test(txt)) && /cultura/.test(txt) && !tem('urocultura + antibiograma') &&
       !tem('urocultura com antibiograma') && !tem('urocultura antibiograma')) {
     removidos.add('antibiograma');
     extras.push({ nome: 'urocultura + antibiograma (combo)', valor: 32 });
