@@ -625,9 +625,11 @@ const FUNIL_COLUNAS = [
 
 function formatarTelefoneFunil(t) {
   if (!t) return '—';
-  const d = String(t).replace(/\D/g, '');
-  if (d.length >= 10) return '(' + d.slice(-11, -9) + ') ' + d.slice(-9);
-  return t;
+  let d = String(t).replace(/\D/g, '');
+  if (d.startsWith('55')) d = d.slice(2); // remove código do país, se tiver
+  const ddd = d.slice(0, 2);
+  const resto = d.slice(2);
+  return ddd ? '(' + ddd + ') ' + resto : t;
 }
 
 async function mudarStatusFunil(id, status) {
