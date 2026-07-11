@@ -9,7 +9,8 @@
     "express": "^4.18.2",
     "axios": "^1.6.0",
     "ws": "^8.18.0",
-    "@supabase/supabase-js": "^2.50.0"
+    "@supabase/supabase-js": "^2.50.0",
+    "sharp": "^0.33.0"
   },
   "engines": {
     "node": ">=20.0.0"
