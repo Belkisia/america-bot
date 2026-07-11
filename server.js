@@ -665,18 +665,24 @@ async function chamarIA(msgs, tentativa) {
       (todasMsgs.includes('clínico')||todasMsgs.includes('clinico')) ? 'Clínico Geral' :
       (todasMsgs.includes('ultrassom')||todasMsgs.includes('usg')) ? 'Ultrassom' : null;
 
-    let systemFinal = SYSTEM_PROMPT
-      + '\n\nAGENDA ATUAL (somente datas futuras):\n' + agendaFiltrada
+    let systemDinamico = '\n\nAGENDA ATUAL (somente datas futuras):\n' + agendaFiltrada
       + '\n\nDATA/HORA ATUAL (Brasília): ' + agora + ' — Hoje é ' + diaSemana + ', ' + dataHoje
       + '\n\nTABELA DE DIAS DA SEMANA JUNHO/2026 (use SEMPRE esta tabela para informar dia da semana de qualquer data — NUNCA calcule de memória): ' + refDiasSemana
       + '\n\nREGRA OBRIGATÓRIA DE SAUDAÇÃO: Agora são ' + hora + 'h em Brasília. Se a resposta começar com saudação, USE EXATAMENTE "' + saudacao + '". NUNCA use "Boa noite" se a hora atual for ' + hora + 'h. Se for encerrar a conversa, use "' + despedida + '".';
 
     if (esp) {
-      systemFinal += '\n\nLEMBRETE CRÍTICO: O paciente JÁ informou que quer ' + esp + '. NÃO pergunte especialidade. Prossiga para o próximo dado necessário.';
+      systemDinamico += '\n\nLEMBRETE CRÍTICO: O paciente JÁ informou que quer ' + esp + '. NÃO pergunte especialidade. Prossiga para o próximo dado necessário.';
     }
 
+    // Prompt caching: SYSTEM_PROMPT é enorme e idêntico em toda chamada — cacheado, custa só 10% do preço normal.
+    // A parte dinâmica (agenda/hora/lembretes) muda a cada mensagem, então fica de fora do cache.
     const r = await axios.post('https://api.anthropic.com/v1/messages',
-      { model: 'claude-sonnet-5', max_tokens: 600, system: systemFinal, messages: hist },
+      { model: 'claude-sonnet-5', max_tokens: 600,
+        system: [
+          { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
+          { type: 'text', text: systemDinamico }
+        ],
+        messages: hist },
       { headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' }, timeout: 30000 }
     );
     const blocoTexto = (r.data.content || []).find(function(b) { return b.type === 'text'; });
