@@ -1,5 +1,6 @@
 const express = require('express');
 const axios = require('axios');
+const sharp = require('sharp');
 const db = require('./supabase');
 const app = express();
 app.use(express.json());
@@ -710,8 +711,16 @@ async function enviar(numero, texto) {
 async function lerImagem(imageUrl) {
   try {
     const imgResp = await axios.get(imageUrl, { responseType: 'arraybuffer', timeout: 15000 });
-    const base64 = Buffer.from(imgResp.data).toString('base64');
-    const mediaType = (imgResp.headers['content-type'] || 'image/jpeg').split(';')[0].trim();
+    // Redimensiona a imagem antes de enviar — fotos de celular costumam vir em resolução muito
+    // maior do que o necessário pra ler texto, e o custo da API de visão escala com o tamanho
+    // da imagem. 1568px no lado maior é o suficiente para leitura nítida e é o tamanho ótimo
+    // recomendado pela própria Anthropic (imagens maiores não melhoram a leitura, só custam mais).
+    const imagemRedimensionada = await sharp(Buffer.from(imgResp.data))
+      .resize({ width: 1568, height: 1568, fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 85 })
+      .toBuffer();
+    const base64 = imagemRedimensionada.toString('base64');
+    const mediaType = 'image/jpeg';
     const r = await axios.post('https://api.anthropic.com/v1/messages',
       { model: 'claude-sonnet-5', max_tokens: 1200, messages: [{ role: 'user', content: [
         { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
@@ -740,7 +749,7 @@ function detectarImagem(b) {
 
 // Cache de histórico em memória — atualizado imediatamente, sem depender do banco
 const historicoCache = {};
-const CACHE_MAX = 20; // máximo de mensagens por número
+const CACHE_MAX = 12; // máximo de mensagens por número (reduzido para economizar tokens — dados essenciais como nome/nascimento/especialidade ficam salvos à parte, não dependem do histórico)
 
 function cacheAdicionarMensagem(num, role, content) {
   if (!historicoCache[num]) historicoCache[num] = [];
@@ -750,7 +759,7 @@ function cacheAdicionarMensagem(num, role, content) {
 
 async function buscarHistoricoComCache(num) {
   // Busca do banco
-  const dbHist = await db.buscarHistorico(num, 20);
+  const dbHist = await db.buscarHistorico(num, 12);
   // Se tem cache em memória com mais mensagens recentes, usa ele
   const cache = historicoCache[num] || [];
   if (cache.length >= dbHist.length) return cache;
@@ -997,7 +1006,7 @@ async function processarFila(num) {
       if (leitura) {
         console.log('LEITURA_IMAGEM [' + num + ']: ' + leitura);
         await db.salvarMensagem(num, 'user', '[imagem enviada]');
-        let hist = await db.buscarHistorico(num, 20);
+        let hist = await db.buscarHistorico(num, 12);
         hist = hist.filter(function(m){return m.content && m.content.trim();});
         // Calcula orçamento no código usando a leitura da imagem
         const orcamentoImg = calcularOrcamento(leitura);
@@ -1233,7 +1242,7 @@ app.post('/api/chat', async function(req, res) {
     const msg = req.body.mensagem;
     if (!msg) return res.status(400).json({ erro: 'mensagem obrigatória' });
     await db.salvarMensagem(tel, 'user', msg);
-    let hist = await db.buscarHistorico(tel, 20);
+    let hist = await db.buscarHistorico(tel, 12);
     if (!hist.length || hist[hist.length-1].role !== 'user') hist.push({ role: 'user', content: msg });
 
     // Calcula orçamento no código (mesmo comportamento do fluxo de WhatsApp) — NUNCA deixa a IA calcular de cabeça
