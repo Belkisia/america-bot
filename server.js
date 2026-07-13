@@ -111,17 +111,10 @@ EXAMES CARDIOLÓGICOS: Holter 24h R$150 | MAPA 24h R$140 | Eletrocardiograma R$5
 
 ATENÇÃO — SEXAGEM FETAL: nesta clínica, Sexagem Fetal é um EXAME DE SANGUE laboratorial (coleta de sangue materno), NÃO é ultrassom. NÃO trate como exame de imagem, NÃO aplique a agenda de ultrassom (sexta-feira) para ele. Ele segue a AGENDA DE COLETA LABORATORIAL normal (abaixo), disponível nos dias de coleta, não só sexta-feira. Valor: R$165,00, sem desconto no pix (mesmo valor no cartão e à vista).
 
+ATENÇÃO — BETA-HCG: valor R$50,00, SEM desconto no pix (mesmo valor no cartão e à vista) — igual à Sexagem Fetal. NUNCA aplique os 10% de desconto normal do laboratório nesse exame específico, mesmo se vier junto com outros exames que têm desconto.
+
 AGENDA DE COLETA LABORATORIAL — 07h00 às 09h45:
-O laboratório funciona em semanas alternadas:
-• Semana A (29/06, 13/07, 27/07...): Segunda, Quarta e Sexta
-• Semana B (07/07, 21/07...): Terça e Quinta
-
-Para saber qual semana é qual, use a DATA ATUAL do prompt:
-- Semana iniciada em 29/06 = Semana A (seg/qua/sex)
-- Semana iniciada em 07/07 = Semana B (ter/qui)
-- Alterna a cada semana a partir daí
-
-Quando paciente perguntar sobre coleta/exames laboratoriais, informe os dias disponíveis da semana atual e da próxima, sempre das 07h00 às 09h45.
+Use SEMPRE as datas exatas fornecidas no bloco "AGENDA ATUAL" do prompt (calculadas pelo sistema) — NUNCA calcule ou deduza essas datas sozinho.
 
 EXAMES LABORATORIAIS: A clínica FAZ exames laboratoriais. NUNCA negar. Quando paciente perguntar preço de exame(s), calcule o total e informe APENAS o valor total com as opções de pagamento — não liste os valores individuais. Para orçamento de pedido médico com foto: peça a foto/lista, depois use [SECRETARIA].
 REGRA DE NUMERAÇÃO: sempre que for listar os nomes dos exames identificados (por foto ou por texto digitado), liste NUMERADOS (1. 2. 3. ...), para o paciente ver de forma clara quantos exames foram identificados. Isso vale só para os NOMES dos exames — os VALORES continuam sendo mostrados apenas como total final (cartão/pix), nunca por item.
@@ -320,6 +313,7 @@ const TABELA_PRECOS = {
   'beta-hcg': 50,
   'sexagem fetal': 165,
   'beta hcg': 50,
+  'bhcg': 50,
   'psa total': 40,
   'psa livre': 42,
   'psa livre/total': 42,
@@ -534,7 +528,7 @@ function calcularOrcamento(textoExames) {
     .concat(extras.map(e => e.nome));
 
   // Sexagem Fetal e Beta-HCG: preço fixo, sem desconto no pix (mesmo valor nas duas formas de pagamento)
-  const SEM_DESCONTO_PIX = ['sexagem fetal', 'beta-hcg', 'beta hcg'];
+  const SEM_DESCONTO_PIX = ['sexagem fetal', 'beta-hcg', 'beta hcg', 'bhcg'];
   const valorSemDesconto = achadosFinais
     .filter(a => SEM_DESCONTO_PIX.includes(a.chave))
     .reduce((s, a) => s + a.valor, 0);
@@ -665,6 +659,39 @@ async function chamarIA(msgs, tentativa) {
           if (disponiveisUSG.length >= 2) break;
         }
         return '• Ultrassom (próximos dias): ' + (disponiveisUSG.length ? disponiveisUSG.join(' | ') : 'sem agenda no momento');
+      })(),
+      (function() {
+        function inicioSemana(data) {
+          const d = new Date(data);
+          const dow = d.getDay();
+          const diffParaSegunda = dow === 0 ? -6 : 1 - dow;
+          d.setDate(d.getDate() + diffParaSegunda);
+          d.setHours(0, 0, 0, 0);
+          return d;
+        }
+        const ANCORA_SEMANA_A = new Date(2026, 5, 29); // 29/06/2026, segunda, início da Semana A
+        function tipoSemana(data) {
+          const segundaAtual = inicioSemana(data);
+          const diffDias = Math.round((segundaAtual - ANCORA_SEMANA_A) / (1000 * 60 * 60 * 24));
+          const semanasPassadas = diffDias / 7;
+          return (Math.round(semanasPassadas) % 2 === 0) ? 'A' : 'B';
+        }
+        const diasSemanaA = [1, 3, 5]; // segunda, quarta, sexta
+        const diasSemanaB = [2, 4]; // terça, quinta
+        const disponiveisColeta = [];
+        for (let i = 0; i <= 14; i++) {
+          const d = new Date(nowBR);
+          d.setDate(d.getDate() + i);
+          const tipo = tipoSemana(d);
+          const diasValidos = tipo === 'A' ? diasSemanaA : diasSemanaB;
+          if (diasValidos.includes(d.getDay())) {
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            disponiveisColeta.push(dd + '/' + mm);
+          }
+          if (disponiveisColeta.length >= 4) break;
+        }
+        return '• Coleta Laboratorial (07h00–09h45, próximas datas): ' + (disponiveisColeta.length ? disponiveisColeta.join(' | ') : 'sem agenda no momento');
       })(),
     ].join('\n');
 
