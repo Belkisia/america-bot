@@ -923,7 +923,7 @@ async function marcarLeadAgendado(num) {
 // - nunca contata o mesmo lead duas vezes (marca followup_enviado_em)
 // - respeita a lista de números ignorados
 const FOLLOWUP_MAX_POR_EXECUCAO = 4;
-const FOLLOWUP_DELAY_ENTRE_ENVIOS_MS = 45 * 1000; // 45s entre cada mensagem
+const FOLLOWUP_DELAY_ENTRE_ENVIOS_MS = 14 * 60 * 1000; // ~14 min entre cada — espalha as 4 mensagens ao longo da hora inteira, em vez de concentrar tudo nos primeiros minutos
 const FOLLOWUP_ESPERA_MINIMA_HORAS = 24;
 
 async function executarFollowUpVendas() {
