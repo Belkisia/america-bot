@@ -655,6 +655,7 @@ function criarCartaoFunil(lead) {
   div.innerHTML = `
     <div class="ftel">${formatarTelefoneFunil(lead.telefone)}</div>
     <div class="fnome">${lead.nome || 'Nome não identificado'}</div>
+    ${lead.followup_enviado_em ? `<div style="font-size:10px;color:#5aabe0;margin-top:4px;background:rgba(30,110,168,0.12);border-radius:4px;padding:2px 6px;display:inline-block">📨 Follow-up enviado em ${formatarData(lead.followup_enviado_em)}</div>` : ''}
     <div class="fvalores">
       <span>💳 <b>R$${Number(lead.valor_cartao || 0).toFixed(2)}</b></span>
       <span>💵 <b>R$${Number(lead.valor_pix || 0).toFixed(2)}</b></span>
