@@ -21,6 +21,7 @@ const NUMEROS_IGNORAR = [
   '5562991199066',
   '5562984463157',
   '5562996092636',
+  '5562984271335', // Dr. Wilder — retirado da lista de números de teste
 ];
 
 // Normaliza telefone para comparação: remove tudo que não é dígito e tira o "9" extra
@@ -44,7 +45,6 @@ const cacheHumano = {};
 // MODO TESTE LABORATORIAL — orçamentos de exames só para esses números
 const NUMEROS_TESTE_LAB = [
   '556284227156',
-  '556284271335',
 ];
 const MODO_TESTE = false; // quando true, bloqueia TUDO para não listados
 const MODO_TESTE_LAB = false; // liberado para todos os clientes
@@ -331,6 +331,9 @@ const TABELA_PRECOS = {
   'elementos anormais e sedimentoscopia': 15,
   'urinálise': 15,
   'urocultura + antibiograma': 32,
+  'cultura de bacterias': 32,
+  'cultura de bacterias p identificacao': 32,
+  'cultura de bacterias para identificacao': 32,
   'urocultura com antibiograma': 32,
   'urocultura antibiograma': 32,
   'uroc': 32,
