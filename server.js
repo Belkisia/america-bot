@@ -896,6 +896,30 @@ function calcularServico(textoExames) {
 // CRM — Funil de vendas: registra cada orçamento laboratorial enviado
 async function registrarLeadOrcamento(num, nome, orcamento, origem) {
   try {
+    // Evita duplicar lead se já existe um recente (últimas 2h) pra esse mesmo telefone ainda
+    // em "orcamento_enviado" — atualiza o existente em vez de criar um novo a cada mensagem
+    const duasHorasAtras = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+    const { data: existente } = await db.supabase.from('leads_orcamento')
+      .select('id')
+      .eq('telefone', num)
+      .eq('status', 'orcamento_enviado')
+      .gte('criado_em', duasHorasAtras)
+      .order('criado_em', { ascending: false })
+      .limit(1);
+
+    if (existente && existente.length > 0) {
+      await db.supabase.from('leads_orcamento')
+        .update({
+          nome: nome || null,
+          valor_cartao: orcamento.cartao,
+          valor_pix: orcamento.pix,
+          exames: JSON.stringify(orcamento.encontrados || []),
+          atualizado_em: new Date().toISOString(),
+        })
+        .eq('id', existente[0].id);
+      return;
+    }
+
     await db.supabase.from('leads_orcamento').insert({
       telefone: num,
       nome: nome || null,
