@@ -81,7 +81,7 @@ ANTI-DUPLICATA: Se histórico já tem confirmação da mesma especialidade, NÃO
 
 AGENDA MÉDICOS
 • Psiquiatria: 07/07, 21/07, 07/08 e 21/08 das 13h30–17h00 — SOMENTE TARDE
-• Otorrinolaringologia: 13/07 e 27/07 das 08h00–11h30 — SOMENTE MANHÃ
+• Otorrinolaringologia: 27/07 das 13h30–17h00 — SOMENTE TARDE
 • Endocrinologia: 04/08 das 14h00–17h00 — SOMENTE TARDE
 • Ginecologia: 31/07, 14/08 e 28/08 das 13h00–16h00 — SOMENTE TARDE
 • Clínico Geral/Pediatria — datas específicas (cada uma com seu horário):
@@ -269,7 +269,7 @@ const TABELA_PRECOS = {
   'folato': 32,
   'ácido fólico': 32,
   'vitamina b12': 32, 'vit b12': 32,
-  'vitamina d': 38, 'vit d': 38,
+  'vitamina d': 38, 'vit d': 38, 'vitamina d3': 38,
   'microalbuminuria': 21, 'microalbuminuria u24h': 21, 'microalbuminuria urina amostra isolada': 21,
   '25 hidroxivitamina d': 38,
   'hidroxivitamina d': 38,
@@ -306,6 +306,7 @@ const TABELA_PRECOS = {
   'anti mülleriano': 115,
   'cortisol': 21,
   'acth': 37,
+  'insulina homa ir e beta': 19, 'insulina homa ir': 19,
   'insulina': 16,
   'beta-hcg': 50,
   'sexagem fetal': 165,
@@ -437,6 +438,11 @@ function calcularOrcamento(textoExames) {
   // não um pedido separado. Não cobra os dois.
   if (temHemograma && tem('eritrograma')) {
     removidos.add('eritrograma');
+  }
+
+  // Hemograma e HMG (sigla) são o mesmo exame — não cobra os dois se aparecerem juntos
+  if (temHemograma && tem('hmg')) {
+    removidos.add('hmg');
   }
 
   // Perfil Lipídico e Lipidograma são o mesmo exame (sinônimos) — não cobra os dois se aparecerem juntos
@@ -605,7 +611,7 @@ async function chamarIA(msgs, tentativa) {
     // Agenda com suporte a múltiplas datas por especialidade — filtra automaticamente as que já passaram
     const AGENDA_ESPECIALIDADES = {
       'Psiquiatria': { horario: '13h30–17h00', periodo: 'SOMENTE TARDE', datas: [{dia:7,mes:7},{dia:21,mes:7},{dia:7,mes:8},{dia:21,mes:8}] },
-      'Otorrinolaringologia': { horario: '08h00–11h30', periodo: 'SOMENTE MANHÃ', datas: [{dia:13,mes:7},{dia:27,mes:7}] },
+      'Otorrinolaringologia': { horario: '13h30–17h00', periodo: 'SOMENTE TARDE', datas: [{dia:27,mes:7}] },
       'Endocrinologia': { horario: '14h00–17h00', periodo: 'SOMENTE TARDE', datas: [{dia:4,mes:8}] },
       'Ginecologia': { horario: '13h00–16h00', periodo: 'SOMENTE TARDE', datas: [{dia:31,mes:7},{dia:14,mes:8},{dia:28,mes:8}] },
     };
@@ -998,7 +1004,7 @@ function inferirPeriodo(especialidade, dataEscolhida) {
   const data = (dataEscolhida || '').toLowerCase();
   if (esp.includes('psiquiatria')) return 'tarde';
   if (esp.includes('endocrinolog')) return 'tarde';
-  if (esp.includes('otorrino')) return 'manha';
+  if (esp.includes('otorrino')) return 'tarde';
   if (esp.includes('ginecolog')) return 'tarde';
   return null;
 }
