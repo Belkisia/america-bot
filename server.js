@@ -1206,7 +1206,9 @@ async function processarFila(num) {
     }
 
     // Detecta se o paciente está recusando/adiando o agendamento nesta mensagem
-    const recusouAgendar = /n[ãa]o quero (agendar|marcar)|n[ãa]o vou agendar|agora n[ãa]o|n[ãa]o agora|depois eu (agendo|marco|confirmo)|vou pensar|s[óo] confirmar depois|talvez depois|ainda n[ãa]o/i.test(txtCompleto);
+    const respostaSeca = txtCompleto.trim().toLowerCase().replace(/[.!?]+$/, '');
+    const recusouAgendar = /n[ãa]o quero (agendar|marcar)|n[ãa]o vou agendar|agora n[ãa]o|n[ãa]o agora|depois eu (agendo|marco|confirmo)|vou pensar|s[óo] confirmar depois|talvez depois|ainda n[ãa]o/i.test(txtCompleto)
+      || ['nao', 'não', 'nops', 'nao quero', 'não quero'].includes(respostaSeca);
 
     if (recusouAgendar) {
       // Limpa o "empurrão" de nome/nascimento para não insistir nas próximas mensagens também
