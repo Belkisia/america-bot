@@ -83,14 +83,10 @@ AGENDA MÉDICOS
 • Psiquiatria: 07/07, 21/07, 07/08 e 21/08 das 13h30–17h00 — SOMENTE TARDE
 • Otorrinolaringologia: 13/07 e 27/07 das 08h00–11h30 — SOMENTE MANHÃ
 • Endocrinologia: 14/07 e 21/07 das 13h00–17h30 — SOMENTE TARDE
-• Ginecologia: 13/07 e 27/07 das 13h30–17h15 — SOMENTE TARDE
+• Ginecologia: 31/07, 14/08 e 28/08 das 13h00–16h00 — SOMENTE TARDE
 • Clínico Geral/Pediatria — datas específicas (cada uma com seu horário):
-  - 09/07: manhã 09h00–11h30 e tarde 14h00–17h15
-  - 13/07: manhã 08h30–10h30 e tarde 16h00–17h15
-  - 14/07: manhã 08h00–11h30 (sem tarde)
-  - 15/07: manhã 08h00–11h30 (sem tarde)
-  - 16/07: manhã 09h00–11h30 e tarde 14h00–17h15
-  - 17/07: manhã 08h00–11h30 (sem tarde)
+  - 20/07: manhã 09h00–10h30 e tarde 16h00–17h15
+  - 23/07: manhã 08h00–11h30 e tarde 14h00–17h00
 
 REGRA DE DATAS: Compare cada data com a DATA ATUAL do prompt. Mostre SOMENTE datas futuras. Cada data tem horário diferente — informe corretamente conforme a agenda acima. Se TODAS passaram: informe que não há agenda disponível no momento.
 
@@ -103,10 +99,11 @@ Dias disponíveis: TERÇA, 14h00–17h30 (tarde), e SEXTA, 07h00–09h45 (manhã
 MORFOLÓGICO: 1ºTri=11–13sem6d(R$230) | 2ºTri=20–23sem6d(R$280) | 3ºTri=32–34sem6d.
 REGRA CRÍTICA MORFOLÓGICO: se o paciente responder diretamente "1º trimestre", "1 trimestre", "primeiro trimestre", "2º trimestre", "segundo trimestre" (sem informar semanas exatas), ACEITE essa resposta como suficiente para identificar qual exame ele quer. NÃO peça semanas exatas de novo — isso já responde qual dos dois exames é. Prossiga direto para confirmar e pedir nome+nascimento. Só peça semanas exatas se o paciente não souber dizer o trimestre.
 
-PREÇOS ULTRASSOM: Abdome Inf R$70|c/Dop R$160 | Abdome Sup R$70|c/Dop R$160 | Abdome Total R$100|c/Dop R$350 | Articulação R$80 | Bolsa Escrotal R$80|c/Dop R$150 | Mamas R$90 | Morfológica 1ºTri R$230|2ºTri R$280 | Obstétrica>14sem R$100|c/Dop R$280|Endovaginal R$100|Múltipla R$180 | Partes Moles R$70 | Próstata R$90 | Quadril Ped R$80 | Tireoide R$90|c/Dop R$150 | Transvaginal R$90|c/Dop R$160 | Vias Urinárias R$80 | Transfontanela R$130 | Pélvica R$80 | Punho R$80 | Parede Abd R$80 | Parótidas R$70|c/Dop R$160 | Pé R$80 | Quadril Ad R$80 | Orelha R$70 | Cervical R$80 | Ombro R$90 | Inguinal R$80 | Doppler Isolado R$140 | Doppler Carótidas R$150.
+PREÇOS ULTRASSOM: Abdome Inf R$70|c/Dop R$160 | Abdome Sup R$80|c/Dop R$160 | Abdome Total R$100|c/Dop R$350 | Articulação R$80 | Bolsa Escrotal R$80|c/Dop R$150 | Mamas R$90 | Morfológica 1ºTri R$230|2ºTri R$280 | Obstétrica>14sem R$100|c/Dop R$280|Endovaginal R$100|Múltipla R$180 | Partes Moles R$70 | Próstata R$90 | Quadril Ped R$80 | Tireoide R$90|c/Dop R$150 | Transvaginal R$90|c/Dop R$160 | Vias Urinárias R$80 | Transfontanela R$130 | Pélvica R$80 | Punho R$80 | Parede Abd R$80 | Parótidas R$70|c/Dop R$160 | Pé R$80 | Quadril Ad R$80 | Orelha R$70 | Cervical R$80 | Ombro R$90 | Inguinal R$80 | Axilas (cada lado) R$70 | Doppler Isolado R$140 | Doppler Carótidas R$150.
 
 CONSULTAS: Clínico Geral R$80 | Ginecologia R$120 | Endocrinologia R$120 | Psiquiatria R$120 | Pediatria R$100 | Otorrino R$140.
 PROCEDIMENTOS: Limpeza ouvido R$50 | DIU inserir R$400 | DIU retirar R$300 | Prevenção R$80 | Retirada pontos R$50.
+ATENÇÃO — BIÓPSIA: a clínica NÃO faz coleta/procedimento de biópsia. Só realiza a ANÁLISE de uma amostra que o paciente já tenha coletado em outro lugar. Se o paciente perguntar sobre "coleta de biópsia" ou agendar a coleta em si, explique que isso não é feito aqui — só recebemos a amostra já coletada para análise.
 EXAMES CARDIOLÓGICOS: Holter 24h R$150 | MAPA 24h R$140 | Eletrocardiograma R$50.
 
 ATENÇÃO — SEXAGEM FETAL: nesta clínica, Sexagem Fetal é um EXAME DE SANGUE laboratorial (coleta de sangue materno), NÃO é ultrassom. NÃO trate como exame de imagem, NÃO aplique a agenda de ultrassom (sexta-feira) para ele. Ele segue a AGENDA DE COLETA LABORATORIAL normal (abaixo), disponível nos dias de coleta, não só sexta-feira. Valor: R$165,00, sem desconto no pix (mesmo valor no cartão e à vista).
@@ -610,7 +607,7 @@ async function chamarIA(msgs, tentativa) {
       'Psiquiatria': { horario: '13h30–17h00', periodo: 'SOMENTE TARDE', datas: [{dia:7,mes:7},{dia:21,mes:7},{dia:7,mes:8},{dia:21,mes:8}] },
       'Otorrinolaringologia': { horario: '08h00–11h30', periodo: 'SOMENTE MANHÃ', datas: [{dia:13,mes:7},{dia:27,mes:7}] },
       'Endocrinologia': { horario: '13h00–17h30', periodo: 'SOMENTE TARDE', datas: [{dia:14,mes:7},{dia:21,mes:7}] },
-      'Ginecologia': { horario: '13h30–17h15', periodo: 'SOMENTE TARDE', datas: [{dia:13,mes:7},{dia:27,mes:7}] },
+      'Ginecologia': { horario: '13h00–16h00', periodo: 'SOMENTE TARDE', datas: [{dia:31,mes:7},{dia:14,mes:8},{dia:28,mes:8}] },
     };
     function formatarListaDatas(lista) {
       if (lista.length === 1) return lista[0];
@@ -631,12 +628,8 @@ async function chamarIA(msgs, tentativa) {
       formatarLinhaAgenda('Ginecologia', AGENDA_ESPECIALIDADES['Ginecologia']),
       (function() {
         const AGENDA_CLINICO = [
-          { dia: 9, mes: 7, manha: '09h00–11h30', tarde: '14h00–17h15' },
-          { dia: 13, mes: 7, manha: '08h30–10h30', tarde: '16h00–17h15' },
-          { dia: 14, mes: 7, manha: '08h00–11h30', tarde: null },
-          { dia: 15, mes: 7, manha: '08h00–11h30', tarde: null },
-          { dia: 16, mes: 7, manha: '09h00–11h30', tarde: '14h00–17h15' },
-          { dia: 17, mes: 7, manha: '08h00–11h30', tarde: null },
+          { dia: 20, mes: 7, manha: '09h00–10h30', tarde: '16h00–17h15' },
+          { dia: 23, mes: 7, manha: '08h00–11h30', tarde: '14h00–17h00' },
         ];
         const disponiveis = AGENDA_CLINICO
           .filter(function (d) { return dataFutura(d.dia, d.mes); })
@@ -835,7 +828,8 @@ async function limparEstado(num) {
 // usada só para detectar e registrar no funil de vendas (o preço narrado ao paciente já vem do prompt)
 const TABELA_SERVICOS = {
   'abdome inferior com doppler': 160, 'abdome inferior': 70,
-  'abdome superior com doppler': 160, 'abdome superior': 70,
+  'abdome superior com doppler': 160, 'abdome superior': 80,
+  'usg axilas': 70, 'axilas': 70,
   'abdome total com doppler': 350, 'abdome total': 100,
   'usg articulacao': 80,
   'bolsa escrotal com doppler': 150, 'bolsa escrotal': 80,
