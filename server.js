@@ -82,7 +82,7 @@ ANTI-DUPLICATA: Se histórico já tem confirmação da mesma especialidade, NÃO
 AGENDA MÉDICOS
 • Psiquiatria: 07/07, 21/07, 07/08 e 21/08 das 13h30–17h00 — SOMENTE TARDE
 • Otorrinolaringologia: 13/07 e 27/07 das 08h00–11h30 — SOMENTE MANHÃ
-• Endocrinologia: 14/07 e 21/07 das 13h00–17h30 — SOMENTE TARDE
+• Endocrinologia: 04/08 das 14h00–17h00 — SOMENTE TARDE
 • Ginecologia: 31/07, 14/08 e 28/08 das 13h00–16h00 — SOMENTE TARDE
 • Clínico Geral/Pediatria — datas específicas (cada uma com seu horário):
   - 20/07: manhã 09h00–10h30 e tarde 16h00–17h15
@@ -606,7 +606,7 @@ async function chamarIA(msgs, tentativa) {
     const AGENDA_ESPECIALIDADES = {
       'Psiquiatria': { horario: '13h30–17h00', periodo: 'SOMENTE TARDE', datas: [{dia:7,mes:7},{dia:21,mes:7},{dia:7,mes:8},{dia:21,mes:8}] },
       'Otorrinolaringologia': { horario: '08h00–11h30', periodo: 'SOMENTE MANHÃ', datas: [{dia:13,mes:7},{dia:27,mes:7}] },
-      'Endocrinologia': { horario: '13h00–17h30', periodo: 'SOMENTE TARDE', datas: [{dia:14,mes:7},{dia:21,mes:7}] },
+      'Endocrinologia': { horario: '14h00–17h00', periodo: 'SOMENTE TARDE', datas: [{dia:4,mes:8}] },
       'Ginecologia': { horario: '13h00–16h00', periodo: 'SOMENTE TARDE', datas: [{dia:31,mes:7},{dia:14,mes:8},{dia:28,mes:8}] },
     };
     function formatarListaDatas(lista) {
