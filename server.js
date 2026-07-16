@@ -953,8 +953,19 @@ const FOLLOWUP_MAX_POR_EXECUCAO = 4;
 const FOLLOWUP_DELAY_ENTRE_ENVIOS_MS = 14 * 60 * 1000; // ~14 min entre cada — espalha as 4 mensagens ao longo da hora inteira, em vez de concentrar tudo nos primeiros minutos
 const FOLLOWUP_ESPERA_MINIMA_HORAS = 24;
 
-async function executarFollowUpVendas() {
+async function executarFollowUpVendas(forcar) {
   try {
+    // Checa no banco (não na memória) se já passou tempo suficiente desde a última execução —
+    // isso sobrevive a reinícios do servidor (Render pode dormir/reiniciar o processo).
+    const { data: statusRows } = await db.supabase.from('agente_vendas_status').select('*').eq('id', 1).limit(1);
+    const status = statusRows && statusRows[0];
+    const agora = new Date();
+    if (!forcar && status && status.ultima_execucao) {
+      const minutosDesdeUltima = (agora - new Date(status.ultima_execucao)) / (60 * 1000);
+      if (minutosDesdeUltima < 55) return; // ainda não passou quase 1h desde a última execução real
+    }
+    await db.supabase.from('agente_vendas_status').upsert({ id: 1, ultima_execucao: agora.toISOString() });
+
     const limiteData = new Date(Date.now() - FOLLOWUP_ESPERA_MINIMA_HORAS * 60 * 60 * 1000).toISOString();
     const { data: leads } = await db.supabase.from('leads_orcamento')
       .select('*')
@@ -1392,7 +1403,7 @@ app.post('/api/chat', async function(req, res) {
 
 app.post('/api/funil/followup', async function(req, res) {
   try {
-    await executarFollowUpVendas();
+    await executarFollowUpVendas(!!req.body.forcar);
     res.json({ ok: true, mensagem: 'Follow-up executado (respeitando o limite de ' + FOLLOWUP_MAX_POR_EXECUCAO + ' mensagens por execução).' });
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
@@ -1477,5 +1488,6 @@ app.get('/', function(req, res) { res.json({ status: 'online', agente: 'CMA v3',
 app.listen(PORT, function() {
   console.log('América — CMA v3 | Porta: ' + PORT + ' | Online');
   // Agente de vendas: roda a cada 1 hora, verifica se tem leads pra contatar (respeitando os limites de segurança)
-  setInterval(executarFollowUpVendas, 60 * 60 * 1000);
+  setInterval(executarFollowUpVendas, 10 * 60 * 1000);
+  executarFollowUpVendas(); // já checa uma vez assim que o servidor sobe (não espera 10 min pro primeiro check)
 });
