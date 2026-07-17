@@ -271,10 +271,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text-bo
     <div class="ps">Orçamentos de exames laboratoriais — do envio até o agendamento (ou perda)</div>
     <div class="gl"></div>
 
-    <div class="kgrid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="kgrid" style="grid-template-columns:repeat(4,1fr)">
       <div class="kcard k1"><div class="kicon"><i class="ti ti-send"></i></div><div class="kval" id="funil-k-enviado">--</div><div class="klbl">Orçamento enviado</div></div>
       <div class="kcard k2"><div class="kicon"><i class="ti ti-calendar-check"></i></div><div class="kval" id="funil-k-agendado">--</div><div class="klbl">Agendado</div></div>
       <div class="kcard k4"><div class="kicon"><i class="ti ti-circle-x"></i></div><div class="kval" id="funil-k-perdido">--</div><div class="klbl">Perdido (7+ dias sem agendar)</div></div>
+      <div class="kcard k3"><div class="kicon"><i class="ti ti-robot"></i></div><div class="kval" id="funil-k-convertido-agente">--</div><div class="klbl">Convertidos pelo agente de vendas <span id="funil-k-valor-agente" style="display:block;color:var(--gold);font-weight:600;margin-top:2px"></span></div></div>
     </div>
 
     <div class="funil-board" id="funil-board">
@@ -683,6 +684,8 @@ async function carregarFunil() {
     document.getElementById('funil-k-enviado').textContent = data.resumo.orcamento_enviado;
     document.getElementById('funil-k-agendado').textContent = data.resumo.agendado;
     document.getElementById('funil-k-perdido').textContent = data.resumo.perdido;
+    document.getElementById('funil-k-convertido-agente').textContent = data.resumo.convertidos_pelo_agente + ' de ' + data.resumo.contatados_pelo_agente + ' contatados';
+    document.getElementById('funil-k-valor-agente').textContent = 'R$' + Number(data.resumo.valor_convertido_pelo_agente || 0).toFixed(2);
 
     board.innerHTML = '';
     FUNIL_COLUNAS.forEach(col => {
