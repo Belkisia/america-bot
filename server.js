@@ -1426,13 +1426,17 @@ app.get('/api/funil', async function(req, res) {
       .eq('status', 'orcamento_enviado')
       .lt('criado_em', seteDiasAtras);
 
-    const r = await db.supabase.from('leads_orcamento').select('*').order('criado_em', { ascending: false }).limit(200);
+    const r = await db.supabase.from('leads_orcamento').select('*').order('criado_em', { ascending: false }).limit(1000);
     const leads = r.data || [];
+    const convertidosPeloAgente = leads.filter(function(l){ return l.status === 'agendado' && l.followup_enviado_em; });
     const resumo = {
       orcamento_enviado: leads.filter(function(l){ return l.status === 'orcamento_enviado'; }).length,
       agendado: leads.filter(function(l){ return l.status === 'agendado'; }).length,
       perdido: leads.filter(function(l){ return l.status === 'perdido'; }).length,
       total: leads.length,
+      contatados_pelo_agente: leads.filter(function(l){ return l.followup_enviado_em; }).length,
+      convertidos_pelo_agente: convertidosPeloAgente.length,
+      valor_convertido_pelo_agente: convertidosPeloAgente.reduce(function(s,l){ return s + Number(l.valor_cartao || 0); }, 0),
     };
     res.json({ resumo: resumo, leads: leads });
   } catch(e) { res.status(500).json({ erro: e.message }); }
