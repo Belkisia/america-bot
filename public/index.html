@@ -130,6 +130,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text-bo
 .funil-card .fexames{font-size:10px;color:var(--text-muted);margin-top:5px;line-height:1.4}
 .funil-card .frodape{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
 .funil-card .fdata{font-size:9px;color:var(--text-muted)}
+/* RELATÓRIOS */
+.rel-cat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.rel-cat-hdr{display:flex;align-items:center;justify-content:space-between}
+.rel-cat-nome{font-size:12px;font-weight:500;color:#f8f6f0;display:flex;align-items:center;gap:8px}
+.rel-cat-icon{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.rel-cat-total{font-size:26px;font-weight:500;color:var(--gold);line-height:1}
+.rel-cat-valor{font-size:12px;color:#5dd49a;font-weight:500}
+.rel-sub-row{display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.rel-sub-row:last-child{border-bottom:none}
+.rel-sub-row b{color:var(--text-body);font-weight:500}
+.rel-aviso{font-size:10px;color:var(--gold-light);background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:6px;padding:6px 8px;line-height:1.4}
 </style>
 </head>
 <body>
@@ -332,6 +343,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text-bo
         </table>
       </div>
 
+      <!-- EXAMES CARDIOLÓGICOS -->
+      <div class="card">
+        <div class="card-title"><i class="ti ti-heart-rate-monitor" style="font-size:14px;margin-right:5px"></i>Exames Cardiológicos</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px" class="preco-table">
+          <tbody>
+            <tr class="preco-row"><td style="padding:7px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">Holter 24h</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04)">R$ 150,00</td></tr>
+            <tr class="preco-row"><td style="padding:7px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">MAPA 24h</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04)">R$ 140,00</td></tr>
+            <tr class="preco-row"><td style="padding:7px 0;color:var(--text-body)">Eletrocardiograma</td><td style="text-align:right;color:var(--gold);font-weight:500">R$ 50,00</td></tr>
+          </tbody>
+        </table>
+      </div>
+
       <!-- ULTRASSONOGRAFIA -->
       <div class="card" style="grid-column:1/-1">
         <div class="card-title"><i class="ti ti-device-desktop-analytics" style="font-size:14px;margin-right:5px"></i>Ultrassonografia / Doppler</div>
@@ -360,7 +383,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text-bo
           </table>
           <table style="width:100%;border-collapse:collapse;font-size:12px" class="preco-table">
             <tbody>
-              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Quadril Pediátrico (cada lado)</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 80,00</td></tr>
               <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Tireoide</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 90,00</td></tr>
               <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Tireoide c/ Doppler</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 150,00</td></tr>
               <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Transvaginal</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 90,00</td></tr>
@@ -372,8 +394,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text-bo
               <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Parede Abdominal</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 80,00</td></tr>
               <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Parótidas</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 70,00</td></tr>
               <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Parótidas c/ Doppler</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 160,00</td></tr>
-              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Pé (cada lado)</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 80,00</td></tr>
-              <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Quadril Adulto (cada lado)</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 80,00</td></tr>
               <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Orelha (cada lado)</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 70,00</td></tr>
               <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Cervical</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 80,00</td></tr>
               <tr class="preco-row"><td style="padding:6px 0;color:var(--text-body);border-bottom:1px solid rgba(255,255,255,0.04)">USG Ombro (cada lado)</td><td style="text-align:right;color:var(--gold);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap">R$ 90,00</td></tr>
@@ -421,10 +441,31 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text-bo
       </table>
     </div>
   </main>
+
+  <!-- RELATÓRIOS -->
   <main class="page" id="p-relatorios">
-    <div class="ph">Relatórios</div><div class="ps">Métricas e análises</div><div class="gl"></div>
-    <div class="card" style="padding:28px;text-align:center;color:var(--text-muted)"><i class="ti ti-chart-bar" style="font-size:36px;display:block;margin:0 auto 10px;color:var(--gold);opacity:.4"></i>Relatórios exportáveis em PDF e Excel.</div>
+    <div class="ph">Relatórios</div>
+    <div class="ps">Agendados por período — consultas, ultrassom, laboratorial e procedimentos</div>
+    <div class="gl"></div>
+
+    <div class="agenda-filters">
+      <button class="filter-btn active" onclick="filtrarRelatorio('semana',this)">Esta Semana</button>
+      <button class="filter-btn" onclick="filtrarRelatorio('mes',this)">Este Mês</button>
+      <button class="refresh-btn" onclick="carregarRelatorios()"><i class="ti ti-refresh" style="font-size:13px"></i>Atualizar</button>
+    </div>
+
+    <div class="ps" id="rel-periodo" style="margin-bottom:14px"></div>
+
+    <div class="kgrid" style="grid-template-columns:repeat(2,1fr)">
+      <div class="kcard k1"><div class="kicon"><i class="ti ti-calendar-stats"></i></div><div class="kval" id="rel-total-agendamentos">--</div><div class="klbl">Total de agendamentos confirmados no período</div></div>
+      <div class="kcard k2"><div class="kicon"><i class="ti ti-cash"></i></div><div class="kval" id="rel-valor-total">--</div><div class="klbl">Valor total (leads convertidos no período)</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px" id="rel-categorias">
+      <div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--text-muted)">Carregando relatório...</div>
+    </div>
   </main>
+
   <main class="page" id="p-config">
     <div class="ph">Configurações</div><div class="ps">Integrações e personalização</div><div class="gl"></div>
     <div class="card" style="padding:28px;text-align:center;color:var(--text-muted)"><i class="ti ti-settings" style="font-size:36px;display:block;margin:0 auto 10px;color:var(--gold);opacity:.4"></i>Evolution API · Supabase · Anthropic configurados no servidor.</div>
@@ -451,7 +492,7 @@ function formatarData(iso) {
 
 // ── NAVEGAÇÃO ─────────────────────────────────────────────────
 const pages = { dash:'p-dash', chat:'p-chat', agenda:'p-agenda', pacientes:'p-pacientes', orcamento:'p-orcamento', funil:'p-funil', relatorios:'p-relatorios', config:'p-config' };
-const titles = { dash:'Dashboard · visão geral', chat:'CMA Assistente · chat em tempo real', agenda:'Agenda · tempo real', pacientes:'Pacientes', orcamento:'Tabela de Preços · valores particulares', funil:'Funil de Vendas · orçamentos e conversões', relatorios:'Relatórios', config:'Configurações' };
+const titles = { dash:'Dashboard · visão geral', chat:'CMA Assistente · chat em tempo real', agenda:'Agenda · tempo real', pacientes:'Pacientes', orcamento:'Tabela de Preços · valores particulares', funil:'Funil de Vendas · orçamentos e conversões', relatorios:'Relatórios · agendados por período', config:'Configurações' };
 
 function go(id, el) {
   Object.values(pages).forEach(pid => {
@@ -470,6 +511,7 @@ function go(id, el) {
   if (id === 'dash') carregarDashboard();
   if (id === 'pacientes') carregarPacientes();
   if (id === 'funil') carregarFunil();
+  if (id === 'relatorios') carregarRelatorios();
 }
 
 // ── PACIENTES ─────────────────────────────────────────────────
@@ -709,6 +751,67 @@ async function carregarFunil() {
   }
 }
 
+// ── RELATÓRIOS ────────────────────────────────────────────────
+let relatorioPeriodoAtual = 'semana';
+
+function filtrarRelatorio(periodo, btn) {
+  relatorioPeriodoAtual = periodo;
+  document.querySelectorAll('#p-relatorios .filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  carregarRelatorios();
+}
+
+function formatarDataBR(isoDate) {
+  if (!isoDate) return '—';
+  const [ano, mes, dia] = isoDate.split('-');
+  return dia + '/' + mes + '/' + ano;
+}
+
+function criarCardCategoria(icone, cor, nome, total, valor, subItens, aviso) {
+  const div = document.createElement('div');
+  div.className = 'rel-cat-card';
+  let subHtml = '';
+  if (subItens && Object.keys(subItens).length) {
+    subHtml = '<div style="margin-top:4px">' + Object.entries(subItens).map(([nome, qtd]) =>
+      `<div class="rel-sub-row"><span>${nome}</span><b>${qtd}</b></div>`
+    ).join('') + '</div>';
+  }
+  div.innerHTML = `
+    <div class="rel-cat-hdr">
+      <div class="rel-cat-nome"><span class="rel-cat-icon" style="background:${cor}22;color:${cor}"><i class="ti ${icone}"></i></span>${nome}</div>
+    </div>
+    <div class="rel-cat-total">${total}</div>
+    <div class="rel-cat-valor">R$ ${Number(valor || 0).toFixed(2)}</div>
+    ${subHtml}
+    ${aviso ? `<div class="rel-aviso">${aviso}</div>` : ''}
+  `;
+  return div;
+}
+
+async function carregarRelatorios() {
+  const cont = document.getElementById('rel-categorias');
+  cont.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--text-muted)">Carregando...</div>';
+  try {
+    const data = await fetch(API_BASE + '/api/relatorios?periodo=' + relatorioPeriodoAtual).then(r => r.json());
+    if (data.erro) throw new Error(data.erro);
+
+    document.getElementById('rel-periodo').textContent =
+      (relatorioPeriodoAtual === 'semana' ? 'Semana de ' : 'Mês de ') +
+      formatarDataBR(data.periodo.inicio) + ' até ' + formatarDataBR(data.periodo.fim);
+    document.getElementById('rel-total-agendamentos').textContent = data.total_agendamentos;
+    document.getElementById('rel-valor-total').textContent = 'R$ ' + Number(data.valor_total_geral || 0).toFixed(2);
+
+    cont.innerHTML = '';
+    cont.appendChild(criarCardCategoria('ti-stethoscope', '#c9a84c', 'Consultas', data.consultas.total, data.consultas.valor, data.consultas.por_especialidade, null));
+    cont.appendChild(criarCardCategoria('ti-device-desktop-analytics', '#5aabe0', 'Ultrassom', data.ultrassom.total, data.ultrassom.valor, null, null));
+    cont.appendChild(criarCardCategoria('ti-flask', '#2dbd7a', 'Laboratorial', data.laboratorial.total, data.laboratorial.valor, null, null));
+    cont.appendChild(criarCardCategoria('ti-tools', '#e07070', 'Procedimentos', data.procedimentos.total, data.procedimentos.valor, null, data.procedimentos.aviso));
+
+  } catch (e) {
+    cont.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:#e07070">Erro ao carregar relatório: ${e.message}</div>`;
+  }
+}
+
 // ── CHAT ──────────────────────────────────────────────────────
 let sessionAgendamentos = 0;
 
@@ -821,6 +924,9 @@ setInterval(() => {
   }
   if (document.getElementById('p-funil').classList.contains('active')) {
     carregarFunil();
+  }
+  if (document.getElementById('p-relatorios').classList.contains('active')) {
+    carregarRelatorios();
   }
   carregarDashboard();
 }, 30000);
