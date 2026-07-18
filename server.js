@@ -927,8 +927,27 @@ function calcularServico(textoExames) {
   return encontrados.length ? encontrados[0] : null; // registra só o primeiro serviço mencionado
 }
 
+// Classifica a chave de TABELA_SERVICOS em uma das 3 categorias — usado para separar os
+// valores do Funil de Vendas por tipo (relatório de agendados por categoria)
+const CHAVES_CONSULTA = ['consulta clinico geral', 'clinico geral', 'consulta ginecologia', 'ginecologia',
+  'ginecologista', 'consulta endocrinologia', 'endocrinologia', 'endocrinologista', 'consulta psiquiatria',
+  'psiquiatria', 'psiquiatra', 'consulta pediatria', 'pediatria', 'pediatra', 'consulta otorrino', 'otorrino',
+  'otorrinolaringologista', 'otorrinolaringologia'];
+function categorizarServico(chave) {
+  if (!chave) return 'procedimento';
+  if (CHAVES_CONSULTA.includes(chave)) return 'consulta';
+  if (chave.startsWith('usg ') || chave.includes('doppler') || chave.startsWith('morfologica') ||
+      chave.startsWith('obstetrica') || chave.startsWith('abdome') || chave.startsWith('transvaginal') ||
+      chave === 'bolsa escrotal' || chave === 'quadril pediatrico' || chave === 'quadril adulto' ||
+      chave === 'tireoide com doppler' || chave === 'vias urinarias' || chave === 'parede abdominal' ||
+      chave === 'parotidas com doppler' || chave === 'axilas') {
+    return 'ultrassom';
+  }
+  return 'procedimento';
+}
+
 // CRM — Funil de vendas: registra cada orçamento laboratorial enviado
-async function registrarLeadOrcamento(num, nome, orcamento, origem) {
+async function registrarLeadOrcamento(num, nome, orcamento, origem, tipo) {
   try {
     // Evita duplicar lead se já existe um recente (últimas 2h) pra esse mesmo telefone ainda
     // em "orcamento_enviado" — atualiza o existente em vez de criar um novo a cada mensagem
@@ -948,6 +967,7 @@ async function registrarLeadOrcamento(num, nome, orcamento, origem) {
           valor_cartao: orcamento.cartao,
           valor_pix: orcamento.pix,
           exames: JSON.stringify(orcamento.encontrados || []),
+          tipo: tipo || 'laboratorial',
           atualizado_em: new Date().toISOString(),
         })
         .eq('id', existente[0].id);
@@ -962,6 +982,7 @@ async function registrarLeadOrcamento(num, nome, orcamento, origem) {
       exames: JSON.stringify(orcamento.encontrados || []),
       status: 'orcamento_enviado',
       origem: origem,
+      tipo: tipo || 'laboratorial',
     });
   } catch(e) { console.error('ERRO registrarLeadOrcamento:', e.message); }
 }
@@ -1174,12 +1195,12 @@ async function processarFila(num) {
         if (orcamentoImg && orcamentoImg.total > 0) {
           instrucaoOrcamento = '\n\nORÇAMENTO CALCULADO PELO SISTEMA — USE ESTES VALORES EXATOS: 💳 Cartão: R$' + orcamentoImg.cartao.toFixed(2) + ' | 💵 Pix/Dinheiro: R$' + orcamentoImg.pix.toFixed(2) + '. NÃO recalcule. NÃO modifique esses valores.';
           console.log('ORÇAMENTO IMAGEM [' + num + ']: base=R$' + orcamentoImg.total + ' cartão=R$' + orcamentoImg.cartao.toFixed(2) + ' — EXAMES ENCONTRADOS: ' + JSON.stringify(orcamentoImg.encontrados));
-          await registrarLeadOrcamento(num, null, orcamentoImg, 'whatsapp');
+          await registrarLeadOrcamento(num, null, orcamentoImg, 'whatsapp', 'laboratorial');
         } else {
           const servicoImg = calcularServico(leitura);
           if (servicoImg) {
             console.log('SERVIÇO IMAGEM [' + num + ']: ' + servicoImg.item + ' = R$' + servicoImg.valor);
-            await registrarLeadOrcamento(num, null, { cartao: servicoImg.valor, pix: servicoImg.valor, encontrados: [servicoImg.item] }, 'whatsapp');
+            await registrarLeadOrcamento(num, null, { cartao: servicoImg.valor, pix: servicoImg.valor, encontrados: [servicoImg.item] }, 'whatsapp', categorizarServico(servicoImg.item));
           }
         }
         hist.push({ role: 'user', content: 'O paciente enviou uma imagem/receita médica. Análise da imagem: ' + leitura + instrucaoOrcamento + '\n\nInstruções:\n1. Confirme o nome do paciente e LISTE cada exame identificado individualmente pelo nome, NUMERADO (1. 2. 3. ...) para o paciente ver de forma clara quantos exames são (NUNCA agrupe em categorias como "função renal", "perfil hormonal" etc.)\n2. Informe os valores calculados acima (use exatamente esses valores)\n3. Avise de forma natural que é uma prévia e que a secretaria vai confirmar o valor final e os exames identificados\n4. Se houver Tomografia (TC/TAC) ou Ressonância (RM/RNM) na lista, avise CLARAMENTE que a clínica não realiza esse exame específico e que o paciente precisa procurar outro local — não diga apenas "será tratado à parte"\n5. Convide para agendar os exames que a clínica faz\nSe algum exame não tiver valor calculado, mencione que entrará em contato para complementar.' });
@@ -1242,13 +1263,13 @@ async function processarFila(num) {
         'NÃO recalcule. Use estes valores exatos na resposta.]';
       hist.push({ role: 'user', content: infoOrcamento });
       console.log('ORÇAMENTO [' + num + ']: base=R$' + orcamento.total + ' cartão=R$' + orcamento.cartao + ' pix=R$' + orcamento.pix);
-      await registrarLeadOrcamento(num, null, orcamento, 'whatsapp');
+      await registrarLeadOrcamento(num, null, orcamento, 'whatsapp', 'laboratorial');
     } else {
       // Não é exame de laboratório — verifica se é ultrassom/consulta/procedimento, para o funil de vendas
       const servico = calcularServico(txtCompleto);
       if (servico) {
         console.log('SERVIÇO [' + num + ']: ' + servico.item + ' = R$' + servico.valor);
-        await registrarLeadOrcamento(num, null, { cartao: servico.valor, pix: servico.valor, encontrados: [servico.item] }, 'whatsapp');
+        await registrarLeadOrcamento(num, null, { cartao: servico.valor, pix: servico.valor, encontrados: [servico.item] }, 'whatsapp', categorizarServico(servico.item));
       }
     }
 
@@ -1416,12 +1437,12 @@ app.post('/api/chat', async function(req, res) {
         'NÃO recalcule. Use estes valores exatos na resposta.]';
       hist.push({ role: 'user', content: infoOrcamentoChat });
       console.log('ORÇAMENTO CHAT [' + tel + ']: base=R$' + orcamentoChat.total + ' cartão=R$' + orcamentoChat.cartao + ' pix=R$' + orcamentoChat.pix);
-      await registrarLeadOrcamento(tel, null, orcamentoChat, 'chat');
+      await registrarLeadOrcamento(tel, null, orcamentoChat, 'chat', 'laboratorial');
     } else {
       const servicoChat = calcularServico(msg);
       if (servicoChat) {
         console.log('SERVIÇO CHAT [' + tel + ']: ' + servicoChat.item + ' = R$' + servicoChat.valor);
-        await registrarLeadOrcamento(tel, null, { cartao: servicoChat.valor, pix: servicoChat.valor, encontrados: [servicoChat.item] }, 'chat');
+        await registrarLeadOrcamento(tel, null, { cartao: servicoChat.valor, pix: servicoChat.valor, encontrados: [servicoChat.item] }, 'chat', categorizarServico(servicoChat.item));
       }
     }
 
@@ -1475,6 +1496,84 @@ app.get('/api/funil', async function(req, res) {
       valor_convertido_pelo_agente: convertidosPeloAgente.reduce(function(s,l){ return s + Number(l.valor_cartao || 0); }, 0),
     };
     res.json({ resumo: resumo, leads: leads });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+// RELATÓRIOS — agendados por semana/mês, separados por categoria, com valores
+// Contagens vêm da tabela agendamentos (fonte confiável — só existe registro lá quando o
+// agendamento foi de fato confirmado com a tag [AGENDAR:...]).
+// Valores vêm do Funil (leads_orcamento, status='agendado'), separados pelo campo "tipo"
+// que passamos a salvar em cada lead (laboratorial | ultrassom | consulta | procedimento).
+const ESPECIALIDADES_CONSULTA = ['Clínico Geral', 'Endocrinologia', 'Ginecologia', 'Otorrinolaringologia', 'Pediatria', 'Psiquiatria'];
+
+app.get('/api/relatorios', async function(req, res) {
+  try {
+    const tipoPeriodo = req.query.periodo === 'mes' ? 'mes' : 'semana';
+    const dataRef = req.query.data ? new Date(req.query.data) : new Date();
+
+    let inicio, fim;
+    if (tipoPeriodo === 'semana') {
+      const dow = dataRef.getDay();
+      const diffSeg = dow === 0 ? -6 : 1 - dow;
+      inicio = new Date(dataRef); inicio.setDate(dataRef.getDate() + diffSeg); inicio.setHours(0, 0, 0, 0);
+      fim = new Date(inicio); fim.setDate(inicio.getDate() + 7);
+    } else {
+      inicio = new Date(dataRef.getFullYear(), dataRef.getMonth(), 1);
+      fim = new Date(dataRef.getFullYear(), dataRef.getMonth() + 1, 1);
+    }
+
+    // Contagens — a partir de agendamentos confirmados de verdade
+    const { data: agendamentosData } = await db.supabase.from('agendamentos')
+      .select('*')
+      .gte('created_at', inicio.toISOString())
+      .lt('created_at', fim.toISOString());
+    const listaAgendamentos = agendamentosData || [];
+
+    const porEspecialidade = {};
+    let totalConsultas = 0, totalUltrassom = 0, totalLab = 0, totalOutros = 0;
+
+    listaAgendamentos.forEach(function(a) {
+      const esp = a.especialidade || 'Não informado';
+      if (ESPECIALIDADES_CONSULTA.includes(esp)) {
+        totalConsultas++;
+        porEspecialidade[esp] = (porEspecialidade[esp] || 0) + 1;
+      } else if (esp === 'Ultrassom') {
+        totalUltrassom++;
+      } else if (esp === 'Coleta Laboratorial') {
+        totalLab++;
+      } else {
+        totalOutros++;
+      }
+    });
+
+    // Valores — a partir do Funil, leads já convertidos (status='agendado') no período
+    const { data: leadsData } = await db.supabase.from('leads_orcamento')
+      .select('*')
+      .eq('status', 'agendado')
+      .gte('atualizado_em', inicio.toISOString())
+      .lt('atualizado_em', fim.toISOString());
+    const listaLeads = leadsData || [];
+
+    const valores = { laboratorial: 0, ultrassom: 0, consulta: 0, procedimento: 0 };
+    listaLeads.forEach(function(l) {
+      const tipo = valores.hasOwnProperty(l.tipo) ? l.tipo : 'procedimento';
+      valores[tipo] += Number(l.valor_cartao || 0);
+    });
+    const valorTotal = valores.laboratorial + valores.ultrassom + valores.consulta + valores.procedimento;
+
+    res.json({
+      periodo: { tipo: tipoPeriodo, inicio: inicio.toISOString().slice(0, 10), fim: new Date(fim.getTime() - 1).toISOString().slice(0, 10) },
+      total_agendamentos: listaAgendamentos.length,
+      consultas: { total: totalConsultas, valor: valores.consulta, por_especialidade: porEspecialidade },
+      ultrassom: { total: totalUltrassom, valor: valores.ultrassom },
+      laboratorial: { total: totalLab, valor: valores.laboratorial },
+      procedimentos: {
+        total: totalOutros,
+        valor: valores.procedimento,
+        aviso: 'Procedimentos ainda não têm fluxo de agendamento confirmado no bot — este total tende a ficar em 0 até essa etapa ser implementada.'
+      },
+      valor_total_geral: valorTotal,
+    });
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
 
