@@ -95,14 +95,25 @@ PERÍODO: Para Clínico Geral/Pediatria, mostre as datas futuras disponíveis e 
 ULTRASSOM
 Não é especialidade — é exame. Colete: nome, nascimento, qual exame.
 Tag: [AGENDAR:nome=X|nascimento=X|especialidade=Ultrassom|convenio=particular|periodo=manha]
-Dias disponíveis: TERÇA, 14h00–17h30 (tarde), e SEXTA, 07h00–09h45 (manhã) e 17h00–18h00 (tarde) — TODOS os exames de ultrassom são feitos nesses dias.
+Dias disponíveis: TERÇA, 14h00–16h00 (tarde), e SEXTA, 17h00–18h00 (tarde) — TODOS os exames de ultrassom são feitos nesses dias.
+ATENÇÃO — EXAMES QUE NÃO FAZEMOS EM ULTRASSOM: NÃO realizamos ultrassom de quadril, joelho, tornozelo ou pés. Se o paciente pedir algum desses, informe CLARAMENTE e diretamente que a clínica não realiza esse exame específico e que ele precisa procurar outro local — não ofereça alternativa nem diga "vou verificar".
 MORFOLÓGICO: 1ºTri=11–13sem6d(R$230) | 2ºTri=20–23sem6d(R$280) | 3ºTri=32–34sem6d.
 REGRA CRÍTICA MORFOLÓGICO: se o paciente responder diretamente "1º trimestre", "1 trimestre", "primeiro trimestre", "2º trimestre", "segundo trimestre" (sem informar semanas exatas), ACEITE essa resposta como suficiente para identificar qual exame ele quer. NÃO peça semanas exatas de novo — isso já responde qual dos dois exames é. Prossiga direto para confirmar e pedir nome+nascimento. Só peça semanas exatas se o paciente não souber dizer o trimestre.
 
-PREÇOS ULTRASSOM: Abdome Inf R$70|c/Dop R$160 | Abdome Sup R$80|c/Dop R$160 | Abdome Total R$100|c/Dop R$350 | Articulação R$80 | Bolsa Escrotal R$80|c/Dop R$150 | Mamas R$90 | Morfológica 1ºTri R$230|2ºTri R$280 | Obstétrica>14sem R$100|c/Dop R$280|Endovaginal R$100|Múltipla R$180 | Partes Moles R$70 | Próstata R$90 | Quadril Ped R$80 | Tireoide R$90|c/Dop R$150 | Transvaginal R$90|c/Dop R$160 | Vias Urinárias R$80 | Transfontanela R$130 | Pélvica R$80 | Punho R$80 | Parede Abd R$80 | Parótidas R$70|c/Dop R$160 | Pé R$80 | Quadril Ad R$80 | Orelha R$70 | Cervical R$80 | Ombro R$90 | Inguinal R$80 | Axilas (cada lado) R$70 | Doppler Isolado R$140 | Doppler Carótidas R$150.
+PREÇOS ULTRASSOM: Abdome Inf R$70|c/Dop R$160 | Abdome Sup R$80|c/Dop R$160 | Abdome Total R$100|c/Dop R$350 | Articulação R$80 | Bolsa Escrotal R$80|c/Dop R$150 | Mamas R$90 | Morfológica 1ºTri R$230|2ºTri R$280 | Obstétrica>14sem R$100|c/Dop R$280|Endovaginal R$100|Múltipla R$180 | Partes Moles R$70 | Próstata R$90 | Tireoide R$90|c/Dop R$150 | Transvaginal R$90|c/Dop R$160 | Vias Urinárias R$80 | Transfontanela R$130 | Pélvica R$80 | Punho R$80 | Parede Abd R$80 | Parótidas R$70|c/Dop R$160 | Orelha R$70 | Cervical R$80 | Ombro R$90 | Inguinal R$80 | Axilas (cada lado) R$70 | Doppler Isolado R$140 | Doppler Carótidas R$150.
 
 CONSULTAS: Clínico Geral R$80 | Ginecologia R$120 | Endocrinologia R$120 | Psiquiatria R$120 | Pediatria R$100 | Otorrino R$140.
 PROCEDIMENTOS: Limpeza ouvido R$50 | DIU inserir R$400 | DIU retirar R$300 | Prevenção R$80 | Retirada pontos R$50.
+
+AGENDAMENTO DE PROCEDIMENTOS — cada um segue uma regra diferente, siga exatamente:
+- DIU (inserir/retirar) e Prevenção/Citopatológico: só são feitos DURANTE uma consulta de Ginecologia — NÃO têm agenda própria. Trate como um agendamento de Ginecologia (mesmas datas e período da agenda de Ginecologia), mas anote no agendamento que o motivo é o procedimento (ex: especialidade=Ginecologia, mas confirme com o paciente que é para "inserir DIU" ou "prevenção" etc. na mensagem de confirmação).
+- Limpeza de ouvido: só é feita DURANTE uma consulta de Otorrino — NÃO tem agenda própria. Trate como um agendamento de Otorrinolaringologia (mesmas datas e período), mas deixe claro na confirmação que é para limpeza de ouvido.
+- Holter e MAPA (24h): agenda própria, segunda a quinta-feira, das 08h00 às 17h00. Colete nome+nascimento e pergunte qual período (manhã ou tarde) o paciente prefere dentro desse horário.
+  Tag: [AGENDAR:nome=X|nascimento=X|especialidade=Holter/MAPA|convenio=particular|periodo=X]
+- Eletrocardiograma: agenda própria, segunda a sexta-feira, com dois horários no dia: 10h00–11h30 (manhã) e 13h30–17h00 (tarde). Colete nome+nascimento e pergunte qual período prefere.
+  Tag: [AGENDAR:nome=X|nascimento=X|especialidade=Eletrocardiograma|convenio=particular|periodo=X]
+- Retirada de pontos: não tem agenda própria nem consulta vinculada definida — informe o preço e use [SECRETARIA] para que a secretaria confirme o melhor horário diretamente com o paciente.
+ANTI-DUPLICATA: aplica-se aos procedimentos também — se o histórico já confirmou o mesmo agendamento, não repita a tag.
 ATENÇÃO — BIÓPSIA: a clínica NÃO faz coleta/procedimento de biópsia. Só realiza a ANÁLISE de uma amostra que o paciente já tenha coletado em outro lugar. Se o paciente perguntar sobre "coleta de biópsia" ou agendar a coleta em si, explique que isso não é feito aqui — só recebemos a amostra já coletada para análise.
 EXAMES CARDIOLÓGICOS: Holter 24h R$150 | MAPA 24h R$140 | Eletrocardiograma R$50.
 
@@ -681,7 +692,7 @@ async function chamarIA(msgs, tentativa) {
         return '• Clínico Geral/Pediatria (datas específicas): ' + (disponiveis.length ? disponiveis.join(' | ') : 'sem agenda no momento');
       })(),
       (function() {
-        const horariosUSG = { 2: 'Terça: 14h00–17h30', 5: 'Sexta: 07h00–09h45 e 17h00–18h00' };
+        const horariosUSG = { 2: 'Terça: 14h00–16h00', 5: 'Sexta: 17h00–18h00' };
         const disponiveisUSG = [];
         for (let i = 0; i <= 10; i++) {
           const d = new Date(nowBR);
@@ -728,6 +739,36 @@ async function chamarIA(msgs, tentativa) {
           if (disponiveisColeta.length >= 4) break;
         }
         return '• Coleta Laboratorial (07h00–09h45, próximas datas): ' + (disponiveisColeta.length ? disponiveisColeta.join(' | ') : 'sem agenda no momento');
+      })(),
+      (function() {
+        const disponiveisHolterMapa = [];
+        for (let i = 0; i <= 10; i++) {
+          const d = new Date(nowBR);
+          d.setDate(d.getDate() + i);
+          const dow = d.getDay(); // 1=segunda .. 4=quinta
+          if (dow >= 1 && dow <= 4) {
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            disponiveisHolterMapa.push(dd + '/' + mm);
+          }
+          if (disponiveisHolterMapa.length >= 4) break;
+        }
+        return '• Holter/MAPA (08h00–17h00, seg a qui, próximas datas): ' + (disponiveisHolterMapa.length ? disponiveisHolterMapa.join(' | ') : 'sem agenda no momento');
+      })(),
+      (function() {
+        const disponiveisECG = [];
+        for (let i = 0; i <= 10; i++) {
+          const d = new Date(nowBR);
+          d.setDate(d.getDate() + i);
+          const dow = d.getDay(); // 1=segunda .. 5=sexta
+          if (dow >= 1 && dow <= 5) {
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            disponiveisECG.push(dd + '/' + mm);
+          }
+          if (disponiveisECG.length >= 4) break;
+        }
+        return '• Eletrocardiograma (10h00–11h30 e 13h30–17h00, seg a sex, próximas datas): ' + (disponiveisECG.length ? disponiveisECG.join(' | ') : 'sem agenda no momento');
       })(),
     ].join('\n');
 
@@ -880,7 +921,6 @@ const TABELA_SERVICOS = {
   'obstetrica gestacao multipla': 180, 'obstetrica': 100,
   'usg partes moles': 70,
   'usg prostata': 90,
-  'quadril pediatrico': 80, 'quadril adulto': 80,
   'tireoide com doppler': 150, 'usg tireoide': 90,
   'transvaginal com doppler': 160, 'usg transvaginal': 90,
   'vias urinarias': 80,
@@ -938,10 +978,12 @@ function categorizarServico(chave) {
   if (CHAVES_CONSULTA.includes(chave)) return 'consulta';
   if (chave.startsWith('usg ') || chave.includes('doppler') || chave.startsWith('morfologica') ||
       chave.startsWith('obstetrica') || chave.startsWith('abdome') || chave.startsWith('transvaginal') ||
-      chave === 'bolsa escrotal' || chave === 'quadril pediatrico' || chave === 'quadril adulto' ||
-      chave === 'tireoide com doppler' || chave === 'vias urinarias' || chave === 'parede abdominal' ||
-      chave === 'parotidas com doppler' || chave === 'axilas') {
+      chave === 'bolsa escrotal' || chave === 'tireoide com doppler' || chave === 'vias urinarias' ||
+      chave === 'parede abdominal' || chave === 'parotidas com doppler' || chave === 'axilas') {
     return 'ultrassom';
+  }
+  if (chave === 'holter' || chave === 'holter 24h' || chave === 'mapa' || chave === 'mapa 24h' || chave === 'eletrocardiograma') {
+    return 'procedimento';
   }
   return 'procedimento';
 }
@@ -1094,6 +1136,8 @@ function extrairDadosMensagem(texto) {
   // Detecta especialidade
   const t = texto.toLowerCase();
   if (t.match(/psiquiat/)) dados.especialidade = 'Psiquiatria';
+  else if (t.match(/limpeza de ouvido/)) dados.especialidade = 'Otorrinolaringologia';
+  else if (t.match(/\bdiu\b|prevenc|citopatolog/)) dados.especialidade = 'Ginecologia';
   else if (t.match(/ginecolog/)) dados.especialidade = 'Ginecologia';
   else if (t.match(/endocrinolog/)) dados.especialidade = 'Endocrinologia';
   else if (t.match(/otorrino/)) dados.especialidade = 'Otorrinolaringologia';
@@ -1101,6 +1145,8 @@ function extrairDadosMensagem(texto) {
   else if (t.match(/cl[íi]nico|clinico geral/)) dados.especialidade = 'Clínico Geral';
   else if (t.match(/ultrassom|usg/)) dados.especialidade = 'Ultrassom';
   else if (t.match(/coleta|exame de sangue|laboratorial/)) dados.especialidade = 'Coleta Laboratorial';
+  else if (t.match(/holter|\bmapa\b/)) dados.especialidade = 'Holter/MAPA';
+  else if (t.match(/eletrocardiograma|\becg\b/)) dados.especialidade = 'Eletrocardiograma';
   // Detecta período explícito
   if (t.match(/\btarde\b|17h|13h|14h/)) dados.periodo = 'tarde';
   else if (t.match(/\bmanh[ãa]\b|manha\b|08h|09h|10h|11h/)) dados.periodo = 'manha';
