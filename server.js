@@ -287,6 +287,7 @@ const TABELA_PRECOS = {
   'ácido fólico': 32,
   'vitamina b12': 32, 'vit b12': 32,
   'vitamina d': 38, 'vit d': 38, 'vitamina d3': 38,
+  'pth': 52.5, 'paratormonio': 52.5, 'pth, paratormonio': 52.5,
   'microalbuminuria': 21, 'microalbuminuria u24h': 21, 'microalbuminuria urina amostra isolada': 21,
   '25 hidroxivitamina d': 38,
   'hidroxivitamina d': 38,
@@ -484,6 +485,14 @@ function calcularOrcamento(textoExames) {
   // Tempo/Atividade da Protrombina e TAP são o mesmo exame (sigla) — não cobra os dois se aparecerem juntos
   if ((tem('tempo de protrombina') || tem('tempo e atividade da protrombina')) && tem('tap')) {
     removidos.add('tap');
+  }
+
+  // Vitamina D3, Vitamina D, Vit D e 25-Hidroxivitamina D são todos SINÔNIMOS do mesmo exame de sangue
+  // (ex: "Vitamina D3 - 25 Hidroxi Vitamina D" é uma linha só na receita, um exame só) — nunca cobra mais de uma vez
+  const CHAVES_VITAMINA_D = ['vitamina d3', 'vitamina d', 'vit d', '25 hidroxivitamina d', 'hidroxivitamina d'];
+  const vitaminaDAchada = achados.filter(a => CHAVES_VITAMINA_D.includes(a.chave));
+  if (vitaminaDAchada.length > 1) {
+    vitaminaDAchada.slice(1).forEach(a => removidos.add(a.chave));
   }
 
   if (temHemograma && glicemiaAchada && achados.length === 2) {
