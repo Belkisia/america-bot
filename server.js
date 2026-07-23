@@ -796,7 +796,7 @@ async function chamarIA(msgs, tentativa) {
       + '\n\nTABELA DE DIAS DA SEMANA JUNHO/2026 (use SEMPRE esta tabela para informar dia da semana de qualquer data — NUNCA calcule de memória): ' + refDiasSemana
       + '\n\nREGRA OBRIGATÓRIA DE SAUDAÇÃO: Agora são ' + hora + 'h em Brasília. Se a resposta começar com saudação, USE EXATAMENTE "' + saudacao + '". NUNCA use "Boa noite" se a hora atual for ' + hora + 'h. Se for encerrar a conversa, use "' + despedida + '".';
 
-    if (esp) {
+    if (esp && !hist.some(function(m){ return m.role === 'user' && /ORÇAMENTO CALCULADO PELO SISTEMA/.test(m.content); })) {
       systemDinamico += '\n\nLEMBRETE CRÍTICO: O paciente JÁ informou que quer ' + esp + '. NÃO pergunte especialidade. Prossiga para o próximo dado necessário.';
     }
 
@@ -1338,6 +1338,11 @@ async function processarFila(num) {
       await atualizarEstado(num, { periodo: null, dataEscolhida: null });
       hist.push({ role: 'user', content: '[INSTRUÇÃO: O paciente disse que não quer agendar agora. Responda de forma acolhedora, SEM insistir, SEM pedir nome ou data de nascimento. Apenas avise que fica à disposição quando ele quiser agendar.]' });
       console.log('RECUSOU_AGENDAR [' + num + ']');
+    } else if (orcamento && orcamento.total > 0) {
+      // A mensagem atual trouxe um orçamento de exames laboratoriais — assunto claramente novo/diferente.
+      // NÃO empurra lembrete/pedir-dados/auto-agendar de uma especialidade antiga (ex: Psiquiatria) que
+      // ainda estava em aberto no estado — isso confundiria o paciente misturando os dois assuntos.
+      console.log('NOVO_ASSUNTO_LAB [' + num + ']: ignorando lembrete de especialidade antiga nesta resposta');
     } else {
 
     // Verifica se tem todos os dados para agendar automaticamente
