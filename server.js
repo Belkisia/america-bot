@@ -85,8 +85,10 @@ AGENDA MÉDICOS
 • Endocrinologia: 04/08 das 14h00–17h00 — SOMENTE TARDE
 • Ginecologia: 31/07, 14/08 e 28/08 das 13h00–16h00 — SOMENTE TARDE
 • Clínico Geral/Pediatria — datas específicas (cada uma com seu horário):
-  - 20/07: manhã 09h00–10h30 e tarde 16h00–17h15
-  - 23/07: manhã 08h00–11h30 e tarde 14h00–17h00
+  - 27/07 (segunda): manhã 08h30–10h30 e tarde 16h00–17h00
+  - 28/07 (terça): manhã 08h30–11h30 (sem tarde)
+  - 30/07 (quinta): manhã 08h30–11h30 e tarde 14h00–17h00
+  - 31/07 (sexta): manhã 08h30–11h30 (sem tarde)
 
 REGRA DE DATAS: Compare cada data com a DATA ATUAL do prompt. Mostre SOMENTE datas futuras. Cada data tem horário diferente — informe corretamente conforme a agenda acima. Se TODAS passaram: informe que não há agenda disponível no momento.
 
@@ -95,12 +97,13 @@ PERÍODO: Para Clínico Geral/Pediatria, mostre as datas futuras disponíveis e 
 ULTRASSOM
 Não é especialidade — é exame. Colete: nome, nascimento, qual exame.
 Tag: [AGENDAR:nome=X|nascimento=X|especialidade=Ultrassom|convenio=particular|periodo=manha]
-Dias disponíveis: TERÇA, 14h00–16h00 (tarde), e SEXTA, 17h00–18h00 (tarde) — TODOS os exames de ultrassom são feitos nesses dias.
-ATENÇÃO — EXAMES QUE NÃO FAZEMOS EM ULTRASSOM: NÃO realizamos ultrassom de quadril, joelho, tornozelo ou pés. Se o paciente pedir algum desses, informe CLARAMENTE e diretamente que a clínica não realiza esse exame específico e que ele precisa procurar outro local — não ofereça alternativa nem diga "vou verificar".
+Dias disponíveis: TERÇA, 14h00–16h00 (tarde), e SEXTA, 07h30–09h45 (manhã) e 17h00–18h00 (tarde) — TODOS os exames de ultrassom são feitos nesses dias.
+ATENÇÃO — RESTRIÇÃO DE HORÁRIO PARA QUADRIL/JOELHO/TORNOZELO/PÉS: esses exames NÃO são feitos no horário de sexta-feira das 17h às 18h. Podem ser agendados normalmente na terça (14h-16h) ou na sexta de manhã (07h30-09h45). Se o paciente pedir um desses exames especificamente para sexta às 17h-18h, informe que nesse horário não é possível e ofereça terça ou sexta de manhã como alternativa.
+ATENÇÃO — IDADE MÍNIMA PARA ULTRASSOM DE PÉS: só é feito a partir de 7 anos de idade. Se o paciente pedir ultrassom de pés para uma criança menor de 7 anos, informe claramente que não é possível nessa idade.
 MORFOLÓGICO: 1ºTri=11–13sem6d(R$230) | 2ºTri=20–23sem6d(R$280) | 3ºTri=32–34sem6d.
 REGRA CRÍTICA MORFOLÓGICO: se o paciente responder diretamente "1º trimestre", "1 trimestre", "primeiro trimestre", "2º trimestre", "segundo trimestre" (sem informar semanas exatas), ACEITE essa resposta como suficiente para identificar qual exame ele quer. NÃO peça semanas exatas de novo — isso já responde qual dos dois exames é. Prossiga direto para confirmar e pedir nome+nascimento. Só peça semanas exatas se o paciente não souber dizer o trimestre.
 
-PREÇOS ULTRASSOM: Abdome Inf R$70|c/Dop R$160 | Abdome Sup R$80|c/Dop R$160 | Abdome Total R$100|c/Dop R$350 | Articulação R$80 | Bolsa Escrotal R$80|c/Dop R$150 | Mamas R$90 | Morfológica 1ºTri R$230|2ºTri R$280 | Obstétrica>14sem R$100|c/Dop R$280|Endovaginal R$100|Múltipla R$180 | Partes Moles R$70 | Próstata R$90 | Tireoide R$90|c/Dop R$150 | Transvaginal R$90|c/Dop R$160 | Vias Urinárias R$80 | Transfontanela R$130 | Pélvica R$80 | Punho R$80 | Parede Abd R$80 | Parótidas R$70|c/Dop R$160 | Orelha R$70 | Cervical R$80 | Ombro R$90 | Inguinal R$80 | Axilas (cada lado) R$70 | Doppler Isolado R$140 | Doppler Carótidas R$150.
+PREÇOS ULTRASSOM: Abdome Inf R$70|c/Dop R$160 | Abdome Sup R$80|c/Dop R$160 | Abdome Total R$100|c/Dop R$350 | Articulação R$80 | Bolsa Escrotal R$80|c/Dop R$150 | Mamas R$90 | Morfológica 1ºTri R$230|2ºTri R$280 | Obstétrica>14sem R$100|c/Dop R$280|Endovaginal R$100|Múltipla R$180 | Partes Moles R$70 | Próstata R$90 | Quadril Ped R$80 | Quadril Ad R$80 | Pé (cada lado, a partir de 7 anos) R$80 | Tireoide R$90|c/Dop R$150 | Transvaginal R$90|c/Dop R$160 | Vias Urinárias R$80 | Transfontanela R$130 | Pélvica R$80 | Punho R$80 | Parede Abd R$80 | Parótidas R$70|c/Dop R$160 | Orelha R$70 | Cervical R$80 | Ombro R$90 | Inguinal R$80 | Axilas (cada lado) R$70 | Doppler Isolado R$140 | Doppler Carótidas R$150.
 
 CONSULTAS: Clínico Geral R$80 | Ginecologia R$120 | Endocrinologia R$120 | Psiquiatria R$120 | Pediatria R$100 | Otorrino R$140.
 PROCEDIMENTOS: Limpeza ouvido R$50 | DIU inserir R$400 | DIU retirar R$300 | Prevenção R$80 | Retirada pontos R$50.
@@ -688,8 +691,10 @@ async function chamarIA(msgs, tentativa) {
       formatarLinhaAgenda('Ginecologia', AGENDA_ESPECIALIDADES['Ginecologia']),
       (function() {
         const AGENDA_CLINICO = [
-          { dia: 20, mes: 7, manha: '09h00–10h30', tarde: '16h00–17h15' },
-          { dia: 23, mes: 7, manha: '08h00–11h30', tarde: '14h00–17h00' },
+          { dia: 27, mes: 7, manha: '08h30–10h30', tarde: '16h00–17h00' },
+          { dia: 28, mes: 7, manha: '08h30–11h30', tarde: null },
+          { dia: 30, mes: 7, manha: '08h30–11h30', tarde: '14h00–17h00' },
+          { dia: 31, mes: 7, manha: '08h30–11h30', tarde: null },
         ];
         const disponiveis = AGENDA_CLINICO
           .filter(function (d) { return dataFutura(d.dia, d.mes); })
@@ -701,7 +706,7 @@ async function chamarIA(msgs, tentativa) {
         return '• Clínico Geral/Pediatria (datas específicas): ' + (disponiveis.length ? disponiveis.join(' | ') : 'sem agenda no momento');
       })(),
       (function() {
-        const horariosUSG = { 2: 'Terça: 14h00–16h00', 5: 'Sexta: 17h00–18h00' };
+        const horariosUSG = { 2: 'Terça: 14h00–16h00', 5: 'Sexta: 07h30–09h45 e 17h00–18h00' };
         const disponiveisUSG = [];
         for (let i = 0; i <= 10; i++) {
           const d = new Date(nowBR);
@@ -930,6 +935,8 @@ const TABELA_SERVICOS = {
   'obstetrica gestacao multipla': 180, 'obstetrica': 100,
   'usg partes moles': 70,
   'usg prostata': 90,
+  'quadril pediatrico': 80, 'quadril adulto': 80,
+  'usg pe': 80,
   'tireoide com doppler': 150, 'usg tireoide': 90,
   'transvaginal com doppler': 160, 'usg transvaginal': 90,
   'vias urinarias': 80,
@@ -987,8 +994,9 @@ function categorizarServico(chave) {
   if (CHAVES_CONSULTA.includes(chave)) return 'consulta';
   if (chave.startsWith('usg ') || chave.includes('doppler') || chave.startsWith('morfologica') ||
       chave.startsWith('obstetrica') || chave.startsWith('abdome') || chave.startsWith('transvaginal') ||
-      chave === 'bolsa escrotal' || chave === 'tireoide com doppler' || chave === 'vias urinarias' ||
-      chave === 'parede abdominal' || chave === 'parotidas com doppler' || chave === 'axilas') {
+      chave === 'bolsa escrotal' || chave === 'quadril pediatrico' || chave === 'quadril adulto' ||
+      chave === 'tireoide com doppler' || chave === 'vias urinarias' || chave === 'parede abdominal' ||
+      chave === 'parotidas com doppler' || chave === 'axilas') {
     return 'ultrassom';
   }
   if (chave === 'holter' || chave === 'holter 24h' || chave === 'mapa' || chave === 'mapa 24h' || chave === 'eletrocardiograma') {
