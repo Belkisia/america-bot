@@ -190,6 +190,14 @@ PROIBIDO:
 TRANSFERÊNCIA: Quando transferir explique brevemente e adicione [SECRETARIA] no final. NÃO coloque telefones — só quando paciente pedir ou na confirmação do agendamento.
 Contatos: 📞 (62) 3636-3536 | 📱 (62) 99504-9138
 
+CANCELAMENTO DE AGENDAMENTO
+Se o paciente pedir para cancelar, desmarcar, ou avisar que não vai conseguir comparecer a um agendamento já confirmado — NUNCA reconfirme o mesmo agendamento nem repita os detalhes dele como se nada tivesse acontecido. Isso vale mesmo que o histórico recente tenha mencionado esse agendamento ou outro assunto (ex: dúvida sobre jejum) — o cancelamento é sempre prioridade sobre qualquer assunto anterior.
+Responda de forma acolhedora, confirme que o cancelamento foi registrado, e gere a tag:
+Tag: [CANCELAR:motivo=X]
+Onde X é o motivo informado pelo paciente (resuma em poucas palavras, ex: "não vai conseguir comparecer"), ou "não informado" se o paciente não disser o motivo.
+Depois do cancelamento, pergunte se o paciente deseja remarcar para outra data, sem insistir — se ele quiser remarcar, siga o fluxo normal de agendamento da mesma especialidade/exame.
+NÃO invente detalhes do agendamento cancelado (data, horário) que não estejam claros no histórico — se não tiver certeza de qual agendamento é, pergunte para confirmar antes de gerar a tag.
+
 REGRAS FINAIS
 - UMA única mensagem por resposta. Máximo 3 parágrafos. Sem markdown #.
 - Nome+nascimento: pergunte juntos, extraia juntos.
@@ -610,7 +618,14 @@ function extrairAgendamento(t) {
   m[1].split('|').forEach(function(p) { const i = p.indexOf('='); if (i > 0) d[p.substring(0,i).trim()] = p.substring(i+1).trim(); });
   return Object.keys(d).length >= 3 ? d : null;
 }
-function limpar(t) { return t.replace(/\[AGENDAR:[^\]]+\]/g, '').trim(); }
+function extrairCancelamento(t) {
+  const m = t.match(/\[CANCELAR:([^\]]+)\]/);
+  if (!m) return null;
+  const d = {};
+  m[1].split('|').forEach(function(p) { const i = p.indexOf('='); if (i > 0) d[p.substring(0,i).trim()] = p.substring(i+1).trim(); });
+  return d;
+}
+function limpar(t) { return t.replace(/\[AGENDAR:[^\]]+\]/g, '').replace(/\[CANCELAR:[^\]]+\]/g, '').trim(); }
 
 // Corrige saudação automaticamente caso o modelo erre
 function corrigirSaudacao(texto) {
@@ -801,7 +816,10 @@ async function chamarIA(msgs, tentativa) {
       + '\n\nTABELA DE DIAS DA SEMANA JUNHO/2026 (use SEMPRE esta tabela para informar dia da semana de qualquer data — NUNCA calcule de memória): ' + refDiasSemana
       + '\n\nREGRA OBRIGATÓRIA DE SAUDAÇÃO: Agora são ' + hora + 'h em Brasília. Se a resposta começar com saudação, USE EXATAMENTE "' + saudacao + '". NUNCA use "Boa noite" se a hora atual for ' + hora + 'h. Se for encerrar a conversa, use "' + despedida + '".';
 
-    if (esp && !hist.some(function(m){ return m.role === 'user' && /ORÇAMENTO CALCULADO PELO SISTEMA/.test(m.content); })) {
+    const assuntoNovoDetectado = hist.some(function(m){
+      return m.role === 'user' && (/ORÇAMENTO CALCULADO PELO SISTEMA/.test(m.content) || /INSTRUÇÃO CRÍTICA: O paciente está pedindo para CANCELAR/.test(m.content));
+    });
+    if (esp && !assuntoNovoDetectado) {
       systemDinamico += '\n\nLEMBRETE CRÍTICO: O paciente JÁ informou que quer ' + esp + '. NÃO pergunte especialidade. Prossiga para o próximo dado necessário.';
     }
 
@@ -1054,6 +1072,25 @@ async function marcarLeadAgendado(num) {
       .eq('telefone', num)
       .eq('status', 'orcamento_enviado');
   } catch(e) { console.error('ERRO marcarLeadAgendado:', e.message); }
+}
+
+// Cancela o agendamento mais recente (pendente ou confirmado) desse telefone — usado quando o
+// paciente pede para cancelar/desmarcar pelo WhatsApp
+async function cancelarAgendamentoRecente(num, motivo) {
+  try {
+    const { data: recentes } = await db.supabase.from('agendamentos')
+      .select('id')
+      .eq('telefone', num)
+      .in('status', ['pendente', 'confirmado'])
+      .order('created_at', { ascending: false })
+      .limit(1);
+    if (!recentes || recentes.length === 0) return false;
+    await db.supabase.from('agendamentos')
+      .update({ status: 'cancelado' })
+      .eq('id', recentes[0].id);
+    console.log('CANCELADO [' + num + ']: agendamento ' + recentes[0].id + ' — motivo: ' + (motivo || 'não informado'));
+    return true;
+  } catch(e) { console.error('ERRO cancelarAgendamentoRecente:', e.message); return false; }
 }
 
 // AGENTE DE VENDAS — Follow-up automático de leads que não converteram
@@ -1341,7 +1378,17 @@ async function processarFila(num) {
     const recusouAgendar = /n[ãa]o quero (agendar|marcar)|n[ãa]o vou agendar|agora n[ãa]o|n[ãa]o agora|depois eu (agendo|marco|confirmo)|vou pensar|s[óo] confirmar depois|talvez depois|ainda n[ãa]o/i.test(txtCompleto)
       || ['nao', 'não', 'nops', 'nao quero', 'não quero'].includes(respostaSeca);
 
-    if (recusouAgendar) {
+    // Detecta pedido de cancelamento — tem prioridade sobre qualquer lembrete de especialidade/assunto antigo
+    const pediuCancelamento = /cancelar|desmarcar|n[ãa]o vou (conseguir|poder) (ir|comparecer)|n[ãa]o (vou|posso|consigo) ir\b|n[ãa]o (vou|posso|consigo) comparecer|remarcar/i.test(txtCompleto);
+
+    if (pediuCancelamento) {
+      // Pedido de cancelamento tem prioridade máxima — limpa qualquer estado de agendamento em
+      // aberto e instrui a IA a tratar o cancelamento, SEM reconfirmar o agendamento antigo nem
+      // responder a qualquer outro assunto pendente no histórico.
+      await limparEstado(num);
+      hist.push({ role: 'user', content: '[INSTRUÇÃO CRÍTICA: O paciente está pedindo para CANCELAR/DESMARCAR um agendamento, ou avisando que não vai conseguir comparecer. Isso tem prioridade sobre qualquer outro assunto do histórico (ex: dúvidas de jejum, outra especialidade). NÃO reconfirme o agendamento antigo. Confirme o cancelamento de forma acolhedora e gere a tag [CANCELAR:motivo=X].]' });
+      console.log('PEDIU_CANCELAMENTO [' + num + ']');
+    } else if (recusouAgendar) {
       // Limpa o "empurrão" de nome/nascimento para não insistir nas próximas mensagens também
       await atualizarEstado(num, { periodo: null, dataEscolhida: null });
       hist.push({ role: 'user', content: '[INSTRUÇÃO: O paciente disse que não quer agendar agora. Responda de forma acolhedora, SEM insistir, SEM pedir nome ou data de nascimento. Apenas avise que fica à disposição quando ele quiser agendar.]' });
@@ -1383,6 +1430,10 @@ async function processarFila(num) {
         console.log('AGENDADO:', ag.nome, ag.especialidade);
       }
       await marcarLeadAgendado(num);
+    }
+    const canc = extrairCancelamento(resp);
+    if (canc) {
+      await cancelarAgendamentoRecente(num, canc.motivo);
     }
 
     const pedirSecretaria = resp.includes('[SECRETARIA]');
@@ -1520,9 +1571,13 @@ app.post('/api/chat', async function(req, res) {
       await db.salvarAgendamento({ nome_paciente: ag.nome, data_nascimento: ag.nascimento||null, telefone: tel, especialidade: ag.especialidade, convenio: 'particular', periodo: ag.periodo, origem: 'chat' });
       await marcarLeadAgendado(tel);
     }
+    const canc = extrairCancelamento(resp);
+    if (canc) {
+      await cancelarAgendamentoRecente(tel, canc.motivo);
+    }
     const final = limpar(resp);
     await db.salvarMensagem(tel, 'assistant', final);
-    res.json({ resposta: final, agendamento: ag||null });
+    res.json({ resposta: final, agendamento: ag||null, cancelamento: canc||null });
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
 
