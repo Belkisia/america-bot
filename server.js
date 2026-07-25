@@ -722,12 +722,15 @@ async function chamarIA(msgs, tentativa) {
       })(),
       (function() {
         const horariosUSG = { 2: 'Terça: 14h00–16h00', 5: 'Sexta: 07h30–09h45 e 17h00–18h00' };
+        // Datas específicas canceladas (ex: feriado, imprevisto) — some daqui quando a data passar
+        const DATAS_BLOQUEADAS_USG = [{ dia: 28, mes: 7 }]; // Terça 28/07 — agenda cancelada
+        const bloqueada = function(d) { return DATAS_BLOQUEADAS_USG.some(function(b){ return b.dia === d.getDate() && b.mes === d.getMonth()+1; }); };
         const disponiveisUSG = [];
-        for (let i = 0; i <= 10; i++) {
+        for (let i = 0; i <= 14; i++) {
           const d = new Date(nowBR);
           d.setDate(d.getDate() + i);
           const dow = d.getDay();
-          if (horariosUSG[dow]) {
+          if (horariosUSG[dow] && !bloqueada(d)) {
             const dd = String(d.getDate()).padStart(2,'0');
             const mm = String(d.getMonth()+1).padStart(2,'0');
             disponiveisUSG.push(dd + '/' + mm + ' (' + horariosUSG[dow] + ')');
