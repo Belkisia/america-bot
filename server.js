@@ -1304,6 +1304,7 @@ async function processarFila(num) {
           if (servicoImg) {
             console.log('SERVIÇO IMAGEM [' + num + ']: ' + servicoImg.item + ' = R$' + servicoImg.valor);
             await registrarLeadOrcamento(num, null, { cartao: servicoImg.valor, pix: servicoImg.valor, encontrados: [servicoImg.item] }, 'whatsapp', categorizarServico(servicoImg.item));
+            instrucaoOrcamento = '\n\nVALOR CALCULADO PELO SISTEMA PARA ESTE SERVIÇO — USE ESTE VALOR EXATO: R$' + servicoImg.valor.toFixed(2) + '. NÃO aplique desconto de pix/dinheiro (essa regra é só para exames laboratoriais) — informe o MESMO valor para cartão e pix/dinheiro, sem mencionar percentual ou desconto.';
           }
         }
         hist.push({ role: 'user', content: 'O paciente enviou uma imagem/receita médica. Análise da imagem: ' + leitura + instrucaoOrcamento + '\n\nInstruções:\n1. Confirme o nome do paciente e LISTE cada exame identificado individualmente pelo nome, NUMERADO (1. 2. 3. ...) para o paciente ver de forma clara quantos exames são (NUNCA agrupe em categorias como "função renal", "perfil hormonal" etc.)\n2. Informe os valores calculados acima (use exatamente esses valores)\n3. Avise de forma natural que é uma prévia e que a secretaria vai confirmar o valor final e os exames identificados\n4. Se houver Tomografia (TC/TAC) ou Ressonância (RM/RNM) na lista, avise CLARAMENTE que a clínica não realiza esse exame específico e que o paciente precisa procurar outro local — não diga apenas "será tratado à parte"\n5. Convide para agendar os exames que a clínica faz\nSe algum exame não tiver valor calculado, mencione que entrará em contato para complementar.' });
@@ -1373,6 +1374,8 @@ async function processarFila(num) {
       if (servico) {
         console.log('SERVIÇO [' + num + ']: ' + servico.item + ' = R$' + servico.valor);
         await registrarLeadOrcamento(num, null, { cartao: servico.valor, pix: servico.valor, encontrados: [servico.item] }, 'whatsapp', categorizarServico(servico.item));
+        const infoServico = '[VALOR CALCULADO PELO SISTEMA PARA ESTE SERVIÇO — USE ESTE VALOR EXATO: R$' + servico.valor.toFixed(2) + '. NÃO aplique desconto de pix/dinheiro (essa regra é só para exames laboratoriais) — informe o MESMO valor para cartão e pix/dinheiro, sem mencionar percentual ou desconto.]';
+        hist.push({ role: 'user', content: infoServico });
       }
     }
 
@@ -1406,7 +1409,31 @@ async function processarFila(num) {
     // Verifica se tem todos os dados para agendar automaticamente
     const temTudo = estadoAtual.especialidade && estadoAtual.nome && estadoAtual.nascimento && estadoAtual.periodo;
 
+    // Proteção contra loop de reconfirmação: se o estado ficou "preso" com temTudo=true (ex: por uma
+    // falha anterior em limpar o estado após o agendamento já ter sido concluído), NUNCA force um novo
+    // [AGENDAR] sem antes checar se esse agendamento JÁ existe. Sem essa checagem, QUALQUER mensagem
+    // futura do paciente (até um simples "boa noite") reacionaria o fluxo de auto-agendamento e reenviaria
+    // a confirmação repetidamente, para sempre, até alguém rodar #cma manualmente.
+    let jaAgendadoAnteriormente = false;
     if (temTudo) {
+      const { data: agendamentoExistente } = await db.supabase.from('agendamentos')
+        .select('id')
+        .eq('telefone', num)
+        .eq('especialidade', estadoAtual.especialidade)
+        .in('status', ['pendente', 'confirmado'])
+        .limit(1);
+      jaAgendadoAnteriormente = !!(agendamentoExistente && agendamentoExistente.length > 0);
+      if (jaAgendadoAnteriormente) {
+        const especialidadeAntiga = estadoAtual.especialidade;
+        // Autocorrige o estado preso — limpa para não repetir essa checagem em toda mensagem futura
+        await limparEstado(num);
+        estadoAtual.especialidade = null; estadoAtual.nome = null; estadoAtual.nascimento = null;
+        estadoAtual.periodo = null; estadoAtual.dataEscolhida = null;
+        console.log('ESTADO_PRESO_CORRIGIDO [' + num + ']: agendamento de ' + especialidadeAntiga + ' já existia, estado limpo sem reenviar confirmação');
+      }
+    }
+
+    if (temTudo && !jaAgendadoAnteriormente) {
       const instrucao = '[DADOS COLETADOS - FINALIZE O AGENDAMENTO: nome=' + estadoAtual.nome + ' | nascimento=' + estadoAtual.nascimento + ' | especialidade=' + estadoAtual.especialidade + ' | periodo=' + estadoAtual.periodo + '. Gere a tag [AGENDAR:nome=' + estadoAtual.nome + '|nascimento=' + estadoAtual.nascimento + '|especialidade=' + estadoAtual.especialidade + '|convenio=particular|periodo=' + estadoAtual.periodo + '] e confirme com a mensagem de sucesso.]';
       hist.push({ role: 'user', content: instrucao });
       console.log('AUTO-AGENDAR [' + num + ']:', estadoAtual.especialidade, estadoAtual.nome, estadoAtual.nascimento, estadoAtual.periodo);
@@ -1565,6 +1592,8 @@ app.post('/api/chat', async function(req, res) {
       if (servicoChat) {
         console.log('SERVIÇO CHAT [' + tel + ']: ' + servicoChat.item + ' = R$' + servicoChat.valor);
         await registrarLeadOrcamento(tel, null, { cartao: servicoChat.valor, pix: servicoChat.valor, encontrados: [servicoChat.item] }, 'chat', categorizarServico(servicoChat.item));
+        const infoServicoChat = '[VALOR CALCULADO PELO SISTEMA PARA ESTE SERVIÇO — USE ESTE VALOR EXATO: R$' + servicoChat.valor.toFixed(2) + '. NÃO aplique desconto de pix/dinheiro (essa regra é só para exames laboratoriais) — informe o MESMO valor para cartão e pix/dinheiro, sem mencionar percentual ou desconto.]';
+        hist.push({ role: 'user', content: infoServicoChat });
       }
     }
 
