@@ -81,7 +81,7 @@ ANTI-DUPLICATA: Se histórico já tem confirmação da mesma especialidade, NÃO
 
 AGENDA MÉDICOS
 • Psiquiatria: 07/08 e 21/08 das 13h30–17h00 — SOMENTE TARDE
-• Otorrinolaringologia: 27/07 das 13h30–17h00 — SOMENTE TARDE
+• Otorrinolaringologia: 11/08 e 25/08 das 08h00–11h00 — SOMENTE MANHÃ
 • Endocrinologia: 04/08 das 14h00–17h00 — SOMENTE TARDE
 • Ginecologia: 31/07, 14/08 e 28/08 das 13h00–16h00 — SOMENTE TARDE
 • Clínico Geral/Pediatria — datas específicas (cada uma com seu horário):
@@ -683,7 +683,7 @@ async function chamarIA(msgs, tentativa) {
     // Agenda com suporte a múltiplas datas por especialidade — filtra automaticamente as que já passaram
     const AGENDA_ESPECIALIDADES = {
       'Psiquiatria': { horario: '13h30–17h00', periodo: 'SOMENTE TARDE', datas: [{dia:7,mes:8},{dia:21,mes:8}] },
-      'Otorrinolaringologia': { horario: '13h30–17h00', periodo: 'SOMENTE TARDE', datas: [{dia:27,mes:7}] },
+      'Otorrinolaringologia': { horario: '08h00–11h00', periodo: 'SOMENTE MANHÃ', datas: [{dia:11,mes:8},{dia:25,mes:8}] },
       'Endocrinologia': { horario: '14h00–17h00', periodo: 'SOMENTE TARDE', datas: [{dia:4,mes:8}] },
       'Ginecologia': { horario: '13h00–16h00', periodo: 'SOMENTE TARDE', datas: [{dia:31,mes:7},{dia:14,mes:8},{dia:28,mes:8}] },
     };
@@ -1169,7 +1169,7 @@ function inferirPeriodo(especialidade, dataEscolhida) {
   const data = (dataEscolhida || '').toLowerCase();
   if (esp.includes('psiquiatria')) return 'tarde';
   if (esp.includes('endocrinolog')) return 'tarde';
-  if (esp.includes('otorrino')) return 'tarde';
+  if (esp.includes('otorrino')) return 'manha';
   if (esp.includes('ginecolog')) return 'tarde';
   if (esp.includes('coleta') || esp.includes('laboratorial')) return 'manha';
   return null;
