@@ -635,7 +635,7 @@ function corrigirSaudacao(texto) {
   return texto.replace(/^(Bom dia|Boa tarde|Boa noite)([!,.])/i, saudacaoCorreta + '$2');
 }
 
-async function chamarIA(msgs, tentativa) {
+async function chamarIA(msgs, instrucaoExtra, tentativa) {
   tentativa = tentativa || 1;
   try {
     const hist = [];
@@ -819,11 +819,19 @@ async function chamarIA(msgs, tentativa) {
       + '\n\nTABELA DE DIAS DA SEMANA JUNHO/2026 (use SEMPRE esta tabela para informar dia da semana de qualquer data — NUNCA calcule de memória): ' + refDiasSemana
       + '\n\nREGRA OBRIGATÓRIA DE SAUDAÇÃO: Agora são ' + hora + 'h em Brasília. Se a resposta começar com saudação, USE EXATAMENTE "' + saudacao + '". NUNCA use "Boa noite" se a hora atual for ' + hora + 'h. Se for encerrar a conversa, use "' + despedida + '".';
 
-    const assuntoNovoDetectado = hist.some(function(m){
-      return m.role === 'user' && (/ORÇAMENTO CALCULADO PELO SISTEMA/.test(m.content) || /INSTRUÇÃO CRÍTICA: O paciente está pedindo para CANCELAR/.test(m.content));
-    });
-    if (esp && !assuntoNovoDetectado) {
+    // Se já existe uma instrução explícita para esta mensagem (orçamento, cancelamento, recusa,
+    // auto-agendar, pedir dados etc.), ela tem prioridade — não injeta também o lembrete genérico
+    // de especialidade antiga, que poderia conflitar com o que já está sendo instruído.
+    if (esp && !instrucaoExtra) {
       systemDinamico += '\n\nLEMBRETE CRÍTICO: O paciente JÁ informou que quer ' + esp + '. NÃO pergunte especialidade. Prossiga para o próximo dado necessário.';
+    }
+
+    // Instruções internas de controle (orçamento calculado, lembretes de agendamento, cancelamento etc.)
+    // vão SEMPRE no system prompt, nunca coladas na mensagem do usuário — colar instruções dentro do
+    // texto do paciente faz o modelo tratar isso como possível injeção de prompt e, às vezes, comentar
+    // isso na resposta ao paciente (bug real já visto em produção).
+    if (instrucaoExtra) {
+      systemDinamico += '\n\nINSTRUÇÃO INTERNA PARA ESTA RESPOSTA (não é do paciente, é do sistema — siga sem comentar isso na resposta): ' + instrucaoExtra;
     }
 
     // Prompt caching: SYSTEM_PROMPT é enorme e idêntico em toda chamada — cacheado, custa só 10% do preço normal.
@@ -844,7 +852,7 @@ async function chamarIA(msgs, tentativa) {
     console.error('ERRO chamarIA - status:', e.response ? e.response.status : '?', '- corpo:', e.response ? JSON.stringify(e.response.data) : e.message);
     if (tentativa < 2) {
       await new Promise(function(r){setTimeout(r,2000);});
-      return chamarIA(msgs, tentativa+1);
+      return chamarIA(msgs, instrucaoExtra, tentativa+1);
     }
     throw e;
   }
@@ -1294,9 +1302,9 @@ async function processarFila(num) {
         hist = hist.filter(function(m){return m.content && m.content.trim();});
         // Calcula orçamento no código usando a leitura da imagem
         const orcamentoImg = calcularOrcamento(leitura);
-        let instrucaoOrcamento = '';
+        const instrucoesExtraImg = [];
         if (orcamentoImg && orcamentoImg.total > 0) {
-          instrucaoOrcamento = '\n\nORÇAMENTO CALCULADO PELO SISTEMA — USE ESTES VALORES EXATOS: 💳 Cartão: R$' + orcamentoImg.cartao.toFixed(2) + ' | 💵 Pix/Dinheiro: R$' + orcamentoImg.pix.toFixed(2) + '. NÃO recalcule. NÃO modifique esses valores.';
+          instrucoesExtraImg.push('ORÇAMENTO CALCULADO PELO SISTEMA — USE ESTES VALORES EXATOS: 💳 Cartão: R$' + orcamentoImg.cartao.toFixed(2) + ' | 💵 Pix/Dinheiro: R$' + orcamentoImg.pix.toFixed(2) + '. NÃO recalcule. NÃO modifique esses valores.');
           console.log('ORÇAMENTO IMAGEM [' + num + ']: base=R$' + orcamentoImg.total + ' cartão=R$' + orcamentoImg.cartao.toFixed(2) + ' — EXAMES ENCONTRADOS: ' + JSON.stringify(orcamentoImg.encontrados));
           await registrarLeadOrcamento(num, null, orcamentoImg, 'whatsapp', 'laboratorial');
         } else {
@@ -1304,11 +1312,12 @@ async function processarFila(num) {
           if (servicoImg) {
             console.log('SERVIÇO IMAGEM [' + num + ']: ' + servicoImg.item + ' = R$' + servicoImg.valor);
             await registrarLeadOrcamento(num, null, { cartao: servicoImg.valor, pix: servicoImg.valor, encontrados: [servicoImg.item] }, 'whatsapp', categorizarServico(servicoImg.item));
-            instrucaoOrcamento = '\n\nVALOR CALCULADO PELO SISTEMA PARA ESTE SERVIÇO — USE ESTE VALOR EXATO: R$' + servicoImg.valor.toFixed(2) + '. NÃO aplique desconto de pix/dinheiro (essa regra é só para exames laboratoriais) — informe o MESMO valor para cartão e pix/dinheiro, sem mencionar percentual ou desconto.';
+            instrucoesExtraImg.push('VALOR CALCULADO PELO SISTEMA PARA ESTE SERVIÇO — USE ESTE VALOR EXATO: R$' + servicoImg.valor.toFixed(2) + '. NÃO aplique desconto de pix/dinheiro (essa regra é só para exames laboratoriais) — informe o MESMO valor para cartão e pix/dinheiro, sem mencionar percentual ou desconto.');
           }
         }
-        hist.push({ role: 'user', content: 'O paciente enviou uma imagem/receita médica. Análise da imagem: ' + leitura + instrucaoOrcamento + '\n\nInstruções:\n1. Confirme o nome do paciente e LISTE cada exame identificado individualmente pelo nome, NUMERADO (1. 2. 3. ...) para o paciente ver de forma clara quantos exames são (NUNCA agrupe em categorias como "função renal", "perfil hormonal" etc.)\n2. Informe os valores calculados acima (use exatamente esses valores)\n3. Avise de forma natural que é uma prévia e que a secretaria vai confirmar o valor final e os exames identificados\n4. Se houver Tomografia (TC/TAC) ou Ressonância (RM/RNM) na lista, avise CLARAMENTE que a clínica não realiza esse exame específico e que o paciente precisa procurar outro local — não diga apenas "será tratado à parte"\n5. Convide para agendar os exames que a clínica faz\nSe algum exame não tiver valor calculado, mencione que entrará em contato para complementar.' });
-        const resp = await chamarIA(hist);
+        instrucoesExtraImg.push('O paciente enviou uma imagem/receita médica nesta mensagem. Instruções para responder:\n1. Confirme o nome do paciente e LISTE cada exame identificado individualmente pelo nome, NUMERADO (1. 2. 3. ...) para o paciente ver de forma clara quantos exames são (NUNCA agrupe em categorias como "função renal", "perfil hormonal" etc.)\n2. Informe os valores calculados acima (use exatamente esses valores)\n3. Avise de forma natural que é uma prévia e que a secretaria vai confirmar o valor final e os exames identificados\n4. Se houver Tomografia (TC/TAC) ou Ressonância (RM/RNM) na lista, avise CLARAMENTE que a clínica não realiza esse exame específico e que o paciente precisa procurar outro local — não diga apenas "será tratado à parte"\n5. Convide para agendar os exames que a clínica faz\nSe algum exame não tiver valor calculado, mencione que entrará em contato para complementar.');
+        hist.push({ role: 'user', content: 'Análise da imagem/receita enviada pelo paciente: ' + leitura });
+        const resp = await chamarIA(hist, instrucoesExtraImg.join('\n\n'));
         const final = limpar(resp).replace('[SECRETARIA]', '').trim();
         await db.salvarMensagem(num, 'assistant', final);
         await enviar(num, final);
@@ -1358,14 +1367,16 @@ async function processarFila(num) {
     }
     console.log('HIST [' + num + ']: ' + hist.length + ' msgs');
 
+    const instrucoesExtra = [];
+
     // Calcula orçamento no código se a mensagem contém exames
     const orcamento = (!MODO_TESTE_LAB || NUMEROS_TESTE_LAB.includes(num)) ? calcularOrcamento(txtCompleto) : null;
     if (orcamento && orcamento.total > 0) {
-      const infoOrcamento = '[ORÇAMENTO CALCULADO PELO SISTEMA — USE ESTES VALORES EXATOS: ' +
+      const infoOrcamento = 'ORÇAMENTO CALCULADO PELO SISTEMA — USE ESTES VALORES EXATOS: ' +
         '💳 Cartão: R$' + orcamento.cartao.toFixed(2) + ' | ' +
         '💵 Pix/Dinheiro: R$' + orcamento.pix.toFixed(2) + '. ' +
-        'NÃO recalcule. Use estes valores exatos na resposta.]';
-      hist.push({ role: 'user', content: infoOrcamento });
+        'NÃO recalcule. Use estes valores exatos na resposta.';
+      instrucoesExtra.push(infoOrcamento);
       console.log('ORÇAMENTO [' + num + ']: base=R$' + orcamento.total + ' cartão=R$' + orcamento.cartao + ' pix=R$' + orcamento.pix);
       await registrarLeadOrcamento(num, null, orcamento, 'whatsapp', 'laboratorial');
     } else {
@@ -1374,8 +1385,7 @@ async function processarFila(num) {
       if (servico) {
         console.log('SERVIÇO [' + num + ']: ' + servico.item + ' = R$' + servico.valor);
         await registrarLeadOrcamento(num, null, { cartao: servico.valor, pix: servico.valor, encontrados: [servico.item] }, 'whatsapp', categorizarServico(servico.item));
-        const infoServico = '[VALOR CALCULADO PELO SISTEMA PARA ESTE SERVIÇO — USE ESTE VALOR EXATO: R$' + servico.valor.toFixed(2) + '. NÃO aplique desconto de pix/dinheiro (essa regra é só para exames laboratoriais) — informe o MESMO valor para cartão e pix/dinheiro, sem mencionar percentual ou desconto.]';
-        hist.push({ role: 'user', content: infoServico });
+        instrucoesExtra.push('VALOR CALCULADO PELO SISTEMA PARA ESTE SERVIÇO — USE ESTE VALOR EXATO: R$' + servico.valor.toFixed(2) + '. NÃO aplique desconto de pix/dinheiro (essa regra é só para exames laboratoriais) — informe o MESMO valor para cartão e pix/dinheiro, sem mencionar percentual ou desconto.');
       }
     }
 
@@ -1392,12 +1402,12 @@ async function processarFila(num) {
       // aberto e instrui a IA a tratar o cancelamento, SEM reconfirmar o agendamento antigo nem
       // responder a qualquer outro assunto pendente no histórico.
       await limparEstado(num);
-      hist.push({ role: 'user', content: '[INSTRUÇÃO CRÍTICA: O paciente está pedindo para CANCELAR/DESMARCAR um agendamento, ou avisando que não vai conseguir comparecer. Isso tem prioridade sobre qualquer outro assunto do histórico (ex: dúvidas de jejum, outra especialidade). NÃO reconfirme o agendamento antigo. Confirme o cancelamento de forma acolhedora e gere a tag [CANCELAR:motivo=X].]' });
+      instrucoesExtra.push('INSTRUÇÃO CRÍTICA: O paciente está pedindo para CANCELAR/DESMARCAR um agendamento, ou avisando que não vai conseguir comparecer. Isso tem prioridade sobre qualquer outro assunto do histórico (ex: dúvidas de jejum, outra especialidade). NÃO reconfirme o agendamento antigo. Confirme o cancelamento de forma acolhedora e gere a tag [CANCELAR:motivo=X].');
       console.log('PEDIU_CANCELAMENTO [' + num + ']');
     } else if (recusouAgendar) {
       // Limpa o "empurrão" de nome/nascimento para não insistir nas próximas mensagens também
       await atualizarEstado(num, { periodo: null, dataEscolhida: null });
-      hist.push({ role: 'user', content: '[INSTRUÇÃO: O paciente disse que não quer agendar agora. Responda de forma acolhedora, SEM insistir, SEM pedir nome ou data de nascimento. Apenas avise que fica à disposição quando ele quiser agendar.]' });
+      instrucoesExtra.push('INSTRUÇÃO: O paciente disse que não quer agendar agora. Responda de forma acolhedora, SEM insistir, SEM pedir nome ou data de nascimento. Apenas avise que fica à disposição quando ele quiser agendar.');
       console.log('RECUSOU_AGENDAR [' + num + ']');
     } else if (orcamento && orcamento.total > 0) {
       // A mensagem atual trouxe um orçamento de exames laboratoriais — assunto claramente novo/diferente.
@@ -1434,23 +1444,22 @@ async function processarFila(num) {
     }
 
     if (temTudo && !jaAgendadoAnteriormente) {
-      const instrucao = '[DADOS COLETADOS - FINALIZE O AGENDAMENTO: nome=' + estadoAtual.nome + ' | nascimento=' + estadoAtual.nascimento + ' | especialidade=' + estadoAtual.especialidade + ' | periodo=' + estadoAtual.periodo + '. Gere a tag [AGENDAR:nome=' + estadoAtual.nome + '|nascimento=' + estadoAtual.nascimento + '|especialidade=' + estadoAtual.especialidade + '|convenio=particular|periodo=' + estadoAtual.periodo + '] e confirme com a mensagem de sucesso.]';
-      hist.push({ role: 'user', content: instrucao });
+      instrucoesExtra.push('DADOS COLETADOS - FINALIZE O AGENDAMENTO: nome=' + estadoAtual.nome + ' | nascimento=' + estadoAtual.nascimento + ' | especialidade=' + estadoAtual.especialidade + ' | periodo=' + estadoAtual.periodo + '. Gere a tag [AGENDAR:nome=' + estadoAtual.nome + '|nascimento=' + estadoAtual.nascimento + '|especialidade=' + estadoAtual.especialidade + '|convenio=particular|periodo=' + estadoAtual.periodo + '] e confirme com a mensagem de sucesso.');
       console.log('AUTO-AGENDAR [' + num + ']:', estadoAtual.especialidade, estadoAtual.nome, estadoAtual.nascimento, estadoAtual.periodo);
     } else if (estadoAtual.especialidade && estadoAtual.periodo) {
       // Tem especialidade e período — só falta nome/nascimento
       const faltaNome = !estadoAtual.nome;
       const faltaNasc = !estadoAtual.nascimento;
       const oque = faltaNome && faltaNasc ? 'nome completo e data de nascimento juntos (ex: João Silva 15/03/1990)' : faltaNome ? 'nome completo' : 'data de nascimento';
-      hist.push({ role: 'user', content: '[INSTRUÇÃO: Especialidade=' + estadoAtual.especialidade + ', período=' + estadoAtual.periodo + (estadoAtual.dataEscolhida ? ', data=' + estadoAtual.dataEscolhida : '') + '. NÃO pergunte especialidade, data ou período. APENAS peça: ' + oque + '.]' });
+      instrucoesExtra.push('INSTRUÇÃO: Especialidade=' + estadoAtual.especialidade + ', período=' + estadoAtual.periodo + (estadoAtual.dataEscolhida ? ', data=' + estadoAtual.dataEscolhida : '') + '. NÃO pergunte especialidade, data ou período. APENAS peça: ' + oque + '.');
       console.log('PEDIR_DADOS [' + num + ']: falta=' + oque);
     } else if (estadoAtual.especialidade) {
-      hist.push({ role: 'user', content: '[LEMBRETE: Especialidade já definida: ' + estadoAtual.especialidade + '. NÃO pergunte especialidade.' + (estadoAtual.periodo ? ' Período: ' + estadoAtual.periodo + '.' : '') + (estadoAtual.dataEscolhida ? ' Data: ' + estadoAtual.dataEscolhida + '.' : '') + ']' });
+      instrucoesExtra.push('LEMBRETE: Especialidade já definida: ' + estadoAtual.especialidade + '. NÃO pergunte especialidade.' + (estadoAtual.periodo ? ' Período: ' + estadoAtual.periodo + '.' : '') + (estadoAtual.dataEscolhida ? ' Data: ' + estadoAtual.dataEscolhida + '.' : ''));
       console.log('LEMBRETE [' + num + ']: esp=' + estadoAtual.especialidade);
     }
     }
 
-    const resp = await chamarIA(hist);
+    const resp = await chamarIA(hist, instrucoesExtra.length ? instrucoesExtra.join('\n\n') : null);
     const ag = extrairAgendamento(resp);
     if (ag) {
       const ontemISO = new Date(Date.now() - 24*60*60*1000).toISOString();
@@ -1577,14 +1586,14 @@ app.post('/api/chat', async function(req, res) {
     let hist = await db.buscarHistorico(tel, 12);
     if (!hist.length || hist[hist.length-1].role !== 'user') hist.push({ role: 'user', content: msg });
 
+    const instrucoesExtraChat = [];
     // Calcula orçamento no código (mesmo comportamento do fluxo de WhatsApp) — NUNCA deixa a IA calcular de cabeça
     const orcamentoChat = calcularOrcamento(msg);
     if (orcamentoChat && orcamentoChat.total > 0) {
-      const infoOrcamentoChat = '[ORÇAMENTO CALCULADO PELO SISTEMA — USE ESTES VALORES EXATOS: ' +
+      instrucoesExtraChat.push('ORÇAMENTO CALCULADO PELO SISTEMA — USE ESTES VALORES EXATOS: ' +
         '💳 Cartão: R$' + orcamentoChat.cartao.toFixed(2) + ' | ' +
         '💵 Pix/Dinheiro: R$' + orcamentoChat.pix.toFixed(2) + '. ' +
-        'NÃO recalcule. Use estes valores exatos na resposta.]';
-      hist.push({ role: 'user', content: infoOrcamentoChat });
+        'NÃO recalcule. Use estes valores exatos na resposta.');
       console.log('ORÇAMENTO CHAT [' + tel + ']: base=R$' + orcamentoChat.total + ' cartão=R$' + orcamentoChat.cartao + ' pix=R$' + orcamentoChat.pix);
       await registrarLeadOrcamento(tel, null, orcamentoChat, 'chat', 'laboratorial');
     } else {
@@ -1592,12 +1601,11 @@ app.post('/api/chat', async function(req, res) {
       if (servicoChat) {
         console.log('SERVIÇO CHAT [' + tel + ']: ' + servicoChat.item + ' = R$' + servicoChat.valor);
         await registrarLeadOrcamento(tel, null, { cartao: servicoChat.valor, pix: servicoChat.valor, encontrados: [servicoChat.item] }, 'chat', categorizarServico(servicoChat.item));
-        const infoServicoChat = '[VALOR CALCULADO PELO SISTEMA PARA ESTE SERVIÇO — USE ESTE VALOR EXATO: R$' + servicoChat.valor.toFixed(2) + '. NÃO aplique desconto de pix/dinheiro (essa regra é só para exames laboratoriais) — informe o MESMO valor para cartão e pix/dinheiro, sem mencionar percentual ou desconto.]';
-        hist.push({ role: 'user', content: infoServicoChat });
+        instrucoesExtraChat.push('VALOR CALCULADO PELO SISTEMA PARA ESTE SERVIÇO — USE ESTE VALOR EXATO: R$' + servicoChat.valor.toFixed(2) + '. NÃO aplique desconto de pix/dinheiro (essa regra é só para exames laboratoriais) — informe o MESMO valor para cartão e pix/dinheiro, sem mencionar percentual ou desconto.');
       }
     }
 
-    const resp = await chamarIA(hist);
+    const resp = await chamarIA(hist, instrucoesExtraChat.length ? instrucoesExtraChat.join('\n\n') : null);
     const ag = extrairAgendamento(resp);
     if (ag) {
       await db.salvarAgendamento({ nome_paciente: ag.nome, data_nascimento: ag.nascimento||null, telefone: tel, especialidade: ag.especialidade, convenio: 'particular', periodo: ag.periodo, origem: 'chat' });
