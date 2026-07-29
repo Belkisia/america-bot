@@ -1275,7 +1275,13 @@ async function processarFila(num) {
     return;
   }
 
-  if (filas[num].msgs.length > 10) filas[num].msgs = filas[num].msgs.slice(-3);
+  // Proteção contra spam extremo — mas o limite precisa ser bem alto: é comum o paciente listar
+  // cada exame em uma mensagem separada (uma receita com 15-20 exames pode virar 15-20 mensagens),
+  // e truncar isso silenciosamente já causou orçamento calculado com valor muito abaixo do real.
+  if (filas[num].msgs.length > 60) {
+    console.log('AVISO_FILA_GRANDE [' + num + ']: ' + filas[num].msgs.length + ' mensagens acumuladas — mantendo só as últimas 50');
+    filas[num].msgs = filas[num].msgs.slice(-50);
+  }
 
   const msgs = filas[num].msgs.splice(0);
   const txtCompleto = msgs.join(' ').trim();
