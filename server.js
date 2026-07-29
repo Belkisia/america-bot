@@ -100,6 +100,7 @@ Tag: [AGENDAR:nome=X|nascimento=X|especialidade=Ultrassom|convenio=particular|pe
 Dias disponíveis: TERÇA, 14h00–16h00 (tarde), e SEXTA, 07h30–09h45 (manhã) e 17h00–18h00 (tarde) — TODOS os exames de ultrassom são feitos nesses dias.
 ATENÇÃO — RESTRIÇÃO DE HORÁRIO PARA QUADRIL/JOELHO/TORNOZELO/PÉS: esses exames NÃO são feitos no horário de sexta-feira das 17h às 18h. Podem ser agendados normalmente na terça (14h-16h) ou na sexta de manhã (07h30-09h45). Se o paciente pedir um desses exames especificamente para sexta às 17h-18h, informe que nesse horário não é possível e ofereça terça ou sexta de manhã como alternativa.
 ATENÇÃO — IDADE MÍNIMA PARA ULTRASSOM DE PÉS: só é feito a partir de 7 anos de idade. Se o paciente pedir ultrassom de pés para uma criança menor de 7 anos, informe claramente que não é possível nessa idade.
+ATENÇÃO — EXCEÇÃO PONTUAL PARA TERÇA-FEIRA 04/08: nesse dia específico (só esse dia, não vale pras demais terças), o horário é reduzido para 13h30–15h00 (em vez do horário normal de terça 14h-16h), e SOMENTE estes exames são feitos: Tireoide, Tireoide com Doppler, Mamas, Axilas, Abdome Total, Abdome Superior, Vias Urinárias, Próstata, Transvaginal/Endovaginal, Obstétrica. Se o paciente pedir para o dia 04/08 um exame de ultrassom que NÃO está nessa lista, informe que nesse dia específico não é possível fazer esse exame e ofereça outra data (outra terça ou sexta, com a agenda normal). Nas demais terças e sextas, a agenda normal de ultrassom continua valendo (todos os exames, horário padrão) — essa restrição é EXCLUSIVA do dia 04/08.
 MORFOLÓGICO: 1ºTri=11–13sem6d(R$230) | 2ºTri=20–23sem6d(R$280) | 3ºTri=32–34sem6d.
 REGRA CRÍTICA MORFOLÓGICO: se o paciente responder diretamente "1º trimestre", "1 trimestre", "primeiro trimestre", "2º trimestre", "segundo trimestre" (sem informar semanas exatas), ACEITE essa resposta como suficiente para identificar qual exame ele quer. NÃO peça semanas exatas de novo — isso já responde qual dos dois exames é. Prossiga direto para confirmar e pedir nome+nascimento. Só peça semanas exatas se o paciente não souber dizer o trimestre.
 
@@ -725,6 +726,14 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
         // Datas específicas canceladas (ex: feriado, imprevisto) — some daqui quando a data passar
         const DATAS_BLOQUEADAS_USG = [{ dia: 28, mes: 7 }]; // Terça 28/07 — agenda cancelada
         const bloqueada = function(d) { return DATAS_BLOQUEADAS_USG.some(function(b){ return b.dia === d.getDate() && b.mes === d.getMonth()+1; }); };
+        // Datas com horário/exames excepcionais (só nesse dia específico) — some daqui quando a data passar
+        const HORARIOS_ESPECIAIS_USG = [
+          { dia: 4, mes: 8, texto: 'Terça: 13h30–15h00 (SOMENTE exames: Tireoide, Tireoide c/Doppler, Mamas, Axilas, Abdome Total, Abdome Superior, Vias Urinárias, Próstata, Transvaginal/Endovaginal, Obstétrica)' },
+        ];
+        const horarioEspecial = function(d) {
+          const e = HORARIOS_ESPECIAIS_USG.find(function(h){ return h.dia === d.getDate() && h.mes === d.getMonth()+1; });
+          return e ? e.texto : null;
+        };
         const disponiveisUSG = [];
         for (let i = 0; i <= 14; i++) {
           const d = new Date(nowBR);
@@ -733,7 +742,8 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
           if (horariosUSG[dow] && !bloqueada(d)) {
             const dd = String(d.getDate()).padStart(2,'0');
             const mm = String(d.getMonth()+1).padStart(2,'0');
-            disponiveisUSG.push(dd + '/' + mm + ' (' + horariosUSG[dow] + ')');
+            const especial = horarioEspecial(d);
+            disponiveisUSG.push(dd + '/' + mm + ' (' + (especial || horariosUSG[dow]) + ')');
           }
           if (disponiveisUSG.length >= 2) break;
         }
