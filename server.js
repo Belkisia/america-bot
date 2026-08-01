@@ -83,12 +83,11 @@ AGENDA MÉDICOS
 • Psiquiatria: 07/08 e 21/08 das 13h30–17h00 — SOMENTE TARDE
 • Otorrinolaringologia: 10/08 das 08h30–11h00 — SOMENTE MANHÃ
 • Endocrinologia: 04/08 das 14h00–17h00 — SOMENTE TARDE
-• Ginecologia: 31/07, 14/08 e 28/08 das 13h00–16h00 — SOMENTE TARDE
+• Ginecologia: 10/08 e 24/08 das 14h30–17h30 — SOMENTE TARDE
 • Clínico Geral/Pediatria — datas específicas (cada uma com seu horário):
-  - 27/07 (segunda): manhã 08h30–10h30 e tarde 16h00–17h00
-  - 28/07 (terça): manhã 08h30–11h30 (sem tarde)
-  - 30/07 (quinta): manhã 08h30–11h30 e tarde 14h00–17h00
-  - 31/07 (sexta): manhã 08h30–11h30 (sem tarde)
+  - 03/08 (segunda): manhã 09h00–10h30 e tarde 16h00–17h00
+  - 04/08 (terça): manhã 09h00–11h15 (sem tarde)
+  - 06/08 (quinta): manhã 09h00–11h15 e tarde 14h00–17h00
 
 REGRA DE DATAS: Compare cada data com a DATA ATUAL do prompt. Mostre SOMENTE datas futuras. Cada data tem horário diferente — informe corretamente conforme a agenda acima. Se TODAS passaram: informe que não há agenda disponível no momento.
 
@@ -686,7 +685,7 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
       'Psiquiatria': { horario: '13h30–17h00', periodo: 'SOMENTE TARDE', datas: [{dia:7,mes:8},{dia:21,mes:8}] },
       'Otorrinolaringologia': { horario: '08h30–11h00', periodo: 'SOMENTE MANHÃ', datas: [{dia:10,mes:8}] },
       'Endocrinologia': { horario: '14h00–17h00', periodo: 'SOMENTE TARDE', datas: [{dia:4,mes:8}] },
-      'Ginecologia': { horario: '13h00–16h00', periodo: 'SOMENTE TARDE', datas: [{dia:31,mes:7},{dia:14,mes:8},{dia:28,mes:8}] },
+      'Ginecologia': { horario: '14h30–17h30', periodo: 'SOMENTE TARDE', datas: [{dia:10,mes:8},{dia:24,mes:8}] },
     };
     function formatarListaDatas(lista) {
       if (lista.length === 1) return lista[0];
@@ -707,10 +706,9 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
       formatarLinhaAgenda('Ginecologia', AGENDA_ESPECIALIDADES['Ginecologia']),
       (function() {
         const AGENDA_CLINICO = [
-          { dia: 27, mes: 7, manha: '08h30–10h30', tarde: '16h00–17h00' },
-          { dia: 28, mes: 7, manha: '08h30–11h30', tarde: null },
-          { dia: 30, mes: 7, manha: '08h30–11h30', tarde: '14h00–17h00' },
-          { dia: 31, mes: 7, manha: '08h30–11h30', tarde: null },
+          { dia: 3, mes: 8, manha: '09h00–10h30', tarde: '16h00–17h00' },
+          { dia: 4, mes: 8, manha: '09h00–11h15', tarde: null },
+          { dia: 6, mes: 8, manha: '09h00–11h15', tarde: '14h00–17h00' },
         ];
         const disponiveis = AGENDA_CLINICO
           .filter(function (d) { return dataFutura(d.dia, d.mes); })
