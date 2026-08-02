@@ -75,7 +75,7 @@ MEMÓRIA: Antes de cada resposta identifique o que já foi fornecido: especialid
 AGENDAMENTO DE CONSULTAS
 Especialidades: Clínico Geral, Endocrinologia, Ginecologia, Otorrinolaringologia, Pediatria, Psiquiatria.
 Colete: nome completo + data de nascimento (na mesma pergunta), especialidade, período.
-Tag: [AGENDAR:nome=X|nascimento=X|especialidade=X|convenio=particular|periodo=X]
+Tag: [AGENDAR:nome=X|nascimento=X|especialidade=X|convenio=particular|periodo=X|data=DD/MM/AAAA]
 Somente particular. NUNCA pergunte convênio.
 ANTI-DUPLICATA: Se histórico já tem confirmação da mesma especialidade, NÃO gere [AGENDAR] de novo.
 
@@ -95,7 +95,7 @@ PERÍODO: Para Clínico Geral/Pediatria, mostre as datas futuras disponíveis e 
 
 ULTRASSOM
 Não é especialidade — é exame. Colete: nome, nascimento, qual exame.
-Tag: [AGENDAR:nome=X|nascimento=X|especialidade=Ultrassom|convenio=particular|periodo=manha]
+Tag: [AGENDAR:nome=X|nascimento=X|especialidade=Ultrassom|convenio=particular|periodo=manha|data=DD/MM/AAAA]
 Dias disponíveis: TERÇA, 14h00–16h00 (tarde), e SEXTA, 07h30–09h45 (manhã) e 17h00–18h00 (tarde) — TODOS os exames de ultrassom são feitos nesses dias.
 ATENÇÃO — RESTRIÇÃO DE HORÁRIO PARA QUADRIL/JOELHO/TORNOZELO/PÉS: esses exames NÃO são feitos no horário de sexta-feira das 17h às 18h. Podem ser agendados normalmente na terça (14h-16h) ou na sexta de manhã (07h30-09h45). Se o paciente pedir um desses exames especificamente para sexta às 17h-18h, informe que nesse horário não é possível e ofereça terça ou sexta de manhã como alternativa.
 ATENÇÃO — IDADE MÍNIMA PARA ULTRASSOM DE PÉS: só é feito a partir de 7 anos de idade. Se o paciente pedir ultrassom de pés para uma criança menor de 7 anos, informe claramente que não é possível nessa idade.
@@ -116,9 +116,9 @@ AGENDAMENTO DE PROCEDIMENTOS — cada um segue uma regra diferente, siga exatame
 - DIU (inserir/retirar) e Prevenção/Citopatológico: só são feitos DURANTE uma consulta de Ginecologia — NÃO têm agenda própria. Trate como um agendamento de Ginecologia (mesmas datas e período da agenda de Ginecologia), mas anote no agendamento que o motivo é o procedimento (ex: especialidade=Ginecologia, mas confirme com o paciente que é para "inserir DIU" ou "prevenção" etc. na mensagem de confirmação).
 - Limpeza de ouvido: só é feita DURANTE uma consulta de Otorrino — NÃO tem agenda própria. Trate como um agendamento de Otorrinolaringologia (mesmas datas e período), mas deixe claro na confirmação que é para limpeza de ouvido.
 - Holter e MAPA (24h): agenda própria, segunda a quinta-feira, das 08h00 às 17h00. Colete nome+nascimento e pergunte qual período (manhã ou tarde) o paciente prefere dentro desse horário.
-  Tag: [AGENDAR:nome=X|nascimento=X|especialidade=Holter/MAPA|convenio=particular|periodo=X]
+  Tag: [AGENDAR:nome=X|nascimento=X|especialidade=Holter/MAPA|convenio=particular|periodo=X|data=DD/MM/AAAA]
 - Eletrocardiograma: agenda própria, segunda a sexta-feira, com dois horários no dia: 10h00–11h30 (manhã) e 13h30–17h00 (tarde). Colete nome+nascimento e pergunte qual período prefere.
-  Tag: [AGENDAR:nome=X|nascimento=X|especialidade=Eletrocardiograma|convenio=particular|periodo=X]
+  Tag: [AGENDAR:nome=X|nascimento=X|especialidade=Eletrocardiograma|convenio=particular|periodo=X|data=DD/MM/AAAA]
 - Retirada de pontos: não tem agenda própria nem consulta vinculada definida — informe o preço e use [SECRETARIA] para que a secretaria confirme o melhor horário diretamente com o paciente.
 ANTI-DUPLICATA: aplica-se aos procedimentos também — se o histórico já confirmou o mesmo agendamento, não repita a tag.
 ATENÇÃO — BIÓPSIA: a clínica NÃO faz coleta/procedimento de biópsia. Só realiza a ANÁLISE de uma amostra que o paciente já tenha coletado em outro lugar. Se o paciente perguntar sobre "coleta de biópsia" ou agendar a coleta em si, explique que isso não é feito aqui — só recebemos a amostra já coletada para análise.
@@ -135,7 +135,7 @@ EXAMES LABORATORIAIS: A clínica FAZ exames laboratoriais. NUNCA negar. Quando p
 REGRA DE NUMERAÇÃO: sempre que for listar os nomes dos exames identificados (por foto ou por texto digitado), liste NUMERADOS (1. 2. 3. ...), para o paciente ver de forma clara quantos exames foram identificados. Isso vale só para os NOMES dos exames — os VALORES continuam sendo mostrados apenas como total final (cartão/pix), nunca por item.
 
 CONFIRMAÇÃO DE AGENDAMENTO DE COLETA: Depois de informar o orçamento e o paciente confirmar que quer agendar a coleta (ex: "pode marcar", "quero sim", confirma um dia específico), colete nome completo + data de nascimento (na mesma pergunta, igual às outras agendas) e a data de coleta escolhida (dentro das datas do bloco AGENDA ATUAL). Depois gere a tag:
-Tag: [AGENDAR:nome=X|nascimento=X|especialidade=Coleta Laboratorial|convenio=particular|periodo=manha]
+Tag: [AGENDAR:nome=X|nascimento=X|especialidade=Coleta Laboratorial|convenio=particular|periodo=manha|data=DD/MM/AAAA]
 O período é sempre manhã (07h00–09h45), não pergunte período para coleta laboratorial.
 ANTI-DUPLICATA: Se o histórico já tem confirmação de agendamento de coleta, NÃO gere [AGENDAR] de novo.
 
@@ -205,6 +205,7 @@ NÃO invente detalhes do agendamento cancelado (data, horário) que não estejam
 REGRAS FINAIS
 - UMA única mensagem por resposta. Máximo 3 parágrafos. Sem markdown #.
 - Nome+nascimento: pergunte juntos, extraia juntos.
+- CAMPO "data" NA TAG [AGENDAR:...]: SEMPRE preencha com a data exata confirmada (DD/MM/AAAA), a MESMA data que você está mostrando na mensagem de confirmação ao paciente. Esse campo é usado pelo sistema para enviar lembretes automáticos antes da consulta — se vier errado ou vazio, o paciente pode não receber o lembrete.
 - Ao confirmar um agendamento, use SEMPRE este formato estruturado (preencha com os dados reais da conversa — NUNCA invente horário exato, nome de médico ou consultório, pois o sistema não tem esses dados):
 "*Seu atendimento foi confirmado!* ✅
 📅 [dia da semana por extenso], [DD/MM/AAAA]
@@ -621,6 +622,16 @@ function extrairAgendamento(t) {
   const d = {};
   m[1].split('|').forEach(function(p) { const i = p.indexOf('='); if (i > 0) d[p.substring(0,i).trim()] = p.substring(i+1).trim(); });
   return Object.keys(d).length >= 3 ? d : null;
+}
+// Converte data no formato DD/MM/AAAA (como vem da tag AGENDAR) para ISO (AAAA-MM-DD), formato
+// aceito por colunas "date" do Supabase. Retorna null se o formato vier inválido/incompleto.
+function dataBrParaISO(dataBr) {
+  if (!dataBr) return null;
+  const m = String(dataBr).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return null;
+  const dia = parseInt(m[1], 10), mes = parseInt(m[2], 10), ano = parseInt(m[3], 10);
+  if (dia < 1 || dia > 31 || mes < 1 || mes > 12) return null;
+  return ano + '-' + String(mes).padStart(2, '0') + '-' + String(dia).padStart(2, '0');
 }
 function extrairCancelamento(t) {
   const m = t.match(/\[CANCELAR:([^\]]+)\]/);
@@ -1174,6 +1185,71 @@ async function executarFollowUpVendas(forcar) {
   }
 }
 
+// LEMBRETES AUTOMÁTICOS DE CONSULTA/EXAME — 2 dias antes e no dia do agendamento
+// Roda periodicamente (a cada ~1h), mas só envia de fato quando a data bater e ainda não tiver
+// sido enviado (marcado em lembrete_2dias_enviado_em / lembrete_dia_enviado_em) — por isso pode
+// rodar com frequência sem risco de mandar duplicado.
+async function executarLembretesConsulta() {
+  try {
+    const hojeBR = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    hojeBR.setHours(0, 0, 0, 0);
+    const hojeISO = hojeBR.toISOString().slice(0, 10);
+    const daqui2Dias = new Date(hojeBR); daqui2Dias.setDate(daqui2Dias.getDate() + 2);
+    const daqui2DiasISO = daqui2Dias.toISOString().slice(0, 10);
+
+    const nomesEspecialidade = function(esp) {
+      // Nome mais natural pra usar na frase do lembrete
+      const mapa = { 'Coleta Laboratorial': 'sua coleta de exames', 'Ultrassom': 'seu ultrassom',
+        'Holter/MAPA': 'seu exame (Holter/MAPA)', 'Eletrocardiograma': 'seu eletrocardiograma' };
+      return mapa[esp] || ('sua consulta de ' + esp);
+    };
+
+    // Lembrete de 2 dias antes
+    const { data: lembrar2Dias } = await db.supabase.from('agendamentos')
+      .select('*')
+      .in('status', ['pendente', 'confirmado'])
+      .eq('data_agendamento', daqui2DiasISO)
+      .is('lembrete_2dias_enviado_em', null);
+
+    for (const ag of (lembrar2Dias || [])) {
+      if (!ag.telefone || numeroEstaIgnorado(ag.telefone)) continue;
+      if (await emAtendimentoHumano(ag.telefone)) continue;
+      const primeiroNome = ag.nome_paciente ? ag.nome_paciente.split(' ')[0] : '';
+      const dataFormatada = new Date(ag.data_agendamento + 'T00:00:00').toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long', day: '2-digit', month: '2-digit' });
+      const msg = (primeiroNome ? 'Oi, ' + primeiroNome + '! 😊' : 'Oi! 😊') +
+        ' Passando pra lembrar que ' + nomesEspecialidade(ag.especialidade) + ' está agendado(a) para ' +
+        dataFormatada + (ag.periodo ? ', período da ' + ag.periodo : '') + '. Te esperamos aqui no Centro Médico América! 💙\n\n' +
+        'Se não conseguir vir, é só me avisar por aqui que eu já ajusto.';
+      await enviar(ag.telefone, msg);
+      await db.supabase.from('agendamentos').update({ lembrete_2dias_enviado_em: new Date().toISOString() }).eq('id', ag.id);
+      console.log('LEMBRETE_2DIAS: enviado para ' + ag.telefone + ' (' + ag.especialidade + ', ' + ag.data_agendamento + ')');
+      await new Promise(function(r) { setTimeout(r, 5000); });
+    }
+
+    // Lembrete no dia
+    const { data: lembrarHoje } = await db.supabase.from('agendamentos')
+      .select('*')
+      .in('status', ['pendente', 'confirmado'])
+      .eq('data_agendamento', hojeISO)
+      .is('lembrete_dia_enviado_em', null);
+
+    for (const ag of (lembrarHoje || [])) {
+      if (!ag.telefone || numeroEstaIgnorado(ag.telefone)) continue;
+      if (await emAtendimentoHumano(ag.telefone)) continue;
+      const primeiroNome = ag.nome_paciente ? ag.nome_paciente.split(' ')[0] : '';
+      const msg = (primeiroNome ? 'Bom dia, ' + primeiroNome + '! 😊' : 'Bom dia! 😊') +
+        ' Hoje é o dia de ' + nomesEspecialidade(ag.especialidade) + (ag.periodo ? ', no período da ' + ag.periodo : '') + '. ' +
+        'Te esperamos no Centro Médico América — Av. Frei Miguelino, 247, Bairro Goiá, Goiânia-GO. Chegue com uns 20 minutinhos de antecedência, tá bom? 🌟';
+      await enviar(ag.telefone, msg);
+      await db.supabase.from('agendamentos').update({ lembrete_dia_enviado_em: new Date().toISOString() }).eq('id', ag.id);
+      console.log('LEMBRETE_DIA: enviado para ' + ag.telefone + ' (' + ag.especialidade + ', ' + ag.data_agendamento + ')');
+      await new Promise(function(r) { setTimeout(r, 5000); });
+    }
+  } catch(e) {
+    console.error('ERRO executarLembretesConsulta:', e.message);
+  }
+}
+
 // Períodos fixos por especialidade/data
 const PERIODOS_FIXOS = {
   'Psiquiatria': 'tarde',
@@ -1485,6 +1561,15 @@ async function processarFila(num) {
       if (!jaExiste || jaExiste.length === 0) {
         await db.salvarAgendamento({ nome_paciente: ag.nome, data_nascimento: ag.nascimento||null, telefone: num, especialidade: ag.especialidade, convenio: 'particular', periodo: ag.periodo, origem: 'whatsapp' });
         console.log('AGENDADO:', ag.nome, ag.especialidade);
+        const dataISO = dataBrParaISO(ag.data);
+        if (dataISO) {
+          const { data: recemCriado } = await db.supabase.from('agendamentos').select('id').eq('telefone', num).eq('especialidade', ag.especialidade).order('created_at', { ascending: false }).limit(1);
+          if (recemCriado && recemCriado[0]) {
+            await db.supabase.from('agendamentos').update({ data_agendamento: dataISO }).eq('id', recemCriado[0].id);
+          }
+        } else {
+          console.log('AVISO: agendamento de ' + ag.nome + ' (' + ag.especialidade + ') sem data válida na tag — lembrete automático não poderá ser enviado para este agendamento.');
+        }
       }
       await marcarLeadAgendado(num);
     }
@@ -1627,6 +1712,13 @@ app.post('/api/chat', async function(req, res) {
     const ag = extrairAgendamento(resp);
     if (ag) {
       await db.salvarAgendamento({ nome_paciente: ag.nome, data_nascimento: ag.nascimento||null, telefone: tel, especialidade: ag.especialidade, convenio: 'particular', periodo: ag.periodo, origem: 'chat' });
+      const dataISOChat = dataBrParaISO(ag.data);
+      if (dataISOChat) {
+        const { data: recemCriadoChat } = await db.supabase.from('agendamentos').select('id').eq('telefone', tel).eq('especialidade', ag.especialidade).order('created_at', { ascending: false }).limit(1);
+        if (recemCriadoChat && recemCriadoChat[0]) {
+          await db.supabase.from('agendamentos').update({ data_agendamento: dataISOChat }).eq('id', recemCriadoChat[0].id);
+        }
+      }
       await marcarLeadAgendado(tel);
     }
     const canc = extrairCancelamento(resp);
@@ -1643,6 +1735,13 @@ app.post('/api/funil/followup', async function(req, res) {
   try {
     await executarFollowUpVendas(!!req.body.forcar);
     res.json({ ok: true, mensagem: 'Follow-up executado (respeitando o limite de ' + FOLLOWUP_MAX_POR_EXECUCAO + ' mensagens por execução).' });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+app.post('/api/lembretes/executar', async function(req, res) {
+  try {
+    await executarLembretesConsulta();
+    res.json({ ok: true, mensagem: 'Lembretes de consulta verificados e enviados (2 dias antes e no dia).' });
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
 
@@ -1810,4 +1909,6 @@ app.listen(PORT, function() {
   // Agente de vendas: roda a cada 1 hora, verifica se tem leads pra contatar (respeitando os limites de segurança)
   setInterval(executarFollowUpVendas, 10 * 60 * 1000);
   executarFollowUpVendas(); // já checa uma vez assim que o servidor sobe (não espera 10 min pro primeiro check)
+  setInterval(executarLembretesConsulta, 60 * 60 * 1000); // checa lembretes de consulta a cada 1h
+  executarLembretesConsulta();
 });
