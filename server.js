@@ -104,6 +104,7 @@ MORFOLÓGICO: 1ºTri=11–13sem6d(R$230) | 2ºTri=20–23sem6d(R$280) | 3ºTri=3
 REGRA CRÍTICA MORFOLÓGICO: se o paciente responder diretamente "1º trimestre", "1 trimestre", "primeiro trimestre", "2º trimestre", "segundo trimestre" (sem informar semanas exatas), ACEITE essa resposta como suficiente para identificar qual exame ele quer. NÃO peça semanas exatas de novo — isso já responde qual dos dois exames é. Prossiga direto para confirmar e pedir nome+nascimento. Só peça semanas exatas se o paciente não souber dizer o trimestre.
 
 REGRA DE COMUNICAÇÃO — RESTRIÇÕES DE AGENDA: ao informar que um exame não está disponível em determinado dia/horário (restrição de exceção pontual, restrição de horário, restrição de idade etc.), seja DIRETO e SIMPLES. NÃO explique o motivo interno da restrição, NÃO liste as exceções da agenda ou por que outro dia/horário não funciona. Vá direto à informação útil: qual dia e horário ESTÁ disponível para esse exame.
+REGRA GERAL — NÃO JUSTIFIQUE REGRAS INTERNAS AO PACIENTE: isso vale pra qualquer situação, não só agenda — preços especiais, exceções de desconto, regras de cálculo etc. são informações internas do sistema pra você usar no cálculo, NUNCA algo pra explicar ou justificar na resposta. Informe só o resultado final (valor, data, disponibilidade) de forma direta e natural, como faria qualquer atendente experiente — sem "porque", sem citar regra, sem soar como se estivesse lendo um manual interno.
 Exemplo CORRETO: "Esse exame temos disponível na sexta-feira, 07/08, pela manhã (07h30–09h45). Posso já reservar para você?"
 Exemplo a EVITAR (não faça isso): "Para esse exame, no dia X infelizmente não é possível, pois esse dia tem uma lista restrita de exames que não inclui esse. E no horário Y também não atende esse exame, mas no horário Z funciona perfeitamente..."
 
@@ -115,7 +116,7 @@ PROCEDIMENTOS: Limpeza ouvido R$50 | DIU inserir R$400 | DIU retirar R$300 | Pre
 AGENDAMENTO DE PROCEDIMENTOS — cada um segue uma regra diferente, siga exatamente:
 - DIU (inserir/retirar) e Prevenção/Citopatológico: só são feitos DURANTE uma consulta de Ginecologia — NÃO têm agenda própria. Trate como um agendamento de Ginecologia (mesmas datas e período da agenda de Ginecologia), mas anote no agendamento que o motivo é o procedimento (ex: especialidade=Ginecologia, mas confirme com o paciente que é para "inserir DIU" ou "prevenção" etc. na mensagem de confirmação).
 - Limpeza de ouvido: só é feita DURANTE uma consulta de Otorrino — NÃO tem agenda própria. Trate como um agendamento de Otorrinolaringologia (mesmas datas e período), mas deixe claro na confirmação que é para limpeza de ouvido.
-- Holter e MAPA (24h): agenda própria, segunda a quinta-feira, das 08h00 às 17h00. Colete nome+nascimento e pergunte qual período (manhã ou tarde) o paciente prefere dentro desse horário.
+- Holter e MAPA (24h): agenda própria, segunda a quinta-feira, das 08h00 às 17h00. SOMENTE 1 paciente por dia (equipamento único) — as datas do bloco AGENDA ATUAL já vêm filtradas sem os dias ocupados, então NUNCA ofereça uma data de Holter/MAPA fora dessa lista. Colete nome+nascimento e pergunte qual período (manhã ou tarde) o paciente prefere dentro desse horário.
   Tag: [AGENDAR:nome=X|nascimento=X|especialidade=Holter/MAPA|convenio=particular|periodo=X|data=DD/MM/AAAA]
 - Eletrocardiograma: agenda própria, segunda a sexta-feira, com dois horários no dia: 10h00–11h30 (manhã) e 13h30–17h00 (tarde). Colete nome+nascimento e pergunte qual período prefere.
   Tag: [AGENDAR:nome=X|nascimento=X|especialidade=Eletrocardiograma|convenio=particular|periodo=X|data=DD/MM/AAAA]
@@ -127,6 +128,7 @@ EXAMES CARDIOLÓGICOS: Holter 24h R$150 | MAPA 24h R$140 | Eletrocardiograma R$5
 ATENÇÃO — SEXAGEM FETAL: nesta clínica, Sexagem Fetal é um EXAME DE SANGUE laboratorial (coleta de sangue materno), NÃO é ultrassom. NÃO trate como exame de imagem, NÃO aplique a agenda de ultrassom (sexta-feira) para ele. Ele segue a AGENDA DE COLETA LABORATORIAL normal (abaixo), disponível nos dias de coleta, não só sexta-feira. Valor: R$165,00, sem desconto no pix (mesmo valor no cartão e à vista).
 
 ATENÇÃO — BETA-HCG: valor R$50,00, SEM desconto no pix (mesmo valor no cartão e à vista) — igual à Sexagem Fetal. NUNCA aplique os 10% de desconto normal do laboratório nesse exame específico, mesmo se vier junto com outros exames que têm desconto.
+REGRA DE COMUNICAÇÃO PARA BETA-HCG/SEXAGEM FETAL: ao informar o valor desses exames, diga APENAS o valor (ex: "O Beta-HCG Quantitativo custa R$50,00"). NÃO explique ou mencione que "não há desconto pra esse exame específico" ou qualquer justificativa parecida — isso é uma regra de cálculo interna, o paciente só precisa saber o valor final.
 
 AGENDA DE COLETA LABORATORIAL — 07h00 às 09h45:
 Use SEMPRE as datas exatas fornecidas no bloco "AGENDA ATUAL" do prompt (calculadas pelo sistema) — NUNCA calcule ou deduza essas datas sozinho.
@@ -714,6 +716,20 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
       return '• ' + nome + ': ' + formatarListaDatas(futuras) + ' das ' + cfg.horario + ' — ' + cfg.periodo;
     }
 
+    // Holter/MAPA: só 1 agendamento por dia (equipamento único) — busca quais dos próximos dias já
+    // têm agendamento confirmado/pendente pra excluir da lista de datas disponíveis
+    let datasHolterMapaOcupadas = [];
+    try {
+      const daqui15Dias = new Date(nowBR); daqui15Dias.setDate(daqui15Dias.getDate() + 15);
+      const { data: ocupadosHolterMapa } = await db.supabase.from('agendamentos')
+        .select('data_agendamento')
+        .eq('especialidade', 'Holter/MAPA')
+        .in('status', ['pendente', 'confirmado'])
+        .gte('data_agendamento', nowBR.toISOString().slice(0, 10))
+        .lte('data_agendamento', daqui15Dias.toISOString().slice(0, 10));
+      datasHolterMapaOcupadas = (ocupadosHolterMapa || []).map(function(a){ return a.data_agendamento; }).filter(Boolean);
+    } catch(e) { console.error('ERRO ao buscar ocupação Holter/MAPA:', e.message); }
+
     const agendaFiltrada = [
       formatarLinhaAgenda('Psiquiatria', AGENDA_ESPECIALIDADES['Psiquiatria']),
       formatarLinhaAgenda('Otorrinolaringologia', AGENDA_ESPECIALIDADES['Otorrinolaringologia']),
@@ -797,18 +813,19 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
       })(),
       (function() {
         const disponiveisHolterMapa = [];
-        for (let i = 0; i <= 10; i++) {
+        for (let i = 0; i <= 20; i++) {
           const d = new Date(nowBR);
           d.setDate(d.getDate() + i);
           const dow = d.getDay(); // 1=segunda .. 4=quinta
-          if (dow >= 1 && dow <= 4) {
-            const dd = String(d.getDate()).padStart(2, '0');
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const iso = d.getFullYear() + '-' + mm + '-' + dd;
+          if (dow >= 1 && dow <= 4 && !datasHolterMapaOcupadas.includes(iso)) {
             disponiveisHolterMapa.push(dd + '/' + mm);
           }
           if (disponiveisHolterMapa.length >= 4) break;
         }
-        return '• Holter/MAPA (08h00–17h00, seg a qui, próximas datas): ' + (disponiveisHolterMapa.length ? disponiveisHolterMapa.join(' | ') : 'sem agenda no momento');
+        return '• Holter/MAPA (08h00–17h00, seg a qui, SOMENTE 1 paciente por dia — próximas datas já livres): ' + (disponiveisHolterMapa.length ? disponiveisHolterMapa.join(' | ') : 'sem agenda no momento');
       })(),
       (function() {
         const disponiveisECG = [];
