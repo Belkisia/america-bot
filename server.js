@@ -1035,7 +1035,7 @@ const TABELA_SERVICOS = {
   'eletrocardiograma': 50,
 };
 
-function calcularServico(textoExames) {
+function calcularServicos(textoExames) {
   const txt = textoExames.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   let txtRestante = txt;
   const encontrados = [];
@@ -1049,7 +1049,24 @@ function calcularServico(textoExames) {
       txtRestante = txtRestante.slice(0, start) + ' '.repeat(chave.length) + txtRestante.slice(start + chave.length);
     }
   }
-  return encontrados.length ? encontrados[0] : null; // registra só o primeiro serviço mencionado
+  return encontrados; // TODOS os serviços encontrados na mensagem, não só o primeiro
+}
+function calcularServico(textoExames) {
+  const todos = calcularServicos(textoExames);
+  return todos.length ? todos[0] : null; // mantido para compatibilidade — usa só o primeiro
+}
+
+// Monta a instrução com os valores de 1 ou mais serviços encontrados, pra IA usar exatamente
+// (mesmo padrão do orçamento de laboratório — nunca deixa a IA calcular/lembrar de cabeça)
+function montarInstrucaoServicos(itens) {
+  if (itens.length === 1) {
+    return 'VALOR CALCULADO PELO SISTEMA PARA ESTE SERVIÇO — USE ESTE VALOR EXATO: R$' + itens[0].valor.toFixed(2) + '. NÃO aplique desconto de pix/dinheiro (essa regra é só para exames laboratoriais) — informe o MESMO valor para cartão e pix/dinheiro, sem mencionar percentual ou desconto.';
+  }
+  const total = itens.reduce(function(s, i) { return s + i.valor; }, 0);
+  const linhas = itens.map(function(i) { return '- ' + i.item + ': R$' + i.valor.toFixed(2); }).join('\n');
+  return 'VALORES CALCULADOS PELO SISTEMA PARA ESTES SERVIÇOS — USE ESTES VALORES EXATOS, NÃO calcule ou lembre de cabeça:\n' + linhas +
+    '\nTotal se o paciente quiser todos: R$' + total.toFixed(2) + '.\n' +
+    'NÃO aplique desconto de pix/dinheiro (regra só para laboratório) — cada valor é fixo, igual no cartão e no pix/dinheiro.';
 }
 
 // Classifica a chave de TABELA_SERVICOS em uma das 3 categorias — usado para separar os
@@ -1419,11 +1436,12 @@ async function processarFila(num) {
           console.log('ORÇAMENTO IMAGEM [' + num + ']: base=R$' + orcamentoImg.total + ' cartão=R$' + orcamentoImg.cartao.toFixed(2) + ' — EXAMES ENCONTRADOS: ' + JSON.stringify(orcamentoImg.encontrados));
           await registrarLeadOrcamento(num, null, orcamentoImg, 'whatsapp', 'laboratorial');
         } else {
-          const servicoImg = calcularServico(leitura);
-          if (servicoImg) {
-            console.log('SERVIÇO IMAGEM [' + num + ']: ' + servicoImg.item + ' = R$' + servicoImg.valor);
-            await registrarLeadOrcamento(num, null, { cartao: servicoImg.valor, pix: servicoImg.valor, encontrados: [servicoImg.item] }, 'whatsapp', categorizarServico(servicoImg.item));
-            instrucoesExtraImg.push('VALOR CALCULADO PELO SISTEMA PARA ESTE SERVIÇO — USE ESTE VALOR EXATO: R$' + servicoImg.valor.toFixed(2) + '. NÃO aplique desconto de pix/dinheiro (essa regra é só para exames laboratoriais) — informe o MESMO valor para cartão e pix/dinheiro, sem mencionar percentual ou desconto.');
+          const servicosImg = calcularServicos(leitura);
+          if (servicosImg.length > 0) {
+            const totalServicosImg = servicosImg.reduce(function(s, i) { return s + i.valor; }, 0);
+            console.log('SERVIÇO(S) IMAGEM [' + num + ']: ' + servicosImg.map(function(i){return i.item + '=R$' + i.valor;}).join(', '));
+            await registrarLeadOrcamento(num, null, { cartao: totalServicosImg, pix: totalServicosImg, encontrados: servicosImg.map(function(i){return i.item;}) }, 'whatsapp', categorizarServico(servicosImg[0].item));
+            instrucoesExtraImg.push(montarInstrucaoServicos(servicosImg));
           }
         }
         instrucoesExtraImg.push('O paciente enviou uma imagem/receita médica nesta mensagem. Instruções para responder:\n1. Confirme o nome do paciente e LISTE cada exame identificado individualmente pelo nome, NUMERADO (1. 2. 3. ...) para o paciente ver de forma clara quantos exames são (NUNCA agrupe em categorias como "função renal", "perfil hormonal" etc.)\n2. Informe os valores calculados acima (use exatamente esses valores)\n3. Avise de forma natural que é uma prévia e que a secretaria vai confirmar o valor final e os exames identificados\n4. Se houver Tomografia (TC/TAC) ou Ressonância (RM/RNM) na lista, avise CLARAMENTE que a clínica não realiza esse exame específico e que o paciente precisa procurar outro local — não diga apenas "será tratado à parte"\n5. Convide para agendar os exames que a clínica faz\nSe algum exame não tiver valor calculado, mencione que entrará em contato para complementar.');
@@ -1492,11 +1510,12 @@ async function processarFila(num) {
       await registrarLeadOrcamento(num, null, orcamento, 'whatsapp', 'laboratorial');
     } else {
       // Não é exame de laboratório — verifica se é ultrassom/consulta/procedimento, para o funil de vendas
-      const servico = calcularServico(txtCompleto);
-      if (servico) {
-        console.log('SERVIÇO [' + num + ']: ' + servico.item + ' = R$' + servico.valor);
-        await registrarLeadOrcamento(num, null, { cartao: servico.valor, pix: servico.valor, encontrados: [servico.item] }, 'whatsapp', categorizarServico(servico.item));
-        instrucoesExtra.push('VALOR CALCULADO PELO SISTEMA PARA ESTE SERVIÇO — USE ESTE VALOR EXATO: R$' + servico.valor.toFixed(2) + '. NÃO aplique desconto de pix/dinheiro (essa regra é só para exames laboratoriais) — informe o MESMO valor para cartão e pix/dinheiro, sem mencionar percentual ou desconto.');
+      const servicos = calcularServicos(txtCompleto);
+      if (servicos.length > 0) {
+        const totalServicos = servicos.reduce(function(s, i) { return s + i.valor; }, 0);
+        console.log('SERVIÇO(S) [' + num + ']: ' + servicos.map(function(i){return i.item + '=R$' + i.valor;}).join(', '));
+        await registrarLeadOrcamento(num, null, { cartao: totalServicos, pix: totalServicos, encontrados: servicos.map(function(i){return i.item;}) }, 'whatsapp', categorizarServico(servicos[0].item));
+        instrucoesExtra.push(montarInstrucaoServicos(servicos));
       }
     }
 
@@ -1526,6 +1545,23 @@ async function processarFila(num) {
       // ainda estava em aberto no estado — isso confundiria o paciente misturando os dois assuntos.
       console.log('NOVO_ASSUNTO_LAB [' + num + ']: ignorando lembrete de especialidade antiga nesta resposta');
     } else {
+
+    // Antes de decidir se falta algum dado, tenta recuperar nome/nascimento que já apareceram
+    // antes na MESMA conversa (ex: paciente já fez um agendamento minutos atrás e agora quer
+    // marcar outro) — evita pedir de novo algo que o estado só "esqueceu" por ter sido limpo
+    // após o agendamento anterior.
+    if (estadoAtual.especialidade && (!estadoAtual.nome || !estadoAtual.nascimento)) {
+      const textoHistoricoRecente = hist.filter(function(m){ return m.role === 'user'; }).map(function(m){ return m.content; }).join(' ');
+      const dadosDoHistorico = extrairDadosMensagem(textoHistoricoRecente);
+      const recuperado = {};
+      if (!estadoAtual.nome && dadosDoHistorico.nome) recuperado.nome = dadosDoHistorico.nome;
+      if (!estadoAtual.nascimento && dadosDoHistorico.nascimento) recuperado.nascimento = dadosDoHistorico.nascimento;
+      if (Object.keys(recuperado).length > 0) {
+        await atualizarEstado(num, recuperado);
+        Object.assign(estadoAtual, recuperado);
+        console.log('DADOS_RECUPERADOS_DO_HISTORICO [' + num + ']: ' + JSON.stringify(recuperado));
+      }
+    }
 
     // Verifica se tem todos os dados para agendar automaticamente
     const temTudo = estadoAtual.especialidade && estadoAtual.nome && estadoAtual.nascimento && estadoAtual.periodo;
@@ -1717,11 +1753,12 @@ app.post('/api/chat', async function(req, res) {
       console.log('ORÇAMENTO CHAT [' + tel + ']: base=R$' + orcamentoChat.total + ' cartão=R$' + orcamentoChat.cartao + ' pix=R$' + orcamentoChat.pix);
       await registrarLeadOrcamento(tel, null, orcamentoChat, 'chat', 'laboratorial');
     } else {
-      const servicoChat = calcularServico(msg);
-      if (servicoChat) {
-        console.log('SERVIÇO CHAT [' + tel + ']: ' + servicoChat.item + ' = R$' + servicoChat.valor);
-        await registrarLeadOrcamento(tel, null, { cartao: servicoChat.valor, pix: servicoChat.valor, encontrados: [servicoChat.item] }, 'chat', categorizarServico(servicoChat.item));
-        instrucoesExtraChat.push('VALOR CALCULADO PELO SISTEMA PARA ESTE SERVIÇO — USE ESTE VALOR EXATO: R$' + servicoChat.valor.toFixed(2) + '. NÃO aplique desconto de pix/dinheiro (essa regra é só para exames laboratoriais) — informe o MESMO valor para cartão e pix/dinheiro, sem mencionar percentual ou desconto.');
+      const servicosChat = calcularServicos(msg);
+      if (servicosChat.length > 0) {
+        const totalServicosChat = servicosChat.reduce(function(s, i) { return s + i.valor; }, 0);
+        console.log('SERVIÇO(S) CHAT [' + tel + ']: ' + servicosChat.map(function(i){return i.item + '=R$' + i.valor;}).join(', '));
+        await registrarLeadOrcamento(tel, null, { cartao: totalServicosChat, pix: totalServicosChat, encontrados: servicosChat.map(function(i){return i.item;}) }, 'chat', categorizarServico(servicosChat[0].item));
+        instrucoesExtraChat.push(montarInstrucaoServicos(servicosChat));
       }
     }
 
