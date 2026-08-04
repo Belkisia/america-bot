@@ -125,6 +125,12 @@ ANTI-DUPLICATA: aplica-se aos procedimentos também — se o histórico já conf
 ATENÇÃO — BIÓPSIA: a clínica NÃO faz coleta/procedimento de biópsia. Só realiza a ANÁLISE de uma amostra que o paciente já tenha coletado em outro lugar. Se o paciente perguntar sobre "coleta de biópsia" ou agendar a coleta em si, explique que isso não é feito aqui — só recebemos a amostra já coletada para análise.
 EXAMES CARDIOLÓGICOS: Holter 24h R$150 | MAPA 24h R$140 | Eletrocardiograma R$50.
 
+CHECK-UP PROMOCIONAIS (pacotes fechados, valor promocional fixo):
+- Check-up Mulher — R$450,00: Consulta com Ginecologista + retorno em 15 dias, Prevenção, e os exames laboratoriais Hemograma completo, Lipidograma, Glicemia, Ureia, Creatina, TSH, T4 Livre, TGO, TGP, FSH, LH, Ferro, Ferritina, Vitamina D, Vitamina B12, Rotina de urina, Urocultura + Antibiograma, Parasitológico de fezes.
+- Check-up Homem — R$330,00: Consulta com Clínico Geral + retorno em 15 dias, e os exames laboratoriais Hemograma completo, Lipidograma, Glicemia, Ureia, Creatina, TSH, T4 Livre, TGO, TGP, Testosterona Total, Ferro, Ferritina, Ácido Úrico, PSA Livre e Total, Vitamina D, Vitamina B12, Rotina de urina.
+Quando o paciente perguntar sobre "check-up mulher/feminino" ou "check-up homem/masculino" (valor, o que inclui, etc.), use o valor fixo do pacote — NUNCA calcule os exames individualmente nem aplique desconto de pix, o valor já é promocional e fechado.
+Para agendar o check-up: colete nome+nascimento e a data/período. O check-up Mulher usa a agenda de Ginecologia (já inclui a consulta), o check-up Homem usa a agenda de Clínico Geral.
+
 ATENÇÃO — SEXAGEM FETAL: nesta clínica, Sexagem Fetal é um EXAME DE SANGUE laboratorial (coleta de sangue materno), NÃO é ultrassom. NÃO trate como exame de imagem, NÃO aplique a agenda de ultrassom (sexta-feira) para ele. Ele segue a AGENDA DE COLETA LABORATORIAL normal (abaixo), disponível nos dias de coleta, não só sexta-feira. Valor: R$165,00, sem desconto no pix (mesmo valor no cartão e à vista).
 
 ATENÇÃO — BETA-HCG: valor R$50,00, SEM desconto no pix (mesmo valor no cartão e à vista) — igual à Sexagem Fetal. NUNCA aplique os 10% de desconto normal do laboratório nesse exame específico, mesmo se vier junto com outros exames que têm desconto.
@@ -1035,6 +1041,46 @@ const TABELA_SERVICOS = {
   'eletrocardiograma': 50,
 };
 
+// PACOTES PROMOCIONAIS DE CHECK-UP — preço fixo e fechado (não soma exame por exame, nem aplica
+// desconto de pix — o valor já é o promocional). Atualize aqui se o conteúdo/valor da promoção mudar.
+const PACOTES_CHECKUP = {
+  'mulher': {
+    nome: 'Check-up Mulher',
+    valor: 450,
+    itens: [
+      'Consulta com Ginecologista + retorno em 15 dias',
+      'Prevenção',
+      'Hemograma completo', 'Lipidograma', 'Glicemia', 'Ureia', 'Creatina',
+      'TSH', 'T4 Livre', 'TGO', 'TGP', 'FSH', 'LH',
+      'Ferro', 'Ferritina', 'Vitamina D', 'Vitamina B12',
+      'Rotina de urina', 'Urocultura + Antibiograma', 'Parasitológico de fezes',
+    ],
+  },
+  'homem': {
+    nome: 'Check-up Homem',
+    valor: 330,
+    itens: [
+      'Consulta com Clínico Geral + retorno em 15 dias',
+      'Hemograma completo', 'Lipidograma', 'Glicemia', 'Ureia', 'Creatina',
+      'TSH', 'T4 Livre', 'TGO', 'TGP', 'Testosterona Total',
+      'Ferro', 'Ferritina', 'Ácido Úrico', 'PSA Livre e Total', 'Vitamina D', 'Vitamina B12',
+      'Rotina de urina',
+    ],
+  },
+};
+function detectarPacoteCheckup(texto) {
+  const t = texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const mencionaCheckup = /check[\s-]?up/.test(t);
+  if (!mencionaCheckup) return null;
+  if (/mulher|feminino/.test(t)) return PACOTES_CHECKUP['mulher'];
+  if (/homem|masculino/.test(t)) return PACOTES_CHECKUP['homem'];
+  return null;
+}
+function montarInstrucaoPacoteCheckup(pacote) {
+  return 'PACOTE PROMOCIONAL DETECTADO — USE ESTE VALOR FIXO, NÃO calcule exame por exame nem aplique desconto de pix: ' +
+    pacote.nome + ' = R$' + pacote.valor.toFixed(2) + ' (mesmo valor no cartão e no pix/dinheiro). Itens inclusos: ' + pacote.itens.join(', ') + '.';
+}
+
 function calcularServicos(textoExames) {
   const txt = textoExames.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   let txtRestante = txt;
@@ -1429,13 +1475,19 @@ async function processarFila(num) {
         let hist = await db.buscarHistorico(num, 12);
         hist = hist.filter(function(m){return m.content && m.content.trim();});
         // Calcula orçamento no código usando a leitura da imagem
-        const orcamentoImg = calcularOrcamento(leitura);
+        const pacoteCheckupImg = detectarPacoteCheckup(leitura);
         const instrucoesExtraImg = [];
+        if (pacoteCheckupImg) {
+          instrucoesExtraImg.push(montarInstrucaoPacoteCheckup(pacoteCheckupImg));
+          console.log('PACOTE_CHECKUP IMAGEM [' + num + ']: ' + pacoteCheckupImg.nome + ' = R$' + pacoteCheckupImg.valor);
+          await registrarLeadOrcamento(num, null, { cartao: pacoteCheckupImg.valor, pix: pacoteCheckupImg.valor, encontrados: [pacoteCheckupImg.nome] }, 'whatsapp', 'consulta');
+        }
+        const orcamentoImg = pacoteCheckupImg ? null : calcularOrcamento(leitura);
         if (orcamentoImg && orcamentoImg.total > 0) {
           instrucoesExtraImg.push('ORÇAMENTO CALCULADO PELO SISTEMA — USE ESTES VALORES EXATOS: 💳 Cartão: R$' + orcamentoImg.cartao.toFixed(2) + ' | 💵 Pix/Dinheiro: R$' + orcamentoImg.pix.toFixed(2) + '. NÃO recalcule. NÃO modifique esses valores.');
           console.log('ORÇAMENTO IMAGEM [' + num + ']: base=R$' + orcamentoImg.total + ' cartão=R$' + orcamentoImg.cartao.toFixed(2) + ' — EXAMES ENCONTRADOS: ' + JSON.stringify(orcamentoImg.encontrados));
           await registrarLeadOrcamento(num, null, orcamentoImg, 'whatsapp', 'laboratorial');
-        } else {
+        } else if (!pacoteCheckupImg) {
           const servicosImg = calcularServicos(leitura);
           if (servicosImg.length > 0) {
             const totalServicosImg = servicosImg.reduce(function(s, i) { return s + i.valor; }, 0);
@@ -1498,8 +1550,17 @@ async function processarFila(num) {
 
     const instrucoesExtra = [];
 
+    // Pacote promocional de check-up tem prioridade sobre o cálculo normal de exames —
+    // se detectado, NUNCA soma exame por exame, usa o valor fixo do pacote
+    const pacoteCheckup = detectarPacoteCheckup(txtCompleto);
+    if (pacoteCheckup) {
+      instrucoesExtra.push(montarInstrucaoPacoteCheckup(pacoteCheckup));
+      console.log('PACOTE_CHECKUP [' + num + ']: ' + pacoteCheckup.nome + ' = R$' + pacoteCheckup.valor);
+      await registrarLeadOrcamento(num, null, { cartao: pacoteCheckup.valor, pix: pacoteCheckup.valor, encontrados: [pacoteCheckup.nome] }, 'whatsapp', 'consulta');
+    }
+
     // Calcula orçamento no código se a mensagem contém exames
-    const orcamento = (!MODO_TESTE_LAB || NUMEROS_TESTE_LAB.includes(num)) ? calcularOrcamento(txtCompleto) : null;
+    const orcamento = (pacoteCheckup || (MODO_TESTE_LAB && !NUMEROS_TESTE_LAB.includes(num))) ? null : calcularOrcamento(txtCompleto);
     if (orcamento && orcamento.total > 0) {
       const infoOrcamento = 'ORÇAMENTO CALCULADO PELO SISTEMA — USE ESTES VALORES EXATOS: ' +
         '💳 Cartão: R$' + orcamento.cartao.toFixed(2) + ' | ' +
@@ -1508,7 +1569,7 @@ async function processarFila(num) {
       instrucoesExtra.push(infoOrcamento);
       console.log('ORÇAMENTO [' + num + ']: base=R$' + orcamento.total + ' cartão=R$' + orcamento.cartao + ' pix=R$' + orcamento.pix);
       await registrarLeadOrcamento(num, null, orcamento, 'whatsapp', 'laboratorial');
-    } else {
+    } else if (!pacoteCheckup) {
       // Não é exame de laboratório — verifica se é ultrassom/consulta/procedimento, para o funil de vendas
       const servicos = calcularServicos(txtCompleto);
       if (servicos.length > 0) {
@@ -1743,8 +1804,16 @@ app.post('/api/chat', async function(req, res) {
     if (!hist.length || hist[hist.length-1].role !== 'user') hist.push({ role: 'user', content: msg });
 
     const instrucoesExtraChat = [];
+
+    // Pacote promocional de check-up tem prioridade sobre o cálculo normal de exames
+    const pacoteCheckupChat = detectarPacoteCheckup(msg);
+    if (pacoteCheckupChat) {
+      instrucoesExtraChat.push(montarInstrucaoPacoteCheckup(pacoteCheckupChat));
+      console.log('PACOTE_CHECKUP CHAT [' + tel + ']: ' + pacoteCheckupChat.nome + ' = R$' + pacoteCheckupChat.valor);
+      await registrarLeadOrcamento(tel, null, { cartao: pacoteCheckupChat.valor, pix: pacoteCheckupChat.valor, encontrados: [pacoteCheckupChat.nome] }, 'chat', 'consulta');
+    }
     // Calcula orçamento no código (mesmo comportamento do fluxo de WhatsApp) — NUNCA deixa a IA calcular de cabeça
-    const orcamentoChat = calcularOrcamento(msg);
+    const orcamentoChat = pacoteCheckupChat ? null : calcularOrcamento(msg);
     if (orcamentoChat && orcamentoChat.total > 0) {
       instrucoesExtraChat.push('ORÇAMENTO CALCULADO PELO SISTEMA — USE ESTES VALORES EXATOS: ' +
         '💳 Cartão: R$' + orcamentoChat.cartao.toFixed(2) + ' | ' +
@@ -1752,7 +1821,7 @@ app.post('/api/chat', async function(req, res) {
         'NÃO recalcule. Use estes valores exatos na resposta.');
       console.log('ORÇAMENTO CHAT [' + tel + ']: base=R$' + orcamentoChat.total + ' cartão=R$' + orcamentoChat.cartao + ' pix=R$' + orcamentoChat.pix);
       await registrarLeadOrcamento(tel, null, orcamentoChat, 'chat', 'laboratorial');
-    } else {
+    } else if (!pacoteCheckupChat) {
       const servicosChat = calcularServicos(msg);
       if (servicosChat.length > 0) {
         const totalServicosChat = servicosChat.reduce(function(s, i) { return s + i.valor; }, 0);
