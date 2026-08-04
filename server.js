@@ -128,8 +128,11 @@ EXAMES CARDIOLÓGICOS: Holter 24h R$150 | MAPA 24h R$140 | Eletrocardiograma R$5
 CHECK-UP PROMOCIONAIS (pacotes fechados, valor promocional fixo):
 - Check-up Mulher — R$450,00: Consulta com Ginecologista + retorno em 15 dias, Prevenção, e os exames laboratoriais Hemograma completo, Lipidograma, Glicemia, Ureia, Creatina, TSH, T4 Livre, TGO, TGP, FSH, LH, Ferro, Ferritina, Vitamina D, Vitamina B12, Rotina de urina, Urocultura + Antibiograma, Parasitológico de fezes.
 - Check-up Homem — R$330,00: Consulta com Clínico Geral + retorno em 15 dias, e os exames laboratoriais Hemograma completo, Lipidograma, Glicemia, Ureia, Creatina, TSH, T4 Livre, TGO, TGP, Testosterona Total, Ferro, Ferritina, Ácido Úrico, PSA Livre e Total, Vitamina D, Vitamina B12, Rotina de urina.
-Quando o paciente perguntar sobre "check-up mulher/feminino" ou "check-up homem/masculino" (valor, o que inclui, etc.), use o valor fixo do pacote — NUNCA calcule os exames individualmente nem aplique desconto de pix, o valor já é promocional e fechado.
-Para agendar o check-up: colete nome+nascimento e a data/período. O check-up Mulher usa a agenda de Ginecologia (já inclui a consulta), o check-up Homem usa a agenda de Clínico Geral.
+- Check-up Infantil (ATÉ 3 anos) — R$220,00: Consulta com Pediatra + retorno em 15 dias, e os exames laboratoriais Hemograma completo, Glicemia, Ferro, Ferritina, Vitamina D, Vitamina B12, EAS/Urina, Parasitológico de fezes.
+- Check-up Infantil (ACIMA de 3 anos) — R$300,00: Consulta com Pediatra + retorno em 15 dias, e os exames laboratoriais Hemograma completo, Glicemia, Ureia, Creatinina, TSH, T4 Livre, Lipidograma, Ferro, Ferritina, Vitamina D, Vitamina B12, Rotina de urina, Parasitológico de fezes.
+Quando o paciente perguntar sobre "check-up mulher/feminino", "check-up homem/masculino" ou "check-up infantil" (valor, o que inclui, etc.), use o valor fixo do pacote — NUNCA calcule os exames individualmente nem aplique desconto de pix, o valor já é promocional e fechado.
+ATENÇÃO — CHECK-UP INFANTIL TEM 2 VERSÕES DIFERENTES: se o paciente perguntar sobre check-up infantil SEM informar a idade da criança, NÃO adivinhe qual dos dois pacotes usar — pergunte a idade primeiro (ex: "Claro! Só preciso saber a idade da criança pra te passar o valor certinho, já que temos uma versão até 3 anos e outra acima de 3 anos 😊"). Só informe o valor depois de saber a idade.
+Para agendar o check-up: colete nome+nascimento e a data/período. O check-up Mulher usa a agenda de Ginecologia, o check-up Homem e o Infantil usam a agenda de Clínico Geral/Pediatria (já incluem a consulta).
 
 ATENÇÃO — SEXAGEM FETAL: nesta clínica, Sexagem Fetal é um EXAME DE SANGUE laboratorial (coleta de sangue materno), NÃO é ultrassom. NÃO trate como exame de imagem, NÃO aplique a agenda de ultrassom (sexta-feira) para ele. Ele segue a AGENDA DE COLETA LABORATORIAL normal (abaixo), disponível nos dias de coleta, não só sexta-feira. Valor: R$165,00, sem desconto no pix (mesmo valor no cartão e à vista).
 
@@ -1067,6 +1070,24 @@ const PACOTES_CHECKUP = {
       'Rotina de urina',
     ],
   },
+  'infantil_ate3': {
+    nome: 'Check-up Infantil (até 3 anos)',
+    valor: 220,
+    itens: [
+      'Consulta com Pediatra + retorno em 15 dias',
+      'Hemograma completo', 'Glicemia', 'Ferro', 'Ferritina', 'Vitamina D', 'Vitamina B12',
+      'EAS/Urina', 'Parasitológico de fezes',
+    ],
+  },
+  'infantil_mais3': {
+    nome: 'Check-up Infantil (acima de 3 anos)',
+    valor: 300,
+    itens: [
+      'Consulta com Pediatra + retorno em 15 dias',
+      'Hemograma completo', 'Glicemia', 'Ureia', 'Creatinina', 'TSH', 'T4 Livre', 'Lipidograma',
+      'Ferro', 'Ferritina', 'Vitamina D', 'Vitamina B12', 'Rotina de urina', 'Parasitológico de fezes',
+    ],
+  },
 };
 function detectarPacoteCheckup(texto) {
   const t = texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -1074,7 +1095,25 @@ function detectarPacoteCheckup(texto) {
   if (!mencionaCheckup) return null;
   if (/mulher|feminino/.test(t)) return PACOTES_CHECKUP['mulher'];
   if (/homem|masculino/.test(t)) return PACOTES_CHECKUP['homem'];
+  if (/infantil|crianca|filho|filha|bebe/.test(t)) {
+    const idadeMatch = t.match(/(\d{1,2})\s*ano/);
+    if (idadeMatch) {
+      const idade = parseInt(idadeMatch[1], 10);
+      return idade >= 3 ? PACOTES_CHECKUP['infantil_mais3'] : PACOTES_CHECKUP['infantil_ate3'];
+    }
+    if (/maior de 3|acima de 3|mais de 3|>\s*3/.test(t)) return PACOTES_CHECKUP['infantil_mais3'];
+    if (/menor de 3|abaixo de 3|menos de 3|<\s*3/.test(t)) return PACOTES_CHECKUP['infantil_ate3'];
+    return null; // menciona check-up infantil mas não deu a idade — ambíguo, não adivinha
+  }
   return null;
+}
+// Detecta quando o paciente perguntou sobre check-up infantil mas não deu idade suficiente pra
+// saber qual dos dois pacotes usar — usado pra instruir a IA a perguntar a idade antes de cotar
+function mencionaCheckupInfantilSemIdade(texto) {
+  const t = texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const mencionaCheckup = /check[\s-]?up/.test(t);
+  const mencionaInfantil = /infantil|crianca|filho|filha|bebe/.test(t);
+  return mencionaCheckup && mencionaInfantil && !detectarPacoteCheckup(texto);
 }
 function montarInstrucaoPacoteCheckup(pacote) {
   return 'PACOTE PROMOCIONAL DETECTADO — USE ESTE VALOR FIXO, NÃO calcule exame por exame nem aplique desconto de pix: ' +
@@ -1557,6 +1596,9 @@ async function processarFila(num) {
       instrucoesExtra.push(montarInstrucaoPacoteCheckup(pacoteCheckup));
       console.log('PACOTE_CHECKUP [' + num + ']: ' + pacoteCheckup.nome + ' = R$' + pacoteCheckup.valor);
       await registrarLeadOrcamento(num, null, { cartao: pacoteCheckup.valor, pix: pacoteCheckup.valor, encontrados: [pacoteCheckup.nome] }, 'whatsapp', 'consulta');
+    } else if (mencionaCheckupInfantilSemIdade(txtCompleto)) {
+      instrucoesExtra.push('O paciente perguntou sobre o check-up infantil mas não informou a idade da criança. NÃO informe nenhum valor ainda — pergunte a idade primeiro, já que existem duas versões do pacote (até 3 anos R$220 e acima de 3 anos R$300).');
+      console.log('CHECKUP_INFANTIL_SEM_IDADE [' + num + ']');
     }
 
     // Calcula orçamento no código se a mensagem contém exames
@@ -1811,6 +1853,9 @@ app.post('/api/chat', async function(req, res) {
       instrucoesExtraChat.push(montarInstrucaoPacoteCheckup(pacoteCheckupChat));
       console.log('PACOTE_CHECKUP CHAT [' + tel + ']: ' + pacoteCheckupChat.nome + ' = R$' + pacoteCheckupChat.valor);
       await registrarLeadOrcamento(tel, null, { cartao: pacoteCheckupChat.valor, pix: pacoteCheckupChat.valor, encontrados: [pacoteCheckupChat.nome] }, 'chat', 'consulta');
+    } else if (mencionaCheckupInfantilSemIdade(msg)) {
+      instrucoesExtraChat.push('O paciente perguntou sobre o check-up infantil mas não informou a idade da criança. NÃO informe nenhum valor ainda — pergunte a idade primeiro, já que existem duas versões do pacote (até 3 anos R$220 e acima de 3 anos R$300).');
+      console.log('CHECKUP_INFANTIL_SEM_IDADE CHAT [' + tel + ']');
     }
     // Calcula orçamento no código (mesmo comportamento do fluxo de WhatsApp) — NUNCA deixa a IA calcular de cabeça
     const orcamentoChat = pacoteCheckupChat ? null : calcularOrcamento(msg);
