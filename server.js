@@ -1669,13 +1669,14 @@ async function processarFila(num) {
     // Verifica se tem todos os dados para agendar automaticamente
     const temTudo = estadoAtual.especialidade && estadoAtual.nome && estadoAtual.nascimento && estadoAtual.periodo;
 
-    // Proteção contra loop de reconfirmação: se o estado ficou "preso" com temTudo=true (ex: por uma
-    // falha anterior em limpar o estado após o agendamento já ter sido concluído), NUNCA force um novo
-    // [AGENDAR] sem antes checar se esse agendamento JÁ existe. Sem essa checagem, QUALQUER mensagem
-    // futura do paciente (até um simples "boa noite") reacionaria o fluxo de auto-agendamento e reenviaria
-    // a confirmação repetidamente, para sempre, até alguém rodar #cma manualmente.
+    // Proteção contra loop de reconfirmação/reperguntas: se o estado ficou "preso" com uma especialidade
+    // definida (ex: por uma falha anterior em limpar o estado após o agendamento já ter sido concluído),
+    // NUNCA force um novo [AGENDAR] nem peça dados de novo sem antes checar se esse agendamento JÁ existe.
+    // Sem essa checagem, QUALQUER mensagem futura do paciente (até um simples "oi") reacionaria o fluxo
+    // de agendamento e pediria dados ou reenviaria a confirmação repetidamente, para sempre, até alguém
+    // rodar #cma manualmente. Isso vale tanto quando já tem todos os dados quanto quando falta alguma coisa.
     let jaAgendadoAnteriormente = false;
-    if (temTudo) {
+    if (estadoAtual.especialidade) {
       const { data: agendamentoExistente } = await db.supabase.from('agendamentos')
         .select('id')
         .eq('telefone', num)
@@ -1689,21 +1690,21 @@ async function processarFila(num) {
         await limparEstado(num);
         estadoAtual.especialidade = null; estadoAtual.nome = null; estadoAtual.nascimento = null;
         estadoAtual.periodo = null; estadoAtual.dataEscolhida = null;
-        console.log('ESTADO_PRESO_CORRIGIDO [' + num + ']: agendamento de ' + especialidadeAntiga + ' já existia, estado limpo sem reenviar confirmação');
+        console.log('ESTADO_PRESO_CORRIGIDO [' + num + ']: agendamento de ' + especialidadeAntiga + ' já existia, estado limpo sem reenviar confirmação ou repetir pergunta');
       }
     }
 
     if (temTudo && !jaAgendadoAnteriormente) {
       instrucoesExtra.push('DADOS COLETADOS - FINALIZE O AGENDAMENTO: nome=' + estadoAtual.nome + ' | nascimento=' + estadoAtual.nascimento + ' | especialidade=' + estadoAtual.especialidade + ' | periodo=' + estadoAtual.periodo + '. Gere a tag [AGENDAR:nome=' + estadoAtual.nome + '|nascimento=' + estadoAtual.nascimento + '|especialidade=' + estadoAtual.especialidade + '|convenio=particular|periodo=' + estadoAtual.periodo + '] e confirme com a mensagem de sucesso.');
       console.log('AUTO-AGENDAR [' + num + ']:', estadoAtual.especialidade, estadoAtual.nome, estadoAtual.nascimento, estadoAtual.periodo);
-    } else if (estadoAtual.especialidade && estadoAtual.periodo) {
+    } else if (!jaAgendadoAnteriormente && estadoAtual.especialidade && estadoAtual.periodo) {
       // Tem especialidade e período — só falta nome/nascimento
       const faltaNome = !estadoAtual.nome;
       const faltaNasc = !estadoAtual.nascimento;
       const oque = faltaNome && faltaNasc ? 'nome completo e data de nascimento juntos (ex: João Silva 15/03/1990)' : faltaNome ? 'nome completo' : 'data de nascimento';
       instrucoesExtra.push('INSTRUÇÃO: Especialidade=' + estadoAtual.especialidade + ', período=' + estadoAtual.periodo + (estadoAtual.dataEscolhida ? ', data=' + estadoAtual.dataEscolhida : '') + '. NÃO pergunte especialidade, data ou período. APENAS peça: ' + oque + '.');
       console.log('PEDIR_DADOS [' + num + ']: falta=' + oque);
-    } else if (estadoAtual.especialidade) {
+    } else if (!jaAgendadoAnteriormente && estadoAtual.especialidade) {
       instrucoesExtra.push('LEMBRETE: Especialidade já definida: ' + estadoAtual.especialidade + '. NÃO pergunte especialidade.' + (estadoAtual.periodo ? ' Período: ' + estadoAtual.periodo + '.' : '') + (estadoAtual.dataEscolhida ? ' Data: ' + estadoAtual.dataEscolhida + '.' : ''));
       console.log('LEMBRETE [' + num + ']: esp=' + estadoAtual.especialidade);
     }
