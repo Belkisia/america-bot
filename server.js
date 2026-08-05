@@ -22,6 +22,7 @@ const NUMEROS_IGNORAR = [
   '5562984463157',
   '5562996092636',
   '5562984271335', // Dr. Wilder — retirado da lista de números de teste
+  '5562992969719',
 ];
 
 // Normaliza telefone para comparação: remove tudo que não é dígito e tira o "9" extra
