@@ -86,9 +86,9 @@ AGENDA MÉDICOS
 • Endocrinologia: 04/08 das 14h00–17h00 — SOMENTE TARDE
 • Ginecologia: 10/08 e 24/08 das 14h30–17h30 — SOMENTE TARDE
 • Clínico Geral/Pediatria — datas específicas (cada uma com seu horário):
-  - 03/08 (segunda): manhã 09h00–10h30 e tarde 16h00–17h00
-  - 04/08 (terça): manhã 09h00–11h15 (sem tarde)
-  - 06/08 (quinta): manhã 09h00–11h15 e tarde 14h00–17h00
+  - 10/08 (segunda): manhã 09h00–10h30 e tarde 16h00–17h00
+  - 13/08 (quinta): manhã 09h00–11h30 e tarde 14h00–17h00
+  - 14/08 (sexta): manhã 09h00–11h00 (sem tarde)
 
 REGRA DE DATAS: Compare cada data com a DATA ATUAL do prompt. Mostre SOMENTE datas futuras. Cada data tem horário diferente — informe corretamente conforme a agenda acima. Se TODAS passaram: informe que não há agenda disponível no momento.
 
@@ -97,10 +97,9 @@ PERÍODO: Para Clínico Geral/Pediatria, mostre as datas futuras disponíveis e 
 ULTRASSOM
 Não é especialidade — é exame. Colete: nome, nascimento, qual exame.
 Tag: [AGENDAR:nome=X|nascimento=X|especialidade=Ultrassom|convenio=particular|periodo=manha|data=DD/MM/AAAA]
-Dias disponíveis: TERÇA, 14h00–16h00 (tarde), e SEXTA, 07h30–09h45 (manhã) e 17h00–18h00 (tarde) — TODOS os exames de ultrassom são feitos nesses dias.
-ATENÇÃO — RESTRIÇÃO DE HORÁRIO PARA QUADRIL/JOELHO/TORNOZELO/PÉS: esses exames NÃO são feitos no horário de sexta-feira das 17h às 18h. Podem ser agendados normalmente na terça (14h-16h) ou na sexta de manhã (07h30-09h45). Se o paciente pedir um desses exames especificamente para sexta às 17h-18h, informe que nesse horário não é possível e ofereça terça ou sexta de manhã como alternativa.
+Dias disponíveis: TERÇA, 14h00–15h30 (tarde), e SEXTA, 07h30–09h45 (manhã) e 17h00–18h00 (tarde) — TODOS os exames de ultrassom são feitos nesses dias.
+ATENÇÃO — RESTRIÇÃO DE HORÁRIO PARA QUADRIL/JOELHO/TORNOZELO/PÉS: esses exames NÃO são feitos no horário de sexta-feira das 17h às 18h. Podem ser agendados normalmente na terça (14h-15h30) ou na sexta de manhã (07h30-09h45). Se o paciente pedir um desses exames especificamente para sexta às 17h-18h, informe que nesse horário não é possível e ofereça terça ou sexta de manhã como alternativa.
 ATENÇÃO — IDADE MÍNIMA PARA ULTRASSOM DE PÉS: só é feito a partir de 7 anos de idade. Se o paciente pedir ultrassom de pés para uma criança menor de 7 anos, informe claramente que não é possível nessa idade.
-ATENÇÃO — EXCEÇÃO PONTUAL PARA TERÇA-FEIRA 04/08: nesse dia específico (só esse dia, não vale pras demais terças), o horário é reduzido para 13h30–15h00 (em vez do horário normal de terça 14h-16h), e SOMENTE estes exames são feitos: Tireoide, Tireoide com Doppler, Mamas, Axilas, Abdome Total, Abdome Superior, Vias Urinárias, Próstata, Transvaginal/Endovaginal, Obstétrica. Se o paciente pedir para o dia 04/08 um exame de ultrassom que NÃO está nessa lista, informe que nesse dia específico não é possível fazer esse exame e ofereça outra data (outra terça ou sexta, com a agenda normal). Nas demais terças e sextas, a agenda normal de ultrassom continua valendo (todos os exames, horário padrão) — essa restrição é EXCLUSIVA do dia 04/08.
 MORFOLÓGICO: 1ºTri=11–13sem6d(R$230) | 2ºTri=20–23sem6d(R$280) | 3ºTri=32–34sem6d.
 REGRA CRÍTICA MORFOLÓGICO: se o paciente responder diretamente "1º trimestre", "1 trimestre", "primeiro trimestre", "2º trimestre", "segundo trimestre" (sem informar semanas exatas), ACEITE essa resposta como suficiente para identificar qual exame ele quer. NÃO peça semanas exatas de novo — isso já responde qual dos dois exames é. Prossiga direto para confirmar e pedir nome+nascimento. Só peça semanas exatas se o paciente não souber dizer o trimestre.
 
@@ -218,6 +217,7 @@ REGRAS FINAIS
 - UMA única mensagem por resposta. Máximo 3 parágrafos. Sem markdown #.
 - Nome+nascimento: pergunte juntos, extraia juntos.
 - CAMPO "data" NA TAG [AGENDAR:...]: SEMPRE preencha com a data exata confirmada (DD/MM/AAAA), a MESMA data que você está mostrando na mensagem de confirmação ao paciente. Esse campo é usado pelo sistema para enviar lembretes automáticos antes da consulta — se vier errado ou vazio, o paciente pode não receber o lembrete.
+- REGRA CRÍTICA — NUNCA CONFIRME SEM GERAR A TAG: toda vez que você enviar a mensagem "*Seu atendimento foi confirmado!* ✅", você DEVE gerar a tag [AGENDAR:...] JUNTO, na mesma resposta — nunca mande a mensagem de confirmação sozinha, sem a tag. Se você não tiver certeza de qual data usar, NÃO invente uma data nem escreva algo como "(aguarde a confirmação da secretaria sobre a data exata)" dentro da confirmação — isso NUNCA deve aparecer. A data mostrada ao paciente e a data no campo "data" da tag devem SEMPRE ser uma data real e definitiva, tirada diretamente do bloco AGENDA ATUAL. Se realmente não souber qual data usar, pergunte ao paciente antes de confirmar, em vez de confirmar com uma data incerta.
 - Ao confirmar um agendamento, use SEMPRE este formato estruturado (preencha com os dados reais da conversa — NUNCA invente horário exato, nome de médico ou consultório, pois o sistema não tem esses dados):
 "*Seu atendimento foi confirmado!* ✅
 📅 [dia da semana por extenso], [DD/MM/AAAA]
@@ -313,7 +313,7 @@ const TABELA_PRECOS = {
   'acido folico': 32,
   'folato': 32,
   'ácido fólico': 32,
-  'vitamina b12': 32, 'vit b12': 32,
+  'vitamina b12': 32, 'vit b12': 32, 'b12': 32,
   'vitamina d': 38, 'vit d': 38, 'vitamina d3': 38,
   'pth': 52.5, 'paratormonio': 52.5, 'pth, paratormonio': 52.5,
   'microalbuminuria': 21, 'microalbuminuria u24h': 21, 'microalbuminuria urina amostra isolada': 21,
@@ -433,6 +433,9 @@ const TABELA_PRECOS = {
   'sangue oculto nas fezes': 21,
   'pcr quantitativo': 23,
   'coagulograma': 37,
+  'troponina': 38,
+  'lipase': 13,
+  'amilase': 13,
   'tp': 13,
   'tempo de protrombina': 13,
   'tempo e atividade da protrombina': 13, 'tap': 13,
@@ -747,9 +750,9 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
       formatarLinhaAgenda('Ginecologia', AGENDA_ESPECIALIDADES['Ginecologia']),
       (function() {
         const AGENDA_CLINICO = [
-          { dia: 3, mes: 8, manha: '09h00–10h30', tarde: '16h00–17h00' },
-          { dia: 4, mes: 8, manha: '09h00–11h15', tarde: null },
-          { dia: 6, mes: 8, manha: '09h00–11h15', tarde: '14h00–17h00' },
+          { dia: 10, mes: 8, manha: '09h00–10h30', tarde: '16h00–17h00' },
+          { dia: 13, mes: 8, manha: '09h00–11h30', tarde: '14h00–17h00' },
+          { dia: 14, mes: 8, manha: '09h00–11h00', tarde: null },
         ];
         const disponiveis = AGENDA_CLINICO
           .filter(function (d) { return dataFutura(d.dia, d.mes); })
@@ -761,14 +764,12 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
         return '• Clínico Geral/Pediatria (datas específicas): ' + (disponiveis.length ? disponiveis.join(' | ') : 'sem agenda no momento');
       })(),
       (function() {
-        const horariosUSG = { 2: 'Terça: 14h00–16h00', 5: 'Sexta: 07h30–09h45 e 17h00–18h00' };
-        // Datas específicas canceladas (ex: feriado, imprevisto) — some daqui quando a data passar
-        const DATAS_BLOQUEADAS_USG = [{ dia: 28, mes: 7 }]; // Terça 28/07 — agenda cancelada
+        const horariosUSG = { 2: 'Terça: 14h00–15h30', 5: 'Sexta: 07h30–09h45 e 17h00–18h00' };
+        // Datas específicas canceladas (ex: feriado, imprevisto) — adicione aqui quando precisar
+        const DATAS_BLOQUEADAS_USG = [];
         const bloqueada = function(d) { return DATAS_BLOQUEADAS_USG.some(function(b){ return b.dia === d.getDate() && b.mes === d.getMonth()+1; }); };
-        // Datas com horário/exames excepcionais (só nesse dia específico) — some daqui quando a data passar
-        const HORARIOS_ESPECIAIS_USG = [
-          { dia: 4, mes: 8, texto: 'Terça: 13h30–15h00 (SOMENTE exames: Tireoide, Tireoide c/Doppler, Mamas, Axilas, Abdome Total, Abdome Superior, Vias Urinárias, Próstata, Transvaginal/Endovaginal, Obstétrica)' },
-        ];
+        // Datas com horário/exames excepcionais (só nesse dia específico) — adicione aqui quando precisar
+        const HORARIOS_ESPECIAIS_USG = [];
         const horarioEspecial = function(d) {
           const e = HORARIOS_ESPECIAIS_USG.find(function(h){ return h.dia === d.getDate() && h.mes === d.getMonth()+1; });
           return e ? e.texto : null;
@@ -1713,6 +1714,9 @@ async function processarFila(num) {
 
     const resp = await chamarIA(hist, instrucoesExtra.length ? instrucoesExtra.join('\n\n') : null);
     const ag = extrairAgendamento(resp);
+    if (!ag && /atendimento foi confirmado/i.test(resp)) {
+      console.error('ALERTA_CONFIRMACAO_SEM_TAG [' + num + ']: a resposta mostrou a mensagem de confirmação ao paciente, mas a tag [AGENDAR:...] não foi gerada ou não pôde ser lida — esse agendamento provavelmente NÃO foi salvo no banco. Resposta completa: ' + resp);
+    }
     if (ag) {
       const ontemISO = new Date(Date.now() - 24*60*60*1000).toISOString();
       const { data: jaExiste } = await db.supabase.from('agendamentos').select('id').eq('telefone', num).eq('especialidade', ag.especialidade).gte('created_at', ontemISO).limit(1);
