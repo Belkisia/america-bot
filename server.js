@@ -81,9 +81,9 @@ Somente particular. NUNCA pergunte convênio.
 ANTI-DUPLICATA: Se histórico já tem confirmação da mesma especialidade, NÃO gere [AGENDAR] de novo.
 
 AGENDA MÉDICOS
-• Psiquiatria: 21/08 das 13h30–17h00 — SOMENTE TARDE
+• Psiquiatria: 03/09 e 17/09 das 13h30–17h00 — SOMENTE TARDE
 • Otorrinolaringologia: 10/08 das 08h30–11h00 — SOMENTE MANHÃ
-• Endocrinologia: 04/08 das 14h00–17h00 — SOMENTE TARDE
+• Endocrinologia: 18/08 das 13h30–16h00 — SOMENTE TARDE
 • Ginecologia: 10/08 e 24/08 das 14h30–17h30 — SOMENTE TARDE
 • Clínico Geral/Pediatria — datas específicas (cada uma com seu horário):
   - 10/08 (segunda): manhã 09h00–10h30 e tarde 16h00–17h00
@@ -105,6 +105,7 @@ REGRA CRÍTICA MORFOLÓGICO: se o paciente responder diretamente "1º trimestre"
 
 REGRA DE COMUNICAÇÃO — RESTRIÇÕES DE AGENDA: ao informar que um exame não está disponível em determinado dia/horário (restrição de exceção pontual, restrição de horário, restrição de idade etc.), seja DIRETO e SIMPLES. NÃO explique o motivo interno da restrição, NÃO liste as exceções da agenda ou por que outro dia/horário não funciona. Vá direto à informação útil: qual dia e horário ESTÁ disponível para esse exame.
 REGRA GERAL — NÃO JUSTIFIQUE REGRAS INTERNAS AO PACIENTE: isso vale pra qualquer situação, não só agenda — preços especiais, exceções de desconto, regras de cálculo etc. são informações internas do sistema pra você usar no cálculo, NUNCA algo pra explicar ou justificar na resposta. Informe só o resultado final (valor, data, disponibilidade) de forma direta e natural, como faria qualquer atendente experiente — sem "porque", sem citar regra, sem soar como se estivesse lendo um manual interno.
+Exemplo: se uma data que já foi oferecida antes some da agenda (porque lotou, foi cancelada etc.), NUNCA diga "essa data está lotada" ou explique o motivo — apenas informe as próximas datas disponíveis normalmente, como se fossem as únicas opções.
 Exemplo CORRETO: "Esse exame temos disponível na sexta-feira, 07/08, pela manhã (07h30–09h45). Posso já reservar para você?"
 Exemplo a EVITAR (não faça isso): "Para esse exame, no dia X infelizmente não é possível, pois esse dia tem uma lista restrita de exames que não inclui esse. E no horário Y também não atende esse exame, mas no horário Z funciona perfeitamente..."
 
@@ -712,9 +713,9 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
 
     // Agenda com suporte a múltiplas datas por especialidade — filtra automaticamente as que já passaram
     const AGENDA_ESPECIALIDADES = {
-      'Psiquiatria': { horario: '13h30–17h00', periodo: 'SOMENTE TARDE', datas: [{dia:21,mes:8}] },
+      'Psiquiatria': { horario: '13h30–17h00', periodo: 'SOMENTE TARDE', datas: [{dia:3,mes:9},{dia:17,mes:9}] },
       'Otorrinolaringologia': { horario: '08h30–11h00', periodo: 'SOMENTE MANHÃ', datas: [{dia:10,mes:8}] },
-      'Endocrinologia': { horario: '14h00–17h00', periodo: 'SOMENTE TARDE', datas: [{dia:4,mes:8}] },
+      'Endocrinologia': { horario: '13h30–16h00', periodo: 'SOMENTE TARDE', datas: [{dia:18,mes:8}] },
       'Ginecologia': { horario: '14h30–17h30', periodo: 'SOMENTE TARDE', datas: [{dia:10,mes:8},{dia:24,mes:8}] },
     };
     function formatarListaDatas(lista) {
