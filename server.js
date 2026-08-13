@@ -1319,65 +1319,108 @@ async function executarFollowUpVendas(forcar) {
   }
 }
 
-// LEMBRETES AUTOMÁTICOS DE CONSULTA/EXAME — 2 dias antes e no dia do agendamento
-// Roda periodicamente (a cada ~1h), mas só envia de fato quando a data bater e ainda não tiver
-// sido enviado (marcado em lembrete_2dias_enviado_em / lembrete_dia_enviado_em) — por isso pode
-// rodar com frequência sem risco de mandar duplicado.
+// LEMBRETES AUTOMÁTICOS DE CONSULTA/EXAME — 3 dias antes, 1 dia antes e 2 horas antes do agendamento,
+// sempre PEDINDO CONFIRMAÇÃO de presença (não é só aviso informativo).
+// Roda periodicamente, mas só envia de fato quando o horário bater e ainda não tiver sido enviado
+// (marcado em lembrete_3dias_enviado_em / lembrete_1dia_enviado_em / lembrete_2h_enviado_em) — por
+// isso pode rodar com frequência sem risco de mandar duplicado.
+//
+// LIMITAÇÃO IMPORTANTE: o sistema só sabe o PERÍODO do agendamento (manhã/tarde), não um horário
+// exato por paciente — é assim que a agenda funciona hoje (vários pacientes no mesmo período). Por
+// isso o lembrete de "2 horas antes" usa uma ESTIMATIVA do horário de início de cada especialidade/
+// período (tabela HORARIO_INICIO_ESTIMADO abaixo), não o horário exato daquele paciente específico.
+const HORARIO_INICIO_ESTIMADO = {
+  'Psiquiatria': { tarde: '13:30' },
+  'Endocrinologia': { tarde: '13:30' },
+  'Ginecologia': { tarde: '14:30' },
+  'Otorrinolaringologia': { manha: '08:30' },
+  'Clínico Geral': { manha: '09:00', tarde: '14:00' },
+  'Pediatria': { manha: '09:00', tarde: '14:00' },
+  'Ultrassom': { manha: '07:30', tarde: '14:00' },
+  'Coleta Laboratorial': { manha: '07:00' },
+  'Holter/MAPA': { manha: '08:00', tarde: '13:00' },
+  'Eletrocardiograma': { manha: '10:00', tarde: '13:30' },
+};
+function estimarInicioAgendamento(ag) {
+  // Retorna um objeto Date estimando o horário de início, ou null se não der pra estimar
+  if (!ag.data_agendamento) return null;
+  const cfg = HORARIO_INICIO_ESTIMADO[ag.especialidade];
+  const horaStr = cfg && ag.periodo && cfg[ag.periodo] ? cfg[ag.periodo] : (ag.periodo === 'tarde' ? '14:00' : '08:00');
+  const [h, m] = horaStr.split(':').map(Number);
+  const d = new Date(ag.data_agendamento + 'T00:00:00-03:00');
+  d.setHours(h, m, 0, 0);
+  return d;
+}
+function nomeEspecialidadeLembrete(esp) {
+  const mapa = { 'Coleta Laboratorial': 'sua coleta de exames', 'Ultrassom': 'seu ultrassom',
+    'Holter/MAPA': 'seu exame (Holter/MAPA)', 'Eletrocardiograma': 'seu eletrocardiograma' };
+  return mapa[esp] || ('sua consulta de ' + esp);
+}
+function montarMensagemConfirmacaoPresenca(ag, quandoTexto) {
+  const primeiroNome = ag.nome_paciente ? ag.nome_paciente.split(' ')[0] : '';
+  const dataFormatada = ag.data_agendamento ? new Date(ag.data_agendamento + 'T00:00:00').toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long', day: '2-digit', month: '2-digit' }) : '';
+  return (primeiroNome ? 'Oi, ' + primeiroNome + '! 😊' : 'Oi! 😊') +
+    ' Passando pra confirmar: ' + quandoTexto + ' é ' + nomeEspecialidadeLembrete(ag.especialidade) +
+    (dataFormatada ? ', dia ' + dataFormatada : '') + (ag.periodo ? ' (período da ' + ag.periodo + ')' : '') + '.\n\n' +
+    'Você confirma presença? Responde aqui *SIM* pra confirmar, ou me avisa se precisar remarcar ou cancelar. 💙';
+}
+
 async function executarLembretesConsulta() {
   try {
-    const hojeBR = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-    hojeBR.setHours(0, 0, 0, 0);
-    const hojeISO = hojeBR.toISOString().slice(0, 10);
-    const daqui2Dias = new Date(hojeBR); daqui2Dias.setDate(daqui2Dias.getDate() + 2);
-    const daqui2DiasISO = daqui2Dias.toISOString().slice(0, 10);
+    const agoraBR = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    const hojeBR = new Date(agoraBR); hojeBR.setHours(0, 0, 0, 0);
 
-    const nomesEspecialidade = function(esp) {
-      // Nome mais natural pra usar na frase do lembrete
-      const mapa = { 'Coleta Laboratorial': 'sua coleta de exames', 'Ultrassom': 'seu ultrassom',
-        'Holter/MAPA': 'seu exame (Holter/MAPA)', 'Eletrocardiograma': 'seu eletrocardiograma' };
-      return mapa[esp] || ('sua consulta de ' + esp);
-    };
+    const daqui3Dias = new Date(hojeBR); daqui3Dias.setDate(daqui3Dias.getDate() + 3);
+    const daqui3DiasISO = daqui3Dias.toISOString().slice(0, 10);
+    const daqui1Dia = new Date(hojeBR); daqui1Dia.setDate(daqui1Dia.getDate() + 1);
+    const daqui1DiaISO = daqui1Dia.toISOString().slice(0, 10);
 
-    // Lembrete de 2 dias antes
-    const { data: lembrar2Dias } = await db.supabase.from('agendamentos')
-      .select('*')
-      .in('status', ['pendente', 'confirmado'])
-      .eq('data_agendamento', daqui2DiasISO)
-      .is('lembrete_2dias_enviado_em', null);
-
-    for (const ag of (lembrar2Dias || [])) {
-      if (!ag.telefone || numeroEstaIgnorado(ag.telefone)) continue;
-      if (await emAtendimentoHumano(ag.telefone)) continue;
-      const primeiroNome = ag.nome_paciente ? ag.nome_paciente.split(' ')[0] : '';
-      const dataFormatada = new Date(ag.data_agendamento + 'T00:00:00').toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long', day: '2-digit', month: '2-digit' });
-      const msg = (primeiroNome ? 'Oi, ' + primeiroNome + '! 😊' : 'Oi! 😊') +
-        ' Passando pra lembrar que ' + nomesEspecialidade(ag.especialidade) + ' está agendado(a) para ' +
-        dataFormatada + (ag.periodo ? ', período da ' + ag.periodo : '') + '. Te esperamos aqui no Centro Médico América! 💙\n\n' +
-        'Se não conseguir vir, é só me avisar por aqui que eu já ajusto.';
-      await enviar(ag.telefone, msg);
-      await db.supabase.from('agendamentos').update({ lembrete_2dias_enviado_em: new Date().toISOString() }).eq('id', ag.id);
-      console.log('LEMBRETE_2DIAS: enviado para ' + ag.telefone + ' (' + ag.especialidade + ', ' + ag.data_agendamento + ')');
-      await new Promise(function(r) { setTimeout(r, 5000); });
+    async function processarLote(dataISO, campoEnviado, quandoTexto) {
+      const { data: lote } = await db.supabase.from('agendamentos')
+        .select('*')
+        .in('status', ['pendente', 'confirmado'])
+        .eq('data_agendamento', dataISO)
+        .is(campoEnviado, null);
+      for (const ag of (lote || [])) {
+        if (!ag.telefone || numeroEstaIgnorado(ag.telefone)) continue;
+        if (await emAtendimentoHumano(ag.telefone)) continue;
+        const msg = montarMensagemConfirmacaoPresenca(ag, quandoTexto);
+        await enviar(ag.telefone, msg);
+        await db.supabase.from('agendamentos').update({ [campoEnviado]: new Date().toISOString() }).eq('id', ag.id);
+        console.log('LEMBRETE (' + campoEnviado + '): enviado para ' + ag.telefone + ' (' + ag.especialidade + ', ' + ag.data_agendamento + ')');
+        await new Promise(function(r) { setTimeout(r, 5000); });
+      }
     }
 
-    // Lembrete no dia
-    const { data: lembrarHoje } = await db.supabase.from('agendamentos')
+    // 3 dias antes e 1 dia antes — checagem por data (dia inteiro)
+    await processarLote(daqui3DiasISO, 'lembrete_3dias_enviado_em', 'daqui a 3 dias');
+    await processarLote(daqui1DiaISO, 'lembrete_1dia_enviado_em', 'amanhã');
+
+    // 2 horas antes — precisa checar por horário estimado, não só pela data. Busca todos os
+    // agendamentos de hoje ou amanhã ainda sem esse lembrete, e filtra pelos que caem na janela.
+    const amanhaISO = daqui1DiaISO;
+    const hojeISO = hojeBR.toISOString().slice(0, 10);
+    const { data: candidatos2h } = await db.supabase.from('agendamentos')
       .select('*')
       .in('status', ['pendente', 'confirmado'])
-      .eq('data_agendamento', hojeISO)
-      .is('lembrete_dia_enviado_em', null);
+      .in('data_agendamento', [hojeISO, amanhaISO])
+      .is('lembrete_2h_enviado_em', null);
 
-    for (const ag of (lembrarHoje || [])) {
-      if (!ag.telefone || numeroEstaIgnorado(ag.telefone)) continue;
-      if (await emAtendimentoHumano(ag.telefone)) continue;
-      const primeiroNome = ag.nome_paciente ? ag.nome_paciente.split(' ')[0] : '';
-      const msg = (primeiroNome ? 'Bom dia, ' + primeiroNome + '! 😊' : 'Bom dia! 😊') +
-        ' Hoje é o dia de ' + nomesEspecialidade(ag.especialidade) + (ag.periodo ? ', no período da ' + ag.periodo : '') + '. ' +
-        'Te esperamos no Centro Médico América — Av. Frei Miguelino, 247, Bairro Goiá, Goiânia-GO. Chegue com uns 20 minutinhos de antecedência, tá bom? 🌟';
-      await enviar(ag.telefone, msg);
-      await db.supabase.from('agendamentos').update({ lembrete_dia_enviado_em: new Date().toISOString() }).eq('id', ag.id);
-      console.log('LEMBRETE_DIA: enviado para ' + ag.telefone + ' (' + ag.especialidade + ', ' + ag.data_agendamento + ')');
-      await new Promise(function(r) { setTimeout(r, 5000); });
+    for (const ag of (candidatos2h || [])) {
+      const inicioEstimado = estimarInicioAgendamento(ag);
+      if (!inicioEstimado) continue;
+      const minutosParaInicio = (inicioEstimado - agoraBR) / (60 * 1000);
+      // Janela de disparo: entre 2h e 1h30min antes do horário estimado (a função roda a cada
+      // ~15-30min, então essa janela de 30min garante que o lembrete não seja perdido nem duplicado)
+      if (minutosParaInicio <= 120 && minutosParaInicio > 90) {
+        if (!ag.telefone || numeroEstaIgnorado(ag.telefone)) continue;
+        if (await emAtendimentoHumano(ag.telefone)) continue;
+        const msg = montarMensagemConfirmacaoPresenca(ag, 'daqui a pouco (em cerca de 2 horas)');
+        await enviar(ag.telefone, msg);
+        await db.supabase.from('agendamentos').update({ lembrete_2h_enviado_em: new Date().toISOString() }).eq('id', ag.id);
+        console.log('LEMBRETE (2h): enviado para ' + ag.telefone + ' (' + ag.especialidade + ', ' + ag.data_agendamento + ')');
+        await new Promise(function(r) { setTimeout(r, 5000); });
+      }
     }
   } catch(e) {
     console.error('ERRO executarLembretesConsulta:', e.message);
@@ -2096,6 +2139,6 @@ app.listen(PORT, function() {
   // Agente de vendas: roda a cada 1 hora, verifica se tem leads pra contatar (respeitando os limites de segurança)
   setInterval(executarFollowUpVendas, 10 * 60 * 1000);
   executarFollowUpVendas(); // já checa uma vez assim que o servidor sobe (não espera 10 min pro primeiro check)
-  setInterval(executarLembretesConsulta, 60 * 60 * 1000); // checa lembretes de consulta a cada 1h
+  setInterval(executarLembretesConsulta, 20 * 60 * 1000); // checa lembretes a cada 20min (precisão necessária pro lembrete de 2h antes)
   executarLembretesConsulta();
 });
