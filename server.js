@@ -320,7 +320,7 @@ const TABELA_PRECOS = {
   'acido folico': 32,
   'folato': 32,
   'ácido fólico': 32,
-  'vitamina b12': 32, 'vit b12': 32, 'b12': 32,
+  'vitamina b12': 32, 'vit b12': 32, 'b12': 32, 'vit b 12': 32, 'vitamina b 12': 32,
   'vitamina d': 38, 'vit d': 38, 'vitamina d3': 38,
   'pth': 52.5, 'paratormonio': 52.5, 'pth, paratormonio': 52.5,
   'microalbuminuria': 21, 'microalbuminuria u24h': 21, 'microalbuminuria urina amostra isolada': 21,
@@ -375,6 +375,7 @@ const TABELA_PRECOS = {
   'fator reumatoide': 15,
   'fator reumatóide': 15,
   'urina i': 15,
+  'urina': 15,
   'eas': 15,
   'uranalise': 15,
   'sedimento da urina': 15,
@@ -483,7 +484,8 @@ function calcularOrcamento(textoExames) {
     }
   }
 
-  if (achados.length === 0) return null;
+  const temFuncaoHepatica = /prova de fun[cç][aã]o hep[aá]tica|fun[cç][aã]o hep[aá]tica/.test(txt);
+  if (achados.length === 0 && !temFuncaoHepatica) return null;
 
   const chaves = achados.map(a => a.chave);
   const tem = (c) => chaves.includes(c);
@@ -582,6 +584,21 @@ function calcularOrcamento(textoExames) {
     removidos.add('fator rh');
   }
 
+  // "Prova de função hepática" / "função hepática" é um pedido genérico que sempre significa esse
+  // conjunto específico de exames — nunca vem detalhado exame por exame na receita
+  // "Vit B12 e D" ou "B12 e D" — a Vitamina D fica implícita (não repete a palavra "vitamina"),
+  // padrão comum de escrita abreviada. Só adiciona se "vitamina d" ainda não foi cobrada de outra forma.
+  if (/b\s*12\s*e\s*d\b/.test(txt) && !tem('vitamina d') && !tem('vit d') && !tem('vitamina d3') &&
+      !tem('25 hidroxivitamina d') && !tem('hidroxivitamina d')) {
+    extras.push({ nome: 'vitamina d (implícita após "b12 e d")', valor: 38 });
+  }
+
+  if (temFuncaoHepatica) {
+    const CHAVES_FUNCAO_HEPATICA = ['tgo', 'tgp', 'gama-gt', 'gama gt', 'bilirrubinas', 'fosfatase alcalina', 'eletroforese de proteinas'];
+    achados.filter(a => CHAVES_FUNCAO_HEPATICA.includes(a.chave)).forEach(a => removidos.add(a.chave));
+    extras.push({ nome: 'prova de função hepática (TGO+TGP+Gama GT+Bilirrubinas+Fosfatase Alcalina+Eletroforese de Proteínas)', valor: 16 + 16 + 16 + 13 + 13 + 27 });
+  }
+
   if (tem('toxoplasmose') && /igm/.test(txt) && /igg/.test(txt)) {
     removidos.add('toxoplasmose');
     extras.push({ nome: 'toxoplasmose (igm+igg)', valor: 53 });
@@ -613,9 +630,14 @@ function calcularOrcamento(textoExames) {
   // Antibiograma + cultura de bactérias (fraseado típico do SUS, sem a palavra "urocultura",
   // e às vezes truncado como "ANTIBIOGR" em guias de convênio) -> combo
   if ((tem('antibiograma') || /\bantibiogr\w*/.test(txt)) && /cultura/.test(txt) && !tem('urocultura + antibiograma') &&
-      !tem('urocultura com antibiograma') && !tem('urocultura antibiograma')) {
+      !tem('urocultura com antibiograma') && !tem('urocultura antibiograma') && !tem('urocultura')) {
     removidos.add('antibiograma');
     extras.push({ nome: 'urocultura + antibiograma (combo)', valor: 32 });
+  }
+  // "Urocultura" isolada já cobre antibiograma (é o mesmo exame) — se "antibiograma" também
+  // aparecer matched separadamente, não cobra os dois
+  if (tem('urocultura') && tem('antibiograma')) {
+    removidos.add('antibiograma');
   }
 
   const achadosFinais = achados.filter(a => !removidos.has(a.chave));
@@ -636,6 +658,73 @@ function calcularOrcamento(textoExames) {
   const pix = Math.round((valorComDesconto * 0.90 + valorSemDesconto) * 100) / 100;
 
   return { total, cartao, pix, encontrados };
+}
+
+// CAMADA DE APOIO COM IA — o cálculo em código (calcularOrcamento acima) é sempre a fonte da
+// verdade pros valores (determinístico, nunca inventa preço). Mas ele só reconhece exames cuja
+// grafia EXATA já está cadastrada na tabela — se o paciente escrever de um jeito não previsto
+// (ex: "Vit B 12" em vez de "vit b12"), o exame passa batido e some do orçamento silenciosamente.
+// Essa função usa a IA como uma segunda checagem: ela lê o texto de novo e tenta identificar
+// exames que o cálculo determinístico deixou passar — mas só pode escolher entre os nomes EXATOS
+// que já existem em TABELA_PRECOS (nunca inventa um exame ou um preço novo). O preço usado é
+// sempre o da tabela oficial, nunca um valor que a IA "ache" que deveria ser.
+async function identificarExamesFaltantesComIA(textoOriginal, chavesJaEncontradas) {
+  try {
+    const listaChaves = Object.keys(TABELA_PRECOS).join(', ');
+    const r = await axios.post('https://api.anthropic.com/v1/messages',
+      {
+        model: 'claude-sonnet-5',
+        max_tokens: 400,
+        system: [
+          { type: 'text', text: 'Você identifica nomes de exames laboratoriais mencionados em textos de pacientes e os mapeia para os nomes EXATOS de uma lista de nomes válidos. Responda SOMENTE com um array JSON de strings — cada string deve ser IDÊNTICA a um dos nomes da lista fornecida, nunca invente um nome que não esteja nela. Não inclua exames que já foram identificados previamente (a lista de "já identificados" vem na mensagem). Se não sobrar nenhum exame adicional, responda exatamente: []. Não escreva mais nada além do array JSON.', cache_control: { type: 'ephemeral' } },
+          { type: 'text', text: 'LISTA DE NOMES VÁLIDOS (use exatamente como estão escritos, em minúsculas): ' + listaChaves, cache_control: { type: 'ephemeral' } }
+        ],
+        messages: [{ role: 'user', content: 'Texto do paciente com o pedido de exames: "' + textoOriginal + '"\n\nExames que JÁ foram identificados por outro sistema (NÃO repita esses): ' + (chavesJaEncontradas.length ? chavesJaEncontradas.join(', ') : 'nenhum') + '\n\nQuais OUTROS exames mencionados nesse texto correspondem a algum nome da lista de válidos, que ainda não foram identificados? Responda só o array JSON, sem explicação.' }],
+      },
+      { headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' }, timeout: 15000 }
+    );
+    const blocoTexto = (r.data.content || []).find(function(b) { return b.type === 'text'; });
+    if (!blocoTexto || !blocoTexto.text) return [];
+    const limpo = blocoTexto.text.replace(/```json|```/g, '').trim();
+    const arr = JSON.parse(limpo);
+    if (!Array.isArray(arr)) return [];
+    // Proteção extra: só aceita nomes que realmente existem na tabela (nunca confia cegamente na IA)
+    return arr.filter(function(k) { return Object.prototype.hasOwnProperty.call(TABELA_PRECOS, k); });
+  } catch(e) {
+    console.error('ERRO identificarExamesFaltantesComIA:', e.message);
+    return [];
+  }
+}
+
+async function calcularOrcamentoComIA(textoExames) {
+  const resultadoBase = calcularOrcamento(textoExames);
+  // Só aciona a checagem extra com IA quando o cálculo determinístico já achou pelo menos 1 exame
+  // (sinal de que é mesmo um pedido de orçamento) — evita gastar uma chamada de IA à toa em
+  // mensagens que não têm nada a ver com exames
+  if (!resultadoBase) return null;
+
+  const extrasIA = await identificarExamesFaltantesComIA(textoExames, resultadoBase.encontrados);
+  if (!extrasIA.length) return resultadoBase;
+
+  const SEM_DESCONTO_PIX = ['sexagem fetal', 'beta-hcg', 'beta hcg', 'bhcg'];
+  const encontrados = resultadoBase.encontrados.slice();
+  let cartaoAdicional = 0;
+  let pixAdicional = 0;
+  extrasIA.forEach(function(chave) {
+    if (encontrados.includes(chave)) return; // evita duplicar se a IA repetir algo já achado
+    const valor = TABELA_PRECOS[chave];
+    if (typeof valor !== 'number') return;
+    encontrados.push(chave);
+    cartaoAdicional += valor;
+    pixAdicional += SEM_DESCONTO_PIX.includes(chave) ? valor : Math.round(valor * 0.90 * 100) / 100;
+    console.log('IA_ENCONTROU_EXAME_ADICIONAL: ' + chave + ' = R$' + valor);
+  });
+
+  if (cartaoAdicional === 0) return resultadoBase; // nada de novo, todos já estavam contados
+
+  const cartao = Math.round((resultadoBase.cartao + cartaoAdicional) * 100) / 100;
+  const pix = Math.round((resultadoBase.pix + pixAdicional) * 100) / 100;
+  return { total: cartao, cartao, pix, encontrados };
 }
 
 function extrairAgendamento(t) {
@@ -1579,7 +1668,7 @@ async function processarFila(num) {
           console.log('PACOTE_CHECKUP IMAGEM [' + num + ']: ' + pacoteCheckupImg.nome + ' = R$' + pacoteCheckupImg.valor);
           await registrarLeadOrcamento(num, null, { cartao: pacoteCheckupImg.valor, pix: pacoteCheckupImg.valor, encontrados: [pacoteCheckupImg.nome] }, 'whatsapp', 'consulta');
         }
-        const orcamentoImg = pacoteCheckupImg ? null : calcularOrcamento(leitura);
+        const orcamentoImg = pacoteCheckupImg ? null : await calcularOrcamentoComIA(leitura);
         if (orcamentoImg && orcamentoImg.total > 0) {
           instrucoesExtraImg.push('ORÇAMENTO CALCULADO PELO SISTEMA — USE ESTES VALORES EXATOS: 💳 Cartão: R$' + orcamentoImg.cartao.toFixed(2) + ' | 💵 Pix/Dinheiro: R$' + orcamentoImg.pix.toFixed(2) + '. NÃO recalcule. NÃO modifique esses valores.');
           console.log('ORÇAMENTO IMAGEM [' + num + ']: base=R$' + orcamentoImg.total + ' cartão=R$' + orcamentoImg.cartao.toFixed(2) + ' — EXAMES ENCONTRADOS: ' + JSON.stringify(orcamentoImg.encontrados));
@@ -1660,7 +1749,7 @@ async function processarFila(num) {
     }
 
     // Calcula orçamento no código se a mensagem contém exames
-    const orcamento = (pacoteCheckup || (MODO_TESTE_LAB && !NUMEROS_TESTE_LAB.includes(num))) ? null : calcularOrcamento(txtCompleto);
+    const orcamento = (pacoteCheckup || (MODO_TESTE_LAB && !NUMEROS_TESTE_LAB.includes(num))) ? null : await calcularOrcamentoComIA(txtCompleto);
     if (orcamento && orcamento.total > 0) {
       const infoOrcamento = 'ORÇAMENTO CALCULADO PELO SISTEMA — USE ESTES VALORES EXATOS: ' +
         '💳 Cartão: R$' + orcamento.cartao.toFixed(2) + ' | ' +
@@ -1920,7 +2009,7 @@ app.post('/api/chat', async function(req, res) {
       console.log('CHECKUP_INFANTIL_SEM_IDADE CHAT [' + tel + ']');
     }
     // Calcula orçamento no código (mesmo comportamento do fluxo de WhatsApp) — NUNCA deixa a IA calcular de cabeça
-    const orcamentoChat = pacoteCheckupChat ? null : calcularOrcamento(msg);
+    const orcamentoChat = pacoteCheckupChat ? null : await calcularOrcamentoComIA(msg);
     if (orcamentoChat && orcamentoChat.total > 0) {
       instrucoesExtraChat.push('ORÇAMENTO CALCULADO PELO SISTEMA — USE ESTES VALORES EXATOS: ' +
         '💳 Cartão: R$' + orcamentoChat.cartao.toFixed(2) + ' | ' +
