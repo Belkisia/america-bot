@@ -901,7 +901,7 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
     // Prompt caching: SYSTEM_PROMPT é enorme e idêntico em toda chamada — cacheado, custa só 10% do preço normal.
     // A parte dinâmica (agenda/hora/lembretes) muda a cada mensagem, então fica de fora do cache.
     const r = await axios.post('https://api.anthropic.com/v1/messages',
-      { model: 'claude-sonnet-5', max_tokens: 600,
+      { model: 'claude-sonnet-5', max_tokens: 1500,
         system: [
           { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
           { type: 'text', text: systemDinamico }
@@ -945,7 +945,7 @@ async function lerImagem(imageUrl) {
     const base64 = imagemRedimensionada.toString('base64');
     const mediaType = 'image/jpeg';
     const r = await axios.post('https://api.anthropic.com/v1/messages',
-      { model: 'claude-sonnet-5', max_tokens: 1200, messages: [{ role: 'user', content: [
+      { model: 'claude-sonnet-5', max_tokens: 2000, messages: [{ role: 'user', content: [
         { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
         { type: 'text', text: 'Analise esta imagem. Se for receita/pedido médico: extraia nome do médico, CRM e a lista de exames solicitados. REGRA CRÍTICA: liste CADA exame individualmente, numerado, com o nome EXATO/LITERAL como está escrito ou impresso no documento (ex: "Dosagem de Creatinina", "Transaminase Glutâmico-Oxalacética (TGO)", "Hemograma Completo"). NUNCA agrupe, resuma ou generalize exames em categorias como "função renal", "função hepática", "perfil lipídico" ou "entre outros" — mesmo que a lista seja longa (10, 20, 30+ itens), liste TODOS sem exceção e sem abreviar a lista. ATENÇÃO A FORMULÁRIOS COM CAIXINHAS/CHECKBOXES: se o documento for um formulário de múltipla escolha com quadradinhos (□) ao lado de cada exame, observe CUIDADOSAMENTE quais quadradinhos estão MARCADOS (preenchidos, com X, com ✓, ou rabiscados) e liste APENAS esses — ignore os desmarcados. Esses formulários costumam ter dezenas de opções organizadas em categorias (Hematologia, Bioquímica, Sorologia, Hormônios, etc.) mas só uma fração é marcada; releia a imagem com atenção antes de responder, verificando cada seção do formulário, pois é comum haver itens marcados em categorias diferentes (ex: alguns em Bioquímica, outros em Hormônios, outros em Urinálise) — não pare na primeira seção. Se for resultado de exame (não pedido): identifique o tipo. Responda simples e direto, sem markdown.' }
       ]}]},
