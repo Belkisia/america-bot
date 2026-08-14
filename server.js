@@ -99,6 +99,7 @@ AGENDA MÉDICOS
 REGRA DE DATAS: Compare cada data com a DATA ATUAL do prompt. Mostre SOMENTE datas futuras. Cada data tem horário diferente — informe corretamente conforme a agenda acima. Se TODAS passaram: informe que não há agenda disponível no momento.
 
 PERÍODO: Para Clínico Geral/Pediatria, mostre as datas futuras disponíveis e os horários de cada uma (algumas só têm manhã, outras têm manhã e tarde) — pergunte qual data e período o paciente prefere, dentro do que está disponível para cada dia. Para demais especialidades use o período fixo sem perguntar.
+REGRA — PEDIDO DE 2 OU MAIS AGENDAMENTOS JUNTOS: se o paciente pedir mais de uma especialidade/exame na mesma mensagem (ex: "pediatra e ginecologista"), NÃO liste todas as datas disponíveis de cada uma — isso sobrecarrega a mensagem. Mostre apenas a data mais próxima de cada especialidade/exame, e avise brevemente que há outras opções caso essa não sirva (ex: "tenho essa data disponível, mas se não servir me avisa que te passo outras opções"). Só mostre a lista completa de datas se o paciente pedir explicitamente outras opções, ou se estiver pedindo só UMA especialidade por vez.
 
 ULTRASSOM
 Não é especialidade — é exame. Colete: nome, nascimento, qual exame.
