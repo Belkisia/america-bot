@@ -869,7 +869,7 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
       (function() {
         const horariosUSG = { 2: 'Terça: 14h00–15h30', 5: 'Sexta: 07h30–09h45 e 17h00–18h00' };
         // Datas específicas canceladas (ex: feriado, imprevisto) — adicione aqui quando precisar
-        const DATAS_BLOQUEADAS_USG = [];
+        const DATAS_BLOQUEADAS_USG = [{ dia: 18, mes: 8 }, { dia: 25, mes: 8 }]; // Terças canceladas — volta normal a partir de 01/09
         const bloqueada = function(d) { return DATAS_BLOQUEADAS_USG.some(function(b){ return b.dia === d.getDate() && b.mes === d.getMonth()+1; }); };
         // Datas com horário/exames excepcionais (só nesse dia específico) — adicione aqui quando precisar
         const HORARIOS_ESPECIAIS_USG = [];
@@ -893,29 +893,11 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
         return '• Ultrassom (próximos dias): ' + (disponiveisUSG.length ? disponiveisUSG.join(' | ') : 'sem agenda no momento');
       })(),
       (function() {
-        function inicioSemana(data) {
-          const d = new Date(data);
-          const dow = d.getDay();
-          const diffParaSegunda = dow === 0 ? -6 : 1 - dow;
-          d.setDate(d.getDate() + diffParaSegunda);
-          d.setHours(0, 0, 0, 0);
-          return d;
-        }
-        const ANCORA_SEMANA_A = new Date(2026, 5, 29); // 29/06/2026, segunda, início da Semana A
-        function tipoSemana(data) {
-          const segundaAtual = inicioSemana(data);
-          const diffDias = Math.round((segundaAtual - ANCORA_SEMANA_A) / (1000 * 60 * 60 * 24));
-          const semanasPassadas = diffDias / 7;
-          return (Math.round(semanasPassadas) % 2 === 0) ? 'A' : 'B';
-        }
-        const diasSemanaA = [1, 3, 5]; // segunda, quarta, sexta
-        const diasSemanaB = [2, 4]; // terça, quinta
+        const diasValidos = [1, 3, 5]; // segunda, quarta, sexta — fixo, sem mais semana alternada
         const disponiveisColeta = [];
         for (let i = 0; i <= 14; i++) {
           const d = new Date(nowBR);
           d.setDate(d.getDate() + i);
-          const tipo = tipoSemana(d);
-          const diasValidos = tipo === 'A' ? diasSemanaA : diasSemanaB;
           if (diasValidos.includes(d.getDay())) {
             const dd = String(d.getDate()).padStart(2, '0');
             const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -970,7 +952,7 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
 
     let systemDinamico = '\n\nAGENDA ATUAL (somente datas futuras):\n' + agendaFiltrada
       + '\n\nDATA/HORA ATUAL (Brasília): ' + agora + ' — Hoje é ' + diaSemana + ', ' + dataHoje
-      + '\n\nTABELA DE DIAS DA SEMANA JUNHO/2026 (use SEMPRE esta tabela para informar dia da semana de qualquer data — NUNCA calcule de memória): ' + refDiasSemana
+      + '\n\nTABELA DE DIAS DA SEMANA — PRÓXIMOS 45 DIAS A PARTIR DE HOJE (essa tabela é gerada automaticamente e está sempre atualizada, cobre qualquer data que você for usar). REGRA CRÍTICA: para informar o dia da semana de QUALQUER data, mesmo que pareça óbvio, SEMPRE busque a data exata nesta tabela e use o dia da semana que ela indica — NUNCA calcule ou "lembre" de cabeça, mesmo se tiver certeza. Erros de dia da semana confundem o paciente sobre quando é a consulta. Tabela: ' + refDiasSemana
       + '\n\nREGRA OBRIGATÓRIA DE SAUDAÇÃO: Agora são ' + hora + 'h em Brasília. Se a resposta começar com saudação, USE EXATAMENTE "' + saudacao + '". NUNCA use "Boa noite" se a hora atual for ' + hora + 'h. Se for encerrar a conversa, use "' + despedida + '".';
 
     // Se já existe uma instrução explícita para esta mensagem (orçamento, cancelamento, recusa,
