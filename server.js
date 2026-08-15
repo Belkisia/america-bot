@@ -82,7 +82,7 @@ ANTI-DUPLICATA: Se histórico já tem confirmação da mesma especialidade, NÃO
 
 AGENDA MÉDICOS
 • Psiquiatria: 21/08, 28/08, 03/09, 17/09, 24/09, 01/10, 07/10, 15/10 e 21/10 das 13h30–18h00 — SOMENTE TARDE — LIMITE DE 16 PACIENTES POR DIA (equipe médica só atende essa quantidade)
-• Otorrinolaringologia: 10/08 das 08h30–11h00 — SOMENTE MANHÃ
+• Otorrinolaringologia: 29/08, 12/09 e 26/09 das 08h00–11h30 — SOMENTE MANHÃ
 • Endocrinologia: 18/08 das 13h30–16h00 — SOMENTE TARDE
 • Ginecologia: 10/08 e 24/08 das 14h30–17h30 — SOMENTE TARDE
 • Clínico Geral/Pediatria — datas específicas (cada uma com seu horário):
@@ -811,7 +811,7 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
     // Agenda com suporte a múltiplas datas por especialidade — filtra automaticamente as que já passaram
     const AGENDA_ESPECIALIDADES = {
       'Psiquiatria': { horario: '13h30–18h00', periodo: 'SOMENTE TARDE', datas: [{dia:21,mes:8},{dia:28,mes:8},{dia:3,mes:9},{dia:17,mes:9},{dia:24,mes:9},{dia:1,mes:10},{dia:7,mes:10},{dia:15,mes:10},{dia:21,mes:10}] },
-      'Otorrinolaringologia': { horario: '08h30–11h00', periodo: 'SOMENTE MANHÃ', datas: [{dia:10,mes:8}] },
+      'Otorrinolaringologia': { horario: '08h00–11h30', periodo: 'SOMENTE MANHÃ', datas: [{dia:29,mes:8},{dia:12,mes:9},{dia:26,mes:9}] },
       'Endocrinologia': { horario: '13h30–16h00', periodo: 'SOMENTE TARDE', datas: [{dia:18,mes:8}] },
       'Ginecologia': { horario: '14h30–17h30', periodo: 'SOMENTE TARDE', datas: [{dia:10,mes:8},{dia:24,mes:8}] },
     };
