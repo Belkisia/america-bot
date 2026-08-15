@@ -81,7 +81,7 @@ Somente particular. NUNCA pergunte convênio.
 ANTI-DUPLICATA: Se histórico já tem confirmação da mesma especialidade, NÃO gere [AGENDAR] de novo.
 
 AGENDA MÉDICOS
-• Psiquiatria: 03/09 e 17/09 das 13h30–17h00 — SOMENTE TARDE
+• Psiquiatria: 21/08, 28/08, 03/09, 17/09, 24/09, 01/10, 07/10, 15/10 e 21/10 das 13h30–18h00 — SOMENTE TARDE — LIMITE DE 16 PACIENTES POR DIA (equipe médica só atende essa quantidade)
 • Otorrinolaringologia: 10/08 das 08h30–11h00 — SOMENTE MANHÃ
 • Endocrinologia: 18/08 das 13h30–16h00 — SOMENTE TARDE
 • Ginecologia: 10/08 e 24/08 das 14h30–17h30 — SOMENTE TARDE
@@ -112,6 +112,7 @@ REGRA CRÍTICA MORFOLÓGICO: se o paciente responder diretamente "1º trimestre"
 
 REGRA DE COMUNICAÇÃO — RESTRIÇÕES DE AGENDA: ao informar que um exame não está disponível em determinado dia/horário (restrição de exceção pontual, restrição de horário, restrição de idade etc.), seja DIRETO e SIMPLES. NÃO explique o motivo interno da restrição, NÃO liste as exceções da agenda ou por que outro dia/horário não funciona. Vá direto à informação útil: qual dia e horário ESTÁ disponível para esse exame.
 REGRA GERAL — NÃO JUSTIFIQUE REGRAS INTERNAS AO PACIENTE: isso vale pra qualquer situação, não só agenda — preços especiais, exceções de desconto, regras de cálculo etc. são informações internas do sistema pra você usar no cálculo, NUNCA algo pra explicar ou justificar na resposta. Informe só o resultado final (valor, data, disponibilidade) de forma direta e natural, como faria qualquer atendente experiente — sem "porque", sem citar regra, sem soar como se estivesse lendo um manual interno.
+REGRA CRÍTICA — RESPEITAR MUDANÇAS NO PEDIDO: se o paciente pedir pra REMOVER, TROCAR ou SIMPLIFICAR algo que já estava sendo discutido (ex: "só o transvaginal, sem o abdome total", "tira esse exame", "quero só a consulta, sem o exame"), a confirmação final e a tag [AGENDAR:...] DEVEM refletir exatamente o pedido MAIS RECENTE do paciente — nunca mantenha um item antigo que ele já pediu pra remover, mesmo que você tenha confirmado verbalmente a mudança. Releia a mensagem mais recente do paciente antes de montar a confirmação final, e garanta que ela bate 100% com o que foi combinado por último.
 Exemplo: se uma data que já foi oferecida antes some da agenda (porque lotou, foi cancelada etc.), NUNCA diga "essa data está lotada" ou explique o motivo — apenas informe as próximas datas disponíveis normalmente, como se fossem as únicas opções.
 Exemplo CORRETO: "Esse exame temos disponível na sexta-feira, 07/08, pela manhã (07h30–09h45). Posso já reservar para você?"
 Exemplo a EVITAR (não faça isso): "Para esse exame, no dia X infelizmente não é possível, pois esse dia tem uma lista restrita de exames que não inclui esse. E no horário Y também não atende esse exame, mas no horário Z funciona perfeitamente..."
@@ -809,7 +810,7 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
 
     // Agenda com suporte a múltiplas datas por especialidade — filtra automaticamente as que já passaram
     const AGENDA_ESPECIALIDADES = {
-      'Psiquiatria': { horario: '13h30–17h00', periodo: 'SOMENTE TARDE', datas: [{dia:3,mes:9},{dia:17,mes:9}] },
+      'Psiquiatria': { horario: '13h30–18h00', periodo: 'SOMENTE TARDE', datas: [{dia:21,mes:8},{dia:28,mes:8},{dia:3,mes:9},{dia:17,mes:9},{dia:24,mes:9},{dia:1,mes:10},{dia:7,mes:10},{dia:15,mes:10},{dia:21,mes:10}] },
       'Otorrinolaringologia': { horario: '08h30–11h00', periodo: 'SOMENTE MANHÃ', datas: [{dia:10,mes:8}] },
       'Endocrinologia': { horario: '13h30–16h00', periodo: 'SOMENTE TARDE', datas: [{dia:18,mes:8}] },
       'Ginecologia': { horario: '14h30–17h30', periodo: 'SOMENTE TARDE', datas: [{dia:10,mes:8},{dia:24,mes:8}] },
@@ -819,8 +820,14 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
       if (lista.length === 2) return lista.join(' e ');
       return lista.slice(0, -1).join(', ') + ' e ' + lista[lista.length - 1];
     }
-    function formatarLinhaAgenda(nome, cfg) {
-      const futuras = cfg.datas.filter(function (d) { return dataFutura(d.dia, d.mes); })
+    function formatarLinhaAgenda(nome, cfg, datasLotadasISO) {
+      const futuras = cfg.datas
+        .filter(function (d) { return dataFutura(d.dia, d.mes); })
+        .filter(function (d) {
+          if (!datasLotadasISO || !datasLotadasISO.length) return true;
+          const iso = 2026 + '-' + String(d.mes).padStart(2, '0') + '-' + String(d.dia).padStart(2, '0');
+          return !datasLotadasISO.includes(iso);
+        })
         .map(function (d) { return String(d.dia).padStart(2, '0') + '/' + String(d.mes).padStart(2, '0'); });
       if (futuras.length === 0) return '• ' + nome + ': sem agenda disponível no momento';
       return '• ' + nome + ': ' + formatarListaDatas(futuras) + ' das ' + cfg.horario + ' — ' + cfg.periodo;
@@ -840,8 +847,27 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
       datasHolterMapaOcupadas = (ocupadosHolterMapa || []).map(function(a){ return a.data_agendamento; }).filter(Boolean);
     } catch(e) { console.error('ERRO ao buscar ocupação Holter/MAPA:', e.message); }
 
+    // Psiquiatria: limite de 16 pacientes por dia — busca quantos já estão agendados em cada data
+    // futura, pra excluir da lista as datas que já bateram o limite
+    let datasPsiquiatriaLotadas = [];
+    try {
+      const daqui90Dias = new Date(nowBR); daqui90Dias.setDate(daqui90Dias.getDate() + 90);
+      const { data: agendamentosPsiquiatria } = await db.supabase.from('agendamentos')
+        .select('data_agendamento')
+        .eq('especialidade', 'Psiquiatria')
+        .in('status', ['pendente', 'confirmado'])
+        .gte('data_agendamento', nowBR.toISOString().slice(0, 10))
+        .lte('data_agendamento', daqui90Dias.toISOString().slice(0, 10));
+      const contagemPorData = {};
+      (agendamentosPsiquiatria || []).forEach(function(a) {
+        if (!a.data_agendamento) return;
+        contagemPorData[a.data_agendamento] = (contagemPorData[a.data_agendamento] || 0) + 1;
+      });
+      datasPsiquiatriaLotadas = Object.keys(contagemPorData).filter(function(iso) { return contagemPorData[iso] >= 16; });
+    } catch(e) { console.error('ERRO ao buscar ocupação Psiquiatria:', e.message); }
+
     const agendaFiltrada = [
-      formatarLinhaAgenda('Psiquiatria', AGENDA_ESPECIALIDADES['Psiquiatria']),
+      formatarLinhaAgenda('Psiquiatria', AGENDA_ESPECIALIDADES['Psiquiatria'], datasPsiquiatriaLotadas),
       formatarLinhaAgenda('Otorrinolaringologia', AGENDA_ESPECIALIDADES['Otorrinolaringologia']),
       formatarLinhaAgenda('Endocrinologia', AGENDA_ESPECIALIDADES['Endocrinologia']),
       formatarLinhaAgenda('Ginecologia', AGENDA_ESPECIALIDADES['Ginecologia']),
@@ -1082,6 +1108,26 @@ async function limparEstado(num) {
   try {
     await db.supabase.from('estado_conversa').delete().eq('telefone', num);
   } catch(e) {}
+}
+
+// Estados de conversa abandonados (paciente começou um agendamento e nunca voltou pra terminar)
+// nunca expiravam sozinhos — se a pessoa voltasse dias ou meses depois com uma mensagem qualquer,
+// o sistema tentava retomar aquele agendamento antigo com dados desatualizados (datas que já nem
+// existem mais na agenda). Essa função limpa silenciosamente qualquer estado com mais de 24h sem
+// atualização, tratando como abandonado antes de usá-lo pra qualquer decisão nesta mensagem.
+async function limparEstadoSeAbandonado(num, horasLimite) {
+  horasLimite = horasLimite || 24;
+  try {
+    const { data } = await db.supabase.from('estado_conversa').select('updated_at').eq('telefone', num).single();
+    if (!data || !data.updated_at) return false;
+    const horasDesdeUltimaAtualizacao = (Date.now() - new Date(data.updated_at).getTime()) / (1000 * 60 * 60);
+    if (horasDesdeUltimaAtualizacao > horasLimite) {
+      await limparEstado(num);
+      console.log('ESTADO_ABANDONADO_LIMPO [' + num + ']: sem atualização há ' + horasDesdeUltimaAtualizacao.toFixed(1) + 'h, tratado como abandonado');
+      return true;
+    }
+    return false;
+  } catch(e) { return false; }
 }
 
 // Tabela de serviços NÃO-laboratoriais (ultrassom, consultas, procedimentos) — preço fixo,
@@ -1695,6 +1741,10 @@ async function processarFila(num) {
 
     if (await emAtendimentoHumano(num)) { filas[num].rodando = false; processarFila(num); return; }
     if (!txtCompleto.trim()) { filas[num].rodando = false; processarFila(num); return; }
+
+    // Descarta estado abandonado (sem atualização há mais de 24h) ANTES de usar ou atualizar
+    // qualquer coisa — evita retomar um agendamento antigo que o paciente nunca terminou
+    await limparEstadoSeAbandonado(num);
 
     // Atualiza estado com dados desta mensagem
     const dadosMsg = extrairDadosMensagem(txtCompleto);
