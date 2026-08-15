@@ -353,6 +353,7 @@ const TABELA_PRECOS = {
   'progesterona': 24,
   'prolactina': 21,
   'testosterona total': 23.5,
+  'homocisteina': 44,
   'testosterona livre': 29.5,
   'testosterona': 0,
   'dhea': 26,
