@@ -82,19 +82,14 @@ ANTI-DUPLICATA: Se histórico já tem confirmação da mesma especialidade, NÃO
 
 AGENDA MÉDICOS
 • Psiquiatria: 28/08, 03/09, 17/09, 24/09, 01/10, 07/10, 15/10 e 21/10 das 13h30–18h00 — SOMENTE TARDE — LIMITE DE 16 PACIENTES POR DIA (equipe médica só atende essa quantidade)
-• Otorrinolaringologia: 29/08, 12/09 e 26/09 das 08h00–11h30 — SOMENTE MANHÃ
+• Otorrinolaringologia: sem agenda disponível no momento
 • Endocrinologia: 18/08 das 13h30–16h00 — SOMENTE TARDE
 • Ginecologia: 10/08 e 24/08 das 14h30–17h30 — SOMENTE TARDE
 • Clínico Geral/Pediatria — datas específicas (cada uma com seu horário):
-  - 17/08 (segunda): manhã 09h00–10h30 e tarde 16h00–17h15
-  - 18/08 (terça): manhã 09h00–11h30 (sem tarde)
-  - 20/08 (quinta): manhã 09h00–11h30 (sem tarde)
-  - 24/08 (segunda): manhã 09h00–10h30 e tarde 16h00–17h15
-  - 25/08 (terça): manhã 09h00–11h30 (sem tarde)
-  - 26/08 (quarta): manhã 09h00–11h30 e tarde 14h30–17h00
-  - 27/08 (quinta): manhã 09h00–11h30 (sem tarde)
-  - 28/08 (sexta): manhã 10h00–11h30 (sem tarde)
-  - 31/08 (segunda): manhã 09h00–10h30 e tarde 16h00–17h15
+  - 01/09 (terça): manhã 09h00–11h15 (sem tarde)
+  - 02/09 (quarta): tarde 14h00–17h15 (sem manhã)
+  - 03/09 (quinta): manhã 09h00–11h15 (sem tarde)
+  - 04/09 (sexta): manhã 10h30–11h15 e tarde 14h00–17h00
 
 REGRA DE DATAS: Compare cada data com a DATA ATUAL do prompt. Mostre SOMENTE datas futuras. Cada data tem horário diferente — informe corretamente conforme a agenda acima. Se TODAS passaram: informe que não há agenda disponível no momento.
 
@@ -107,6 +102,8 @@ Tag: [AGENDAR:nome=X|nascimento=X|especialidade=Ultrassom|convenio=particular|pe
 Dias disponíveis: TERÇA, 14h00–16h00 (tarde), e SEXTA, 07h30–09h45 (manhã) e 17h00–18h00 (tarde) — TODOS os exames de ultrassom são feitos nesses dias.
 ATENÇÃO — RESTRIÇÃO DE HORÁRIO PARA QUADRIL/JOELHO/TORNOZELO/PÉS: esses exames NÃO são feitos no horário de sexta-feira das 17h às 18h. Podem ser agendados normalmente na terça (14h-16h) ou na sexta de manhã (07h30-09h45). Se o paciente pedir um desses exames especificamente para sexta às 17h-18h, informe que nesse horário não é possível e ofereça terça ou sexta de manhã como alternativa.
 ATENÇÃO — IDADE MÍNIMA PARA ULTRASSOM DE PÉS: só é feito a partir de 7 anos de idade. Se o paciente pedir ultrassom de pés para uma criança menor de 7 anos, informe claramente que não é possível nessa idade.
+ATENÇÃO — NÃO REALIZAMOS: Ultrassom Obstétrico com Doppler, e Morfológica para gestação gemelar/múltipla. Se o paciente pedir algum desses, informe CLARAMENTE que a clínica não realiza esse exame específico e que ele precisa procurar outro local — não ofereça alternativa nem diga "vou verificar".
+ATENÇÃO — RESTRIÇÃO SEXTA DE MANHÃ: no horário de sexta-feira pela manhã (07h30–09h45), NÃO fazemos Ultrassom Transvaginal/Endovaginal nem Morfológica de 1º Trimestre. Esses dois exames podem ser feitos na terça (14h-16h) ou na sexta à tarde (17h-18h). Se o paciente pedir um desses especificamente para sexta de manhã, informe que nesse horário não é possível e ofereça terça ou sexta à tarde como alternativa.
 MORFOLÓGICO: 1ºTri=11–13sem6d(R$230) | 2ºTri=20–23sem6d(R$280) | 3ºTri=32–34sem6d.
 REGRA CRÍTICA MORFOLÓGICO: se o paciente responder diretamente "1º trimestre", "1 trimestre", "primeiro trimestre", "2º trimestre", "segundo trimestre" (sem informar semanas exatas), ACEITE essa resposta como suficiente para identificar qual exame ele quer. NÃO peça semanas exatas de novo — isso já responde qual dos dois exames é. Prossiga direto para confirmar e pedir nome+nascimento. Só peça semanas exatas se o paciente não souber dizer o trimestre.
 
@@ -117,7 +114,7 @@ Exemplo: se uma data que já foi oferecida antes some da agenda (porque lotou, f
 Exemplo CORRETO: "Esse exame temos disponível na sexta-feira, 07/08, pela manhã (07h30–09h45). Posso já reservar para você?"
 Exemplo a EVITAR (não faça isso): "Para esse exame, no dia X infelizmente não é possível, pois esse dia tem uma lista restrita de exames que não inclui esse. E no horário Y também não atende esse exame, mas no horário Z funciona perfeitamente..."
 
-PREÇOS ULTRASSOM: Abdome Inf R$70|c/Dop R$160 | Abdome Sup R$80|c/Dop R$160 | Abdome Total R$100|c/Dop R$350 | Articulação R$80 | Bolsa Escrotal R$80|c/Dop R$150 | Mamas R$90 | Morfológica 1ºTri R$230|2ºTri R$280 | Obstétrica>14sem R$100|c/Dop R$280|Endovaginal R$100|Múltipla R$180 | Partes Moles R$70 | Próstata R$90 | Quadril Ped R$80 | Quadril Ad R$80 | Pé (cada lado, a partir de 7 anos) R$80 | Tireoide R$90|c/Dop R$150 | Transvaginal R$90|c/Dop R$160 | Vias Urinárias R$80 | Transfontanela R$130 | Pélvica R$80 | Punho R$80 | Parede Abd R$80 | Parótidas R$70|c/Dop R$160 | Orelha R$70 | Cervical R$80 | Ombro R$90 | Inguinal R$80 | Axilas (cada lado) R$70 | Doppler Isolado R$140 | Doppler Carótidas R$150.
+PREÇOS ULTRASSOM: Abdome Inf R$70|c/Dop R$160 | Abdome Sup R$80|c/Dop R$160 | Abdome Total R$100|c/Dop R$350 | Articulação R$80 | Bolsa Escrotal R$80|c/Dop R$150 | Mamas R$90 | Morfológica 1ºTri R$230|2ºTri R$280 | Obstétrica>14sem R$100|Endovaginal R$100|Múltipla R$180 | Partes Moles R$70 | Próstata R$90 | Quadril Ped R$80 | Quadril Ad R$80 | Pé (cada lado, a partir de 7 anos) R$80 | Tireoide R$90|c/Dop R$150 | Transvaginal R$90|c/Dop R$160 | Vias Urinárias R$80 | Transfontanela R$130 | Pélvica R$80 | Punho R$80 | Parede Abd R$80 | Parótidas R$70|c/Dop R$160 | Orelha R$70 | Cervical R$80 | Ombro R$90 | Inguinal R$80 | Axilas (cada lado) R$70 | Doppler Isolado R$140 | Doppler Carótidas R$150.
 
 CONSULTAS: Clínico Geral R$80 | Ginecologia R$120 | Endocrinologia R$120 | Psiquiatria R$120 | Pediatria R$100 | Otorrino R$140.
 PROCEDIMENTOS: Limpeza ouvido R$50 | DIU inserir R$400 | DIU retirar R$300 | Prevenção R$80 | Retirada pontos R$50.
@@ -812,7 +809,7 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
     // Agenda com suporte a múltiplas datas por especialidade — filtra automaticamente as que já passaram
     const AGENDA_ESPECIALIDADES = {
       'Psiquiatria': { horario: '13h30–18h00', periodo: 'SOMENTE TARDE', datas: [{dia:28,mes:8},{dia:3,mes:9},{dia:17,mes:9},{dia:24,mes:9},{dia:1,mes:10},{dia:7,mes:10},{dia:15,mes:10},{dia:21,mes:10}] },
-      'Otorrinolaringologia': { horario: '08h00–11h30', periodo: 'SOMENTE MANHÃ', datas: [{dia:29,mes:8},{dia:12,mes:9},{dia:26,mes:9}] },
+      'Otorrinolaringologia': { horario: '08h00–11h30', periodo: 'SOMENTE MANHÃ', datas: [] },
       'Endocrinologia': { horario: '13h30–16h00', periodo: 'SOMENTE TARDE', datas: [{dia:18,mes:8}] },
       'Ginecologia': { horario: '14h30–17h30', periodo: 'SOMENTE TARDE', datas: [{dia:10,mes:8},{dia:24,mes:8}] },
     };
@@ -874,21 +871,20 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
       formatarLinhaAgenda('Ginecologia', AGENDA_ESPECIALIDADES['Ginecologia']),
       (function() {
         const AGENDA_CLINICO = [
-          { dia: 17, mes: 8, manha: '09h00–10h30', tarde: '16h00–17h15' },
-          { dia: 18, mes: 8, manha: '09h00–11h30', tarde: null },
-          { dia: 20, mes: 8, manha: '09h00–11h30', tarde: null },
-          { dia: 24, mes: 8, manha: '09h00–10h30', tarde: '16h00–17h15' },
-          { dia: 25, mes: 8, manha: '09h00–11h30', tarde: null },
-          { dia: 26, mes: 8, manha: '09h00–11h30', tarde: '14h30–17h00' },
-          { dia: 27, mes: 8, manha: '09h00–11h30', tarde: null },
-          { dia: 28, mes: 8, manha: '10h00–11h30', tarde: null },
-          { dia: 31, mes: 8, manha: '09h00–10h30', tarde: '16h00–17h15' },
+          { dia: 1, mes: 9, manha: '09h00–11h15', tarde: null },
+          { dia: 2, mes: 9, manha: null, tarde: '14h00–17h15' },
+          { dia: 3, mes: 9, manha: '09h00–11h15', tarde: null },
+          { dia: 4, mes: 9, manha: '10h30–11h15', tarde: '14h00–17h00' },
         ];
         const disponiveis = AGENDA_CLINICO
           .filter(function (d) { return dataFutura(d.dia, d.mes); })
           .map(function (d) {
             const dd = String(d.dia).padStart(2, '0') + '/' + String(d.mes).padStart(2, '0');
-            const periodos = 'manhã ' + d.manha + (d.tarde ? ' e tarde ' + d.tarde : ' (sem tarde)');
+            let periodos;
+            if (d.manha && d.tarde) periodos = 'manhã ' + d.manha + ' e tarde ' + d.tarde;
+            else if (d.manha) periodos = 'manhã ' + d.manha + ' (sem tarde)';
+            else if (d.tarde) periodos = 'tarde ' + d.tarde + ' (sem manhã)';
+            else periodos = 'sem horário definido';
             return dd + ' (' + periodos + ')';
           });
         return '• Clínico Geral/Pediatria (datas específicas): ' + (disponiveis.length ? disponiveis.join(' | ') : 'sem agenda no momento');
@@ -1144,7 +1140,7 @@ const TABELA_SERVICOS = {
   'usg mamas': 90,
   'morfologica 1 trimestre': 230, 'morfologica 1º trimestre': 230,
   'morfologica 2 trimestre': 280, 'morfologica 2º trimestre': 280,
-  'obstetrica com doppler': 280, 'obstetrica endovaginal': 100,
+  'obstetrica endovaginal': 100,
   'obstetrica gestacao multipla': 180, 'obstetrica': 100,
   'usg partes moles': 70,
   'usg prostata': 90,
