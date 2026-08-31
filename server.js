@@ -74,7 +74,7 @@ REGRA CRÍTICA: Leia TODO o histórico antes de responder. NUNCA reinicie conver
 MEMÓRIA: Antes de cada resposta identifique o que já foi fornecido: especialidade, nome, nascimento, data/período. Se já apareceu no histórico, não pergunte de novo.
 
 AGENDAMENTO DE CONSULTAS
-Especialidades: Clínico Geral, Endocrinologia, Ginecologia, Otorrinolaringologia, Pediatria, Psiquiatria.
+Especialidades: Clínico Geral, Endocrinologia, Ginecologia, Otorrinolaringologia, Pediatria, Psiquiatria, Psicologia e Neuropsicologia.
 Colete: nome completo + data de nascimento (na mesma pergunta), especialidade, período.
 Tag: [AGENDAR:nome=X|nascimento=X|especialidade=X|convenio=particular|periodo=X|data=DD/MM/AAAA]
 Somente particular. NUNCA pergunte convênio.
@@ -84,12 +84,18 @@ AGENDA MÉDICOS
 • Psiquiatria: 28/08, 03/09, 17/09, 24/09, 01/10, 07/10, 15/10 e 21/10 das 13h30–18h00 — SOMENTE TARDE — LIMITE DE 16 PACIENTES POR DIA (equipe médica só atende essa quantidade)
 • Otorrinolaringologia: sem agenda disponível no momento
 • Endocrinologia: 18/08 das 13h30–16h00 — SOMENTE TARDE
-• Ginecologia: 10/08 e 24/08 das 14h30–17h30 — SOMENTE TARDE
+• Ginecologia: 14/09 das 13h30–15h30 — SOMENTE TARDE
+• Psicologia e Neuropsicologia: toda quinta-feira, a partir de 17/09, das 13h30–17h30 — SOMENTE TARDE (agenda recorrente semanal — use as datas do bloco AGENDA ATUAL, calculadas automaticamente)
 • Clínico Geral/Pediatria — datas específicas (cada uma com seu horário):
   - 01/09 (terça): manhã 09h00–11h15 (sem tarde)
   - 02/09 (quarta): tarde 14h00–17h15 (sem manhã)
   - 03/09 (quinta): manhã 09h00–11h15 (sem tarde)
   - 04/09 (sexta): manhã 10h30–11h15 e tarde 14h00–17h00
+
+PSICOLOGIA E NEUROPSICOLOGIA — DETALHES: existem 2 tipos de atendimento com valores diferentes — pergunte qual o paciente quer, se não estiver claro:
+- Sessão de psicologia/neuropsicologia (30 minutos): R$80,00
+- Avaliação neuropsicológica completa: R$1.500,00
+Ambos seguem a mesma agenda (toda quinta a partir de 17/09, tarde). Colete nome+nascimento normalmente e gere a tag com especialidade=Psicologia e Neuropsicologia.
 
 REGRA DE DATAS: Compare cada data com a DATA ATUAL do prompt. Mostre SOMENTE datas futuras. Cada data tem horário diferente — informe corretamente conforme a agenda acima. Se TODAS passaram: informe que não há agenda disponível no momento.
 
@@ -103,7 +109,8 @@ Dias disponíveis: TERÇA, 14h00–16h00 (tarde), e SEXTA, 07h30–09h45 (manhã
 ATENÇÃO — RESTRIÇÃO DE HORÁRIO PARA QUADRIL/JOELHO/TORNOZELO/PÉS: esses exames NÃO são feitos no horário de sexta-feira das 17h às 18h. Podem ser agendados normalmente na terça (14h-16h) ou na sexta de manhã (07h30-09h45). Se o paciente pedir um desses exames especificamente para sexta às 17h-18h, informe que nesse horário não é possível e ofereça terça ou sexta de manhã como alternativa.
 ATENÇÃO — IDADE MÍNIMA PARA ULTRASSOM DE PÉS: só é feito a partir de 7 anos de idade. Se o paciente pedir ultrassom de pés para uma criança menor de 7 anos, informe claramente que não é possível nessa idade.
 ATENÇÃO — NÃO REALIZAMOS: Ultrassom Obstétrico com Doppler, e Morfológica para gestação gemelar/múltipla. Se o paciente pedir algum desses, informe CLARAMENTE que a clínica não realiza esse exame específico e que ele precisa procurar outro local — não ofereça alternativa nem diga "vou verificar".
-ATENÇÃO — RESTRIÇÃO SEXTA DE MANHÃ: no horário de sexta-feira pela manhã (07h30–09h45), NÃO fazemos Ultrassom Transvaginal/Endovaginal nem Morfológica de 1º Trimestre. Esses dois exames podem ser feitos na terça (14h-16h) ou na sexta à tarde (17h-18h). Se o paciente pedir um desses especificamente para sexta de manhã, informe que nesse horário não é possível e ofereça terça ou sexta à tarde como alternativa.
+ATENÇÃO — RESTRIÇÃO SEXTA DE MANHÃ: no horário de sexta-feira pela manhã (07h30–09h45), NÃO fazemos Morfológica de 1º Trimestre. Esse exame pode ser feito na terça (14h-16h) ou na sexta à tarde (17h-18h). Se o paciente pedir Morfológica de 1º Trimestre especificamente para sexta de manhã, informe que nesse horário não é possível e ofereça terça ou sexta à tarde como alternativa. Ultrassom Transvaginal/Endovaginal É FEITO normalmente na sexta de manhã, sem restrição.
+ATENÇÃO — EXCEÇÃO PONTUAL 04/09: nesse dia específico (só esse dia), o ultrassom NÃO atende à tarde — só a manhã (07h30–09h45) está disponível. O bloco AGENDA ATUAL já reflete isso automaticamente; se o paciente pedir especificamente sexta 04/09 à tarde, informe que esse horário não está disponível nesse dia e ofereça a manhã do mesmo dia ou outra data.
 MORFOLÓGICO: 1ºTri=11–13sem6d(R$230) | 2ºTri=20–23sem6d(R$280) | 3ºTri=32–34sem6d.
 REGRA CRÍTICA MORFOLÓGICO: se o paciente responder diretamente "1º trimestre", "1 trimestre", "primeiro trimestre", "2º trimestre", "segundo trimestre" (sem informar semanas exatas), ACEITE essa resposta como suficiente para identificar qual exame ele quer. NÃO peça semanas exatas de novo — isso já responde qual dos dois exames é. Prossiga direto para confirmar e pedir nome+nascimento. Só peça semanas exatas se o paciente não souber dizer o trimestre.
 
@@ -811,7 +818,7 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
       'Psiquiatria': { horario: '13h30–18h00', periodo: 'SOMENTE TARDE', datas: [{dia:28,mes:8},{dia:3,mes:9},{dia:17,mes:9},{dia:24,mes:9},{dia:1,mes:10},{dia:7,mes:10},{dia:15,mes:10},{dia:21,mes:10}] },
       'Otorrinolaringologia': { horario: '08h00–11h30', periodo: 'SOMENTE MANHÃ', datas: [] },
       'Endocrinologia': { horario: '13h30–16h00', periodo: 'SOMENTE TARDE', datas: [{dia:18,mes:8}] },
-      'Ginecologia': { horario: '14h30–17h30', periodo: 'SOMENTE TARDE', datas: [{dia:10,mes:8},{dia:24,mes:8}] },
+      'Ginecologia': { horario: '13h30–15h30', periodo: 'SOMENTE TARDE', datas: [{dia:14,mes:9}] },
     };
     function formatarListaDatas(lista) {
       if (lista.length === 1) return lista[0];
@@ -895,7 +902,9 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
         const DATAS_BLOQUEADAS_USG = [{ dia: 18, mes: 8 }, { dia: 25, mes: 8 }]; // Terças canceladas — volta normal a partir de 01/09
         const bloqueada = function(d) { return DATAS_BLOQUEADAS_USG.some(function(b){ return b.dia === d.getDate() && b.mes === d.getMonth()+1; }); };
         // Datas com horário/exames excepcionais (só nesse dia específico) — adicione aqui quando precisar
-        const HORARIOS_ESPECIAIS_USG = [];
+        const HORARIOS_ESPECIAIS_USG = [
+          { dia: 4, mes: 9, texto: 'Sexta: 07h30–09h45' }, // 04/09 — sem atendimento à tarde nesse dia específico
+        ];
         const horarioEspecial = function(d) {
           const e = HORARIOS_ESPECIAIS_USG.find(function(h){ return h.dia === d.getDate() && h.mes === d.getMonth()+1; });
           return e ? e.texto : null;
@@ -929,6 +938,21 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
           if (disponiveisColeta.length >= 4) break;
         }
         return '• Coleta Laboratorial (07h00–09h45, próximas datas): ' + (disponiveisColeta.length ? disponiveisColeta.join(' | ') : 'sem agenda no momento');
+      })(),
+      (function() {
+        const inicioVigencia = new Date(2026, 8, 17); // 17/09/2026 — início da agenda recorrente
+        const disponiveisPsico = [];
+        for (let i = 0; i <= 30; i++) {
+          const d = new Date(nowBR);
+          d.setDate(d.getDate() + i);
+          if (d.getDay() === 4 && d >= inicioVigencia) { // 4 = quinta-feira
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            disponiveisPsico.push(dd + '/' + mm);
+          }
+          if (disponiveisPsico.length >= 3) break;
+        }
+        return '• Psicologia e Neuropsicologia (13h30–17h30, toda quinta, próximas datas): ' + (disponiveisPsico.length ? disponiveisPsico.join(' | ') : 'sem agenda no momento');
       })(),
       (function() {
         const disponiveisHolterMapa = [];
@@ -1160,6 +1184,9 @@ const TABELA_SERVICOS = {
   'usg inguinal': 80,
   'doppler isolado': 140, 'doppler carotidas': 150,
   'consulta clinico geral': 80, 'clinico geral': 80,
+  'sessao de psicologia': 80, 'sessao psicologia': 80, 'psicologia': 80,
+  'sessao de neuropsicologia': 80, 'sessao neuropsicologia': 80, 'neuropsicologia': 80,
+  'avaliacao neuropsicologica completa': 1500, 'avaliacao neuropsicologica': 1500,
   'consulta ginecologia': 120, 'ginecologia': 120, 'ginecologista': 120,
   'consulta endocrinologia': 120, 'endocrinologia': 120, 'endocrinologista': 120,
   'consulta psiquiatria': 120, 'psiquiatria': 120, 'psiquiatra': 120,
@@ -1290,7 +1317,9 @@ function montarInstrucaoServicos(itens) {
 const CHAVES_CONSULTA = ['consulta clinico geral', 'clinico geral', 'consulta ginecologia', 'ginecologia',
   'ginecologista', 'consulta endocrinologia', 'endocrinologia', 'endocrinologista', 'consulta psiquiatria',
   'psiquiatria', 'psiquiatra', 'consulta pediatria', 'pediatria', 'pediatra', 'consulta otorrino', 'otorrino',
-  'otorrinolaringologista', 'otorrinolaringologia'];
+  'otorrinolaringologista', 'otorrinolaringologia', 'sessao de psicologia', 'sessao psicologia', 'psicologia',
+  'sessao de neuropsicologia', 'sessao neuropsicologia', 'neuropsicologia',
+  'avaliacao neuropsicologica completa', 'avaliacao neuropsicologica'];
 function categorizarServico(chave) {
   if (!chave) return 'procedimento';
   if (CHAVES_CONSULTA.includes(chave)) return 'consulta';
@@ -1557,6 +1586,7 @@ function inferirPeriodo(especialidade, dataEscolhida) {
   const esp = especialidade.toLowerCase();
   const data = (dataEscolhida || '').toLowerCase();
   if (esp.includes('psiquiatria')) return 'tarde';
+  if (esp.includes('psicologia') || esp.includes('neuropsicologia')) return 'tarde';
   if (esp.includes('endocrinolog')) return 'tarde';
   if (esp.includes('otorrino')) return 'manha';
   if (esp.includes('ginecolog')) return 'tarde';
@@ -1582,6 +1612,7 @@ function extrairDadosMensagem(texto) {
   // Detecta especialidade
   const t = texto.toLowerCase();
   if (t.match(/psiquiat/)) dados.especialidade = 'Psiquiatria';
+  else if (t.match(/neuropsicolog|psicolog/)) dados.especialidade = 'Psicologia e Neuropsicologia';
   else if (t.match(/limpeza de ouvido/)) dados.especialidade = 'Otorrinolaringologia';
   else if (t.match(/\bdiu\b|prevenc|citopatolog/)) dados.especialidade = 'Ginecologia';
   else if (t.match(/ginecolog/)) dados.especialidade = 'Ginecologia';
