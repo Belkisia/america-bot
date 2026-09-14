@@ -87,10 +87,10 @@ AGENDA MÉDICOS
 • Ginecologia: 14/09 das 13h30–15h30 — SOMENTE TARDE
 • Psicologia e Neuropsicologia: toda quinta-feira, a partir de 17/09, das 13h30–17h30 — SOMENTE TARDE (agenda recorrente semanal — use as datas do bloco AGENDA ATUAL, calculadas automaticamente)
 • Clínico Geral/Pediatria — datas específicas (cada uma com seu horário):
-  - 01/09 (terça): manhã 09h00–11h15 (sem tarde)
-  - 02/09 (quarta): tarde 14h00–17h15 (sem manhã)
-  - 03/09 (quinta): manhã 09h00–11h15 (sem tarde)
-  - 04/09 (sexta): manhã 10h30–11h15 e tarde 14h00–17h00
+  - 14/09 (segunda): tarde 16h00–17h15 (sem manhã)
+  - 15/09 (terça): manhã 09h00–11h30 (sem tarde)
+  - 17/09 (quinta): tarde 14h00–17h00 (sem manhã)
+  - 18/09 (sexta): manhã 10h00–11h30 e tarde 14h00–17h00
 
 PSICOLOGIA E NEUROPSICOLOGIA — DETALHES: existem 2 tipos de atendimento com valores diferentes — pergunte qual o paciente quer, se não estiver claro:
 - Sessão de psicologia/neuropsicologia (30 minutos): R$80,00
@@ -157,6 +157,7 @@ AGENDA DE COLETA LABORATORIAL — 07h00 às 09h45:
 Use SEMPRE as datas exatas fornecidas no bloco "AGENDA ATUAL" do prompt (calculadas pelo sistema) — NUNCA calcule ou deduza essas datas sozinho.
 
 EXAMES LABORATORIAIS: A clínica FAZ exames laboratoriais. NUNCA negar. Quando paciente perguntar preço de exame(s), calcule o total e informe APENAS o valor total com as opções de pagamento — não liste os valores individuais. Para orçamento de pedido médico com foto: peça a foto/lista, depois use [SECRETARIA].
+REGRA CRÍTICA — NUNCA INVENTE VALOR: se um exame ou serviço mencionado pelo paciente não tiver um valor calculado pelo sistema (não está na tabela de preços que você conhece), NUNCA estime, calcule de cabeça ou "chute" um valor pra esse item — isso já causou orçamentos errados enviados a pacientes. Nesse caso, diga que a secretaria vai confirmar o valor desse item específico, sem citar nenhum número. Isso vale inclusive pra exames que a clínica não realiza (ex: Ecocardiograma, TC, RM) — nunca informe preço de algo que não é feito aqui.
 REGRA DE NUMERAÇÃO: sempre que for listar os nomes dos exames identificados (por foto ou por texto digitado), liste NUMERADOS (1. 2. 3. ...), para o paciente ver de forma clara quantos exames foram identificados. Isso vale só para os NOMES dos exames — os VALORES continuam sendo mostrados apenas como total final (cartão/pix), nunca por item.
 
 CONFIRMAÇÃO DE AGENDAMENTO DE COLETA: Depois de informar o orçamento e o paciente confirmar que quer agendar a coleta (ex: "pode marcar", "quero sim", confirma um dia específico), colete nome completo + data de nascimento (na mesma pergunta, igual às outras agendas) e a data de coleta escolhida (dentro das datas do bloco AGENDA ATUAL). Depois gere a tag:
@@ -164,7 +165,7 @@ Tag: [AGENDAR:nome=X|nascimento=X|especialidade=Coleta Laboratorial|convenio=par
 O período é sempre manhã (07h00–09h45), não pergunte período para coleta laboratorial.
 ANTI-DUPLICATA: Se o histórico já tem confirmação de agendamento de coleta, NÃO gere [AGENDAR] de novo.
 
-EXAMES QUE A CLÍNICA NÃO FAZ: Tomografia (TC/TAC) e Ressonância Magnética (RM/RNM) NÃO são feitos aqui. Se algum desses aparecer no pedido/receita (ex: "TC de Abdome Total", "Ressonância de Crânio"), NÃO diga que "será tratado à parte" — avise CLARAMENTE e direto ao paciente, já na mesma mensagem, que a clínica não realiza esse exame específico e que ele precisa procurar outro local para isso. Continue normalmente com o orçamento dos demais exames que a clínica faz.
+EXAMES QUE A CLÍNICA NÃO FAZ: Tomografia (TC/TAC), Ressonância Magnética (RM/RNM) e Ecocardiograma (Ecocardiograma Transtorácico) NÃO são feitos aqui — NÃO CONFUNDA Ecocardiograma com Eletrocardiograma (ECG), que a clínica FAZ normalmente. Se algum desses aparecer no pedido/receita (ex: "TC de Abdome Total", "Ressonância de Crânio", "Ecocardiograma Transtorácico"), NÃO diga que "será tratado à parte" — avise CLARAMENTE e direto ao paciente, já na mesma mensagem, que a clínica não realiza esse exame específico e que ele precisa procurar outro local para isso. Continue normalmente com o orçamento dos demais exames que a clínica faz.
 
 REGRAS DE PREÇO ESPECIAL:
 - Hemograma SOZINHO: R$30
@@ -359,6 +360,9 @@ const TABELA_PRECOS = {
   'prolactina': 21,
   'testosterona total': 23.5,
   'homocisteina': 44,
+  'coprocultura': 20,
+  'coprologico funcional': 47, 'coprologia funcional': 47,
+  'calprotectina': 94.5, 'calprotectina fecal': 94.5,
   'testosterona livre': 29.5,
   'testosterona': 0,
   'dhea': 26,
@@ -879,10 +883,10 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
       formatarLinhaAgenda('Ginecologia', AGENDA_ESPECIALIDADES['Ginecologia']),
       (function() {
         const AGENDA_CLINICO = [
-          { dia: 1, mes: 9, manha: '09h00–11h15', tarde: null },
-          { dia: 2, mes: 9, manha: null, tarde: '14h00–17h15' },
-          { dia: 3, mes: 9, manha: '09h00–11h15', tarde: null },
-          { dia: 4, mes: 9, manha: '10h30–11h15', tarde: '14h00–17h00' },
+          { dia: 14, mes: 9, manha: null, tarde: '16h00–17h15' },
+          { dia: 15, mes: 9, manha: '09h00–11h30', tarde: null },
+          { dia: 17, mes: 9, manha: null, tarde: '14h00–17h00' },
+          { dia: 18, mes: 9, manha: '10h00–11h30', tarde: '14h00–17h00' },
         ];
         const disponiveis = AGENDA_CLINICO
           .filter(function (d) { return dataFutura(d.dia, d.mes); })
@@ -1759,7 +1763,7 @@ async function processarFila(num) {
             instrucoesExtraImg.push(montarInstrucaoServicos(servicosImg));
           }
         }
-        instrucoesExtraImg.push('O paciente enviou uma imagem/receita médica nesta mensagem. Instruções para responder:\n1. Confirme o nome do paciente e LISTE cada exame identificado individualmente pelo nome, NUMERADO (1. 2. 3. ...) para o paciente ver de forma clara quantos exames são (NUNCA agrupe em categorias como "função renal", "perfil hormonal" etc.)\n2. Informe os valores calculados acima (use exatamente esses valores)\n3. Avise de forma natural que é uma prévia e que a secretaria vai confirmar o valor final e os exames identificados\n4. Se houver Tomografia (TC/TAC) ou Ressonância (RM/RNM) na lista, avise CLARAMENTE que a clínica não realiza esse exame específico e que o paciente precisa procurar outro local — não diga apenas "será tratado à parte"\n5. Convide para agendar os exames que a clínica faz\nSe algum exame não tiver valor calculado, mencione que entrará em contato para complementar.');
+        instrucoesExtraImg.push('O paciente enviou uma imagem/receita médica nesta mensagem. Instruções para responder:\n1. Confirme o nome do paciente e LISTE cada exame identificado individualmente pelo nome, NUMERADO (1. 2. 3. ...) para o paciente ver de forma clara quantos exames são (NUNCA agrupe em categorias como "função renal", "perfil hormonal" etc.)\n2. Informe os valores calculados acima (use exatamente esses valores)\n3. Avise de forma natural que é uma prévia e que a secretaria vai confirmar o valor final e os exames identificados\n4. Se houver Tomografia (TC/TAC), Ressonância (RM/RNM) ou Ecocardiograma na lista, avise CLARAMENTE que a clínica não realiza esse exame específico e que o paciente precisa procurar outro local — não diga apenas "será tratado à parte"\n5. Convide para agendar os exames que a clínica faz\nSe algum exame não tiver valor calculado pelo sistema, NUNCA invente ou estime um valor por conta própria — apenas mencione que a secretaria vai confirmar o valor desse item específico, sem dar nenhum número.');
         hist.push({ role: 'user', content: 'Análise da imagem/receita enviada pelo paciente: ' + leitura });
         const resp = await chamarIA(hist, instrucoesExtraImg.join('\n\n'));
         const final = limpar(resp).replace('[SECRETARIA]', '').trim();
