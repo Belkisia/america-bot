@@ -112,7 +112,7 @@ ATENÇÃO — RESTRIÇÃO DE HORÁRIO PARA QUADRIL/JOELHO/TORNOZELO/PÉS: esses 
 ATENÇÃO — IDADE MÍNIMA PARA ULTRASSOM DE PÉS: só é feito a partir de 7 anos de idade. Se o paciente pedir ultrassom de pés para uma criança menor de 7 anos, informe claramente que não é possível nessa idade.
 ATENÇÃO — NÃO REALIZAMOS: Ultrassom Obstétrico com Doppler, e Morfológica para gestação gemelar/múltipla. Se o paciente pedir algum desses, informe CLARAMENTE que a clínica não realiza esse exame específico e que ele precisa procurar outro local — não ofereça alternativa nem diga "vou verificar".
 ATENÇÃO — RESTRIÇÃO SEXTA DE MANHÃ: no horário de sexta-feira pela manhã (07h30–09h45), NÃO fazemos Morfológica de 1º Trimestre. Esse exame pode ser feito na terça (14h-16h) ou na sexta à tarde (17h-18h). Se o paciente pedir Morfológica de 1º Trimestre especificamente para sexta de manhã, informe que nesse horário não é possível e ofereça terça ou sexta à tarde como alternativa. Ultrassom Transvaginal/Endovaginal É FEITO normalmente na sexta de manhã, sem restrição.
-ATENÇÃO — EXCEÇÃO PONTUAL 04/09: nesse dia específico (só esse dia), o ultrassom NÃO atende à tarde — só a manhã (07h30–09h45) está disponível. O bloco AGENDA ATUAL já reflete isso automaticamente; se o paciente pedir especificamente sexta 04/09 à tarde, informe que esse horário não está disponível nesse dia e ofereça a manhã do mesmo dia ou outra data.
+ATENÇÃO — EXCEÇÃO PONTUAL 22/09 (terça): nesse dia específico (só esse dia), o horário de ultrassom é ESTENDIDO — 07h30 às 11h00 (em vez do horário normal de terça, que é 14h00–16h00). O bloco AGENDA ATUAL já reflete isso automaticamente.
 MORFOLÓGICO: 1ºTri=11–13sem6d(R$230) | 2ºTri=20–23sem6d(R$280) | 3ºTri=32–34sem6d.
 REGRA CRÍTICA MORFOLÓGICO: se o paciente responder diretamente "1º trimestre", "1 trimestre", "primeiro trimestre", "2º trimestre", "segundo trimestre" (sem informar semanas exatas), ACEITE essa resposta como suficiente para identificar qual exame ele quer. NÃO peça semanas exatas de novo — isso já responde qual dos dois exames é. Prossiga direto para confirmar e pedir nome+nascimento. Só peça semanas exatas se o paciente não souber dizer o trimestre.
 
@@ -906,7 +906,7 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
         const bloqueada = function(d) { return DATAS_BLOQUEADAS_USG.some(function(b){ return b.dia === d.getDate() && b.mes === d.getMonth()+1; }); };
         // Datas com horário/exames excepcionais (só nesse dia específico) — adicione aqui quando precisar
         const HORARIOS_ESPECIAIS_USG = [
-          { dia: 4, mes: 9, texto: 'Sexta: 07h30–09h45' }, // 04/09 — sem atendimento à tarde nesse dia específico
+          { dia: 22, mes: 9, texto: 'Terça: 07h30–11h00' }, // 22/09 — exceção pontual, horário estendido só nesse dia
         ];
         const horarioEspecial = function(d) {
           const e = HORARIOS_ESPECIAIS_USG.find(function(h){ return h.dia === d.getDate() && h.mes === d.getMonth()+1; });
