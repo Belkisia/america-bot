@@ -86,11 +86,12 @@ AGENDA MÉDICOS
 • Endocrinologia: 18/08 das 13h30–16h00 — SOMENTE TARDE
 • Ginecologia: 14/09 das 13h30–15h30 — SOMENTE TARDE
 • Psicologia e Neuropsicologia: toda quinta-feira, a partir de 17/09, das 13h30–17h30 — SOMENTE TARDE (agenda recorrente semanal — use as datas do bloco AGENDA ATUAL, calculadas automaticamente)
-• Clínico Geral/Pediatria — datas específicas (cada uma com seu horário):
-  - 14/09 (segunda): tarde 16h00–17h15 (sem manhã)
-  - 15/09 (terça): manhã 09h00–11h30 (sem tarde)
-  - 17/09 (quinta): tarde 14h00–17h00 (sem manhã)
-  - 18/09 (sexta): manhã 10h00–11h30 e tarde 14h00–17h00
+• Clínico Geral/Pediatria — agenda recorrente semanal (use as datas do bloco AGENDA ATUAL, calculadas automaticamente):
+  - Segunda-feira: tarde 16h00–17h00 (sem manhã)
+  - Terça-feira: manhã 09h00–11h00 (sem tarde)
+  - Quinta-feira: manhã 09h00–11h00 (sem tarde)
+  - Sexta-feira: manhã 09h00–11h00 (sem tarde)
+  - Quarta-feira: sem atendimento
 
 PSICOLOGIA E NEUROPSICOLOGIA — DETALHES: existem 2 tipos de atendimento com valores diferentes — pergunte qual o paciente quer, se não estiver claro:
 - Sessão de psicologia/neuropsicologia (30 minutos): R$80,00
@@ -99,7 +100,7 @@ Ambos seguem a mesma agenda (toda quinta a partir de 17/09, tarde). Colete nome+
 
 REGRA DE DATAS: Compare cada data com a DATA ATUAL do prompt. Mostre SOMENTE datas futuras. Cada data tem horário diferente — informe corretamente conforme a agenda acima. Se TODAS passaram: informe que não há agenda disponível no momento.
 
-PERÍODO: Para Clínico Geral/Pediatria, mostre as datas futuras disponíveis e os horários de cada uma (algumas só têm manhã, outras têm manhã e tarde) — pergunte qual data e período o paciente prefere, dentro do que está disponível para cada dia. Para demais especialidades use o período fixo sem perguntar.
+PERÍODO: Para Clínico Geral/Pediatria, cada dia da semana já tem um período fixo (segunda só tarde, terça/quinta/sexta só manhã) — NÃO pergunte período, apenas mostre as próximas datas disponíveis (do bloco AGENDA ATUAL) com o horário de cada uma e pergunte qual data o paciente prefere. Para demais especialidades use o período fixo sem perguntar.
 REGRA — PEDIDO DE 2 OU MAIS AGENDAMENTOS JUNTOS: se o paciente pedir mais de uma especialidade/exame na mesma mensagem (ex: "pediatra e ginecologista"), NÃO liste todas as datas disponíveis de cada uma — isso sobrecarrega a mensagem. Mostre apenas a data mais próxima de cada especialidade/exame, e avise brevemente que há outras opções caso essa não sirva (ex: "tenho essa data disponível, mas se não servir me avisa que te passo outras opções"). Só mostre a lista completa de datas se o paciente pedir explicitamente outras opções, ou se estiver pedindo só UMA especialidade por vez.
 
 ULTRASSOM
@@ -882,24 +883,21 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
       formatarLinhaAgenda('Endocrinologia', AGENDA_ESPECIALIDADES['Endocrinologia']),
       formatarLinhaAgenda('Ginecologia', AGENDA_ESPECIALIDADES['Ginecologia']),
       (function() {
-        const AGENDA_CLINICO = [
-          { dia: 14, mes: 9, manha: null, tarde: '16h00–17h15' },
-          { dia: 15, mes: 9, manha: '09h00–11h30', tarde: null },
-          { dia: 17, mes: 9, manha: null, tarde: '14h00–17h00' },
-          { dia: 18, mes: 9, manha: '10h00–11h30', tarde: '14h00–17h00' },
-        ];
-        const disponiveis = AGENDA_CLINICO
-          .filter(function (d) { return dataFutura(d.dia, d.mes); })
-          .map(function (d) {
-            const dd = String(d.dia).padStart(2, '0') + '/' + String(d.mes).padStart(2, '0');
-            let periodos;
-            if (d.manha && d.tarde) periodos = 'manhã ' + d.manha + ' e tarde ' + d.tarde;
-            else if (d.manha) periodos = 'manhã ' + d.manha + ' (sem tarde)';
-            else if (d.tarde) periodos = 'tarde ' + d.tarde + ' (sem manhã)';
-            else periodos = 'sem horário definido';
-            return dd + ' (' + periodos + ')';
-          });
-        return '• Clínico Geral/Pediatria (datas específicas): ' + (disponiveis.length ? disponiveis.join(' | ') : 'sem agenda no momento');
+        // Agenda recorrente semanal (permanente): segunda tarde, terça/quinta/sexta manhã — sem atendimento na quarta
+        const horariosClinico = { 1: 'tarde 16h00–17h00 (sem manhã)', 2: 'manhã 09h00–11h00 (sem tarde)', 4: 'manhã 09h00–11h00 (sem tarde)', 5: 'manhã 09h00–11h00 (sem tarde)' };
+        const disponiveisClinico = [];
+        for (let i = 0; i <= 14; i++) {
+          const d = new Date(nowBR);
+          d.setDate(d.getDate() + i);
+          const dow = d.getDay();
+          if (horariosClinico[dow]) {
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            disponiveisClinico.push(dd + '/' + mm + ' (' + horariosClinico[dow] + ')');
+          }
+          if (disponiveisClinico.length >= 4) break;
+        }
+        return '• Clínico Geral/Pediatria (agenda recorrente semanal, próximas datas): ' + (disponiveisClinico.length ? disponiveisClinico.join(' | ') : 'sem agenda no momento');
       })(),
       (function() {
         const horariosUSG = { 2: 'Terça: 14h00–16h00', 5: 'Sexta: 07h30–09h45 e 17h00–18h00' };
