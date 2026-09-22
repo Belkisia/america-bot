@@ -89,9 +89,11 @@ AGENDA MÉDICOS
 • Clínico Geral/Pediatria — agenda recorrente semanal (use as datas do bloco AGENDA ATUAL, calculadas automaticamente):
   - Segunda-feira: tarde 16h00–17h00 (sem manhã)
   - Terça-feira: manhã 09h00–11h00 (sem tarde)
-  - Quinta-feira: manhã 09h00–11h00 (sem tarde)
+  - Quinta-feira: tarde 14h30–17h00 (sem manhã)
   - Sexta-feira: manhã 09h00–11h00 (sem tarde)
   - Quarta-feira: sem atendimento
+• Cardiologia: sem agenda disponível no momento
+• Dermatologia: sem agenda disponível no momento
 
 PSICOLOGIA E NEUROPSICOLOGIA — DETALHES: existem 2 tipos de atendimento com valores diferentes — pergunte qual o paciente quer, se não estiver claro:
 - Sessão de psicologia/neuropsicologia (30 minutos): R$80,00
@@ -100,18 +102,16 @@ Ambos seguem a mesma agenda (toda quinta a partir de 17/09, tarde). Colete nome+
 
 REGRA DE DATAS: Compare cada data com a DATA ATUAL do prompt. Mostre SOMENTE datas futuras. Cada data tem horário diferente — informe corretamente conforme a agenda acima. Se TODAS passaram: informe que não há agenda disponível no momento.
 
-PERÍODO: Para Clínico Geral/Pediatria, cada dia da semana já tem um período fixo (segunda só tarde, terça/quinta/sexta só manhã) — NÃO pergunte período, apenas mostre as próximas datas disponíveis (do bloco AGENDA ATUAL) com o horário de cada uma e pergunte qual data o paciente prefere. Para demais especialidades use o período fixo sem perguntar.
+PERÍODO: Para Clínico Geral/Pediatria, cada dia da semana já tem um período fixo (segunda e quinta só tarde, terça e sexta só manhã) — NÃO pergunte período, apenas mostre as próximas datas disponíveis (do bloco AGENDA ATUAL) com o horário de cada uma e pergunte qual data o paciente prefere. Para demais especialidades use o período fixo sem perguntar.
 REGRA — PEDIDO DE 2 OU MAIS AGENDAMENTOS JUNTOS: se o paciente pedir mais de uma especialidade/exame na mesma mensagem (ex: "pediatra e ginecologista"), NÃO liste todas as datas disponíveis de cada uma — isso sobrecarrega a mensagem. Mostre apenas a data mais próxima de cada especialidade/exame, e avise brevemente que há outras opções caso essa não sirva (ex: "tenho essa data disponível, mas se não servir me avisa que te passo outras opções"). Só mostre a lista completa de datas se o paciente pedir explicitamente outras opções, ou se estiver pedindo só UMA especialidade por vez.
 
 ULTRASSOM
 Não é especialidade — é exame. Colete: nome, nascimento, qual exame.
 Tag: [AGENDAR:nome=X|nascimento=X|especialidade=Ultrassom|convenio=particular|periodo=manha|data=DD/MM/AAAA]
-Dias disponíveis: TERÇA, 14h00–16h00 (tarde), e SEXTA, 07h30–09h45 (manhã) e 17h00–18h00 (tarde) — na SEXTA são feitos TODOS os exames de ultrassom (respeitando as restrições específicas abaixo).
+Dias disponíveis: TERÇA, 14h00–16h00 (tarde), e SEXTA, 13h30–17h30 (tarde) — na SEXTA são feitos TODOS os exames de ultrassom (respeitando as restrições específicas abaixo).
 ATENÇÃO — RESTRIÇÃO PERMANENTE DE TERÇA-FEIRA: na TERÇA, SOMENTE estes exames são feitos: Tireoide (sem Doppler), Mamas, Axilas, Abdome Total, Abdome Superior, Vias Urinárias, Próstata, Transvaginal/Endovaginal, Obstétrica. Se o paciente pedir um exame de ultrassom que NÃO está nessa lista para terça-feira, informe que nesse dia não é possível fazer esse exame específico e ofereça a sexta-feira como alternativa (que faz todos os exames). Essa restrição vale pra TODA terça, permanentemente — não é uma exceção pontual.
-ATENÇÃO — RESTRIÇÃO DE HORÁRIO PARA QUADRIL/JOELHO/TORNOZELO/PÉS: esses exames NÃO são feitos no horário de sexta-feira das 17h às 18h. Podem ser agendados normalmente na terça (14h-16h) ou na sexta de manhã (07h30-09h45). Se o paciente pedir um desses exames especificamente para sexta às 17h-18h, informe que nesse horário não é possível e ofereça terça ou sexta de manhã como alternativa.
 ATENÇÃO — IDADE MÍNIMA PARA ULTRASSOM DE PÉS: só é feito a partir de 7 anos de idade. Se o paciente pedir ultrassom de pés para uma criança menor de 7 anos, informe claramente que não é possível nessa idade.
 ATENÇÃO — NÃO REALIZAMOS: Ultrassom Obstétrico com Doppler, e Morfológica para gestação gemelar/múltipla. Se o paciente pedir algum desses, informe CLARAMENTE que a clínica não realiza esse exame específico e que ele precisa procurar outro local — não ofereça alternativa nem diga "vou verificar".
-ATENÇÃO — RESTRIÇÃO SEXTA DE MANHÃ: no horário de sexta-feira pela manhã (07h30–09h45), NÃO fazemos Morfológica de 1º Trimestre. Esse exame pode ser feito na terça (14h-16h) ou na sexta à tarde (17h-18h). Se o paciente pedir Morfológica de 1º Trimestre especificamente para sexta de manhã, informe que nesse horário não é possível e ofereça terça ou sexta à tarde como alternativa. Ultrassom Transvaginal/Endovaginal É FEITO normalmente na sexta de manhã, sem restrição.
 ATENÇÃO — EXCEÇÃO PONTUAL 22/09 (terça): nesse dia específico (só esse dia), o horário de ultrassom é ESTENDIDO — 07h30 às 11h00 (em vez do horário normal de terça, que é 14h00–16h00). O bloco AGENDA ATUAL já reflete isso automaticamente.
 MORFOLÓGICO: 1ºTri=11–13sem6d(R$230) | 2ºTri=20–23sem6d(R$280) | 3ºTri=32–34sem6d.
 REGRA CRÍTICA MORFOLÓGICO: se o paciente responder diretamente "1º trimestre", "1 trimestre", "primeiro trimestre", "2º trimestre", "segundo trimestre" (sem informar semanas exatas), ACEITE essa resposta como suficiente para identificar qual exame ele quer. NÃO peça semanas exatas de novo — isso já responde qual dos dois exames é. Prossiga direto para confirmar e pedir nome+nascimento. Só peça semanas exatas se o paciente não souber dizer o trimestre.
@@ -1049,7 +1049,7 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
       formatarLinhaAgenda('Ginecologia', AGENDA_ESPECIALIDADES['Ginecologia']),
       (function() {
         // Agenda recorrente semanal (permanente): segunda tarde, terça/quinta/sexta manhã — sem atendimento na quarta
-        const horariosClinico = { 1: 'tarde 16h00–17h00 (sem manhã)', 2: 'manhã 09h00–11h00 (sem tarde)', 4: 'manhã 09h00–11h00 (sem tarde)', 5: 'manhã 09h00–11h00 (sem tarde)' };
+        const horariosClinico = { 1: 'tarde 16h00–17h00 (sem manhã)', 2: 'manhã 09h00–11h00 (sem tarde)', 4: 'tarde 14h30–17h00 (sem manhã)', 5: 'manhã 09h00–11h00 (sem tarde)' };
         const disponiveisClinico = [];
         for (let i = 0; i <= 14; i++) {
           const d = new Date(nowBR);
@@ -1065,7 +1065,7 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
         return '• Clínico Geral/Pediatria (agenda recorrente semanal, próximas datas): ' + (disponiveisClinico.length ? disponiveisClinico.join(' | ') : 'sem agenda no momento');
       })(),
       (function() {
-        const horariosUSG = { 2: 'Terça: 14h00–16h00', 5: 'Sexta: 07h30–09h45 e 17h00–18h00' };
+        const horariosUSG = { 2: 'Terça: 14h00–16h00', 5: 'Sexta: 13h30–17h30' };
         // Datas específicas canceladas (ex: feriado, imprevisto) — adicione aqui quando precisar
         const DATAS_BLOQUEADAS_USG = [{ dia: 18, mes: 8 }, { dia: 25, mes: 8 }]; // Terças canceladas — volta normal a partir de 01/09
         const bloqueada = function(d) { return DATAS_BLOQUEADAS_USG.some(function(b){ return b.dia === d.getDate() && b.mes === d.getMonth()+1; }); };
@@ -1374,6 +1374,8 @@ const TABELA_SERVICOS = {
   'consulta psiquiatria': 120, 'psiquiatria': 120, 'psiquiatra': 120,
   'consulta pediatria': 100, 'pediatria': 100, 'pediatra': 100,
   'consulta otorrino': 140, 'otorrino': 140, 'otorrinolaringologista': 140, 'otorrinolaringologia': 140,
+  'consulta cardiologia': 150, 'cardiologia': 150, 'cardiologista': 150,
+  'consulta dermatologia': 120, 'dermatologia': 120, 'dermatologista': 120,
   'limpeza de ouvido': 50,
   'inserir diu': 400, 'diu inserir': 400,
   'retirar diu': 300, 'diu retirar': 300,
@@ -1505,7 +1507,9 @@ const CHAVES_CONSULTA = ['consulta clinico geral', 'clinico geral', 'consulta gi
   'psiquiatria', 'psiquiatra', 'consulta pediatria', 'pediatria', 'pediatra', 'consulta otorrino', 'otorrino',
   'otorrinolaringologista', 'otorrinolaringologia', 'sessao de psicologia', 'sessao psicologia', 'psicologia',
   'sessao de neuropsicologia', 'sessao neuropsicologia', 'neuropsicologia',
-  'avaliacao neuropsicologica completa', 'avaliacao neuropsicologica'];
+  'avaliacao neuropsicologica completa', 'avaliacao neuropsicologica',
+  'consulta cardiologia', 'cardiologia', 'cardiologista',
+  'consulta dermatologia', 'dermatologia', 'dermatologista'];
 function categorizarServico(chave) {
   if (!chave) return 'procedimento';
   if (CHAVES_CONSULTA.includes(chave)) return 'consulta';
