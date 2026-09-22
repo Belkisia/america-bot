@@ -84,7 +84,7 @@ AGENDA MÉDICOS
 • Psiquiatria: 28/08, 03/09, 17/09, 24/09, 01/10, 07/10, 15/10 e 21/10 das 13h30–18h00 — SOMENTE TARDE — LIMITE DE 16 PACIENTES POR DIA (equipe médica só atende essa quantidade)
 • Otorrinolaringologia: sem agenda disponível no momento
 • Endocrinologia: 18/08 das 13h30–16h00 — SOMENTE TARDE
-• Ginecologia: 14/09 das 13h30–15h30 — SOMENTE TARDE
+• Ginecologia: 29/09 das 07h30–11h00 — SOMENTE MANHÃ
 • Psicologia e Neuropsicologia: toda quinta-feira, a partir de 17/09, das 13h30–17h30 — SOMENTE TARDE (agenda recorrente semanal — use as datas do bloco AGENDA ATUAL, calculadas automaticamente)
 • Clínico Geral/Pediatria — agenda recorrente semanal (use as datas do bloco AGENDA ATUAL, calculadas automaticamente):
   - Segunda-feira: tarde 16h00–17h00 (sem manhã)
@@ -989,7 +989,7 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
       'Psiquiatria': { horario: '13h30–18h00', periodo: 'SOMENTE TARDE', datas: [{dia:28,mes:8},{dia:3,mes:9},{dia:17,mes:9},{dia:24,mes:9},{dia:1,mes:10},{dia:7,mes:10},{dia:15,mes:10},{dia:21,mes:10}] },
       'Otorrinolaringologia': { horario: '08h00–11h30', periodo: 'SOMENTE MANHÃ', datas: [] },
       'Endocrinologia': { horario: '13h30–16h00', periodo: 'SOMENTE TARDE', datas: [{dia:18,mes:8}] },
-      'Ginecologia': { horario: '13h30–15h30', periodo: 'SOMENTE TARDE', datas: [{dia:14,mes:9}] },
+      'Ginecologia': { horario: '07h30–11h00', periodo: 'SOMENTE MANHÃ', datas: [{dia:29,mes:9}] },
     };
     function formatarListaDatas(lista) {
       if (lista.length === 1) return lista[0];
@@ -1667,7 +1667,7 @@ async function executarFollowUpVendas(forcar) {
 const HORARIO_INICIO_ESTIMADO = {
   'Psiquiatria': { tarde: '13:30' },
   'Endocrinologia': { tarde: '13:30' },
-  'Ginecologia': { tarde: '14:30' },
+  'Ginecologia': { manha: '07:30' },
   'Otorrinolaringologia': { manha: '08:30' },
   'Clínico Geral': { manha: '09:00', tarde: '14:00' },
   'Pediatria': { manha: '09:00', tarde: '14:00' },
@@ -1779,7 +1779,7 @@ function inferirPeriodo(especialidade, dataEscolhida) {
   if (esp.includes('psicologia') || esp.includes('neuropsicologia')) return 'tarde';
   if (esp.includes('endocrinolog')) return 'tarde';
   if (esp.includes('otorrino')) return 'manha';
-  if (esp.includes('ginecolog')) return 'tarde';
+  if (esp.includes('ginecolog')) return 'manha';
   if (esp.includes('coleta') || esp.includes('laboratorial')) return 'manha';
   return null;
 }
