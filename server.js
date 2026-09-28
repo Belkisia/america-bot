@@ -87,11 +87,10 @@ AGENDA MÉDICOS
 • Ginecologia: 29/09 das 07h30–11h00 — SOMENTE MANHÃ
 • Psicologia e Neuropsicologia: toda quinta-feira, a partir de 17/09, das 13h30–17h30 — SOMENTE TARDE (agenda recorrente semanal — use as datas do bloco AGENDA ATUAL, calculadas automaticamente)
 • Clínico Geral/Pediatria — agenda recorrente semanal (use as datas do bloco AGENDA ATUAL, calculadas automaticamente):
-  - Segunda-feira: tarde 16h00–17h00 (sem manhã)
-  - Terça-feira: manhã 09h00–11h00 (sem tarde)
-  - Quinta-feira: tarde 14h30–17h00 (sem manhã)
-  - Sexta-feira: manhã 09h00–11h00 (sem tarde)
-  - Quarta-feira: sem atendimento
+  - Segunda-feira: manhã 09h00–10h30 (sem tarde)
+  - Quinta-feira: manhã 10h30–11h30 (sem tarde)
+  - Sexta-feira: manhã 09h00–11h00 e tarde 14h30–17h00
+  - Terça-feira e Quarta-feira: sem atendimento
 • Cardiologia: sem agenda disponível no momento
 • Dermatologia: sem agenda disponível no momento
 
@@ -102,19 +101,20 @@ Ambos seguem a mesma agenda (toda quinta a partir de 17/09, tarde). Colete nome+
 
 REGRA DE DATAS: Compare cada data com a DATA ATUAL do prompt. Mostre SOMENTE datas futuras. Cada data tem horário diferente — informe corretamente conforme a agenda acima. Se TODAS passaram: informe que não há agenda disponível no momento.
 
-PERÍODO: Para Clínico Geral/Pediatria, cada dia da semana já tem um período fixo (segunda e quinta só tarde, terça e sexta só manhã) — NÃO pergunte período, apenas mostre as próximas datas disponíveis (do bloco AGENDA ATUAL) com o horário de cada uma e pergunte qual data o paciente prefere. Para demais especialidades use o período fixo sem perguntar.
+PERÍODO: Para Clínico Geral/Pediatria, segunda e quinta só têm manhã (não precisa perguntar período nesses dias). Sexta-feira tem manhã (09h00–11h00) E tarde (14h30–17h00) — nesse dia pergunte qual período o paciente prefere. Mostre as próximas datas disponíveis (do bloco AGENDA ATUAL) com o horário de cada uma e pergunte qual data o paciente prefere. Para demais especialidades use o período fixo sem perguntar.
 REGRA — PEDIDO DE 2 OU MAIS AGENDAMENTOS JUNTOS: se o paciente pedir mais de uma especialidade/exame na mesma mensagem (ex: "pediatra e ginecologista"), NÃO liste todas as datas disponíveis de cada uma — isso sobrecarrega a mensagem. Mostre apenas a data mais próxima de cada especialidade/exame, e avise brevemente que há outras opções caso essa não sirva (ex: "tenho essa data disponível, mas se não servir me avisa que te passo outras opções"). Só mostre a lista completa de datas se o paciente pedir explicitamente outras opções, ou se estiver pedindo só UMA especialidade por vez.
 
 ULTRASSOM
 Não é especialidade — é exame. Colete: nome, nascimento, qual exame.
 Tag: [AGENDAR:nome=X|nascimento=X|especialidade=Ultrassom|convenio=particular|periodo=manha|data=DD/MM/AAAA]
-Dias disponíveis: TERÇA, 14h00–16h00 (tarde), e SEXTA, 13h30–17h30 (tarde) — na SEXTA são feitos TODOS os exames de ultrassom (respeitando as restrições específicas abaixo).
+Dias disponíveis: TERÇA, 14h00–16h00 (tarde), e SEXTA, 16h00–17h30 (tarde) — na SEXTA são feitos TODOS os exames de ultrassom (respeitando as restrições específicas abaixo).
 ATENÇÃO — RESTRIÇÃO PERMANENTE DE TERÇA-FEIRA: na TERÇA, SOMENTE estes exames são feitos: Tireoide (sem Doppler), Mamas, Axilas, Abdome Total, Abdome Superior, Vias Urinárias, Próstata, Transvaginal/Endovaginal, Obstétrica. Se o paciente pedir um exame de ultrassom que NÃO está nessa lista para terça-feira, informe que nesse dia não é possível fazer esse exame específico e ofereça a sexta-feira como alternativa (que faz todos os exames). Essa restrição vale pra TODA terça, permanentemente — não é uma exceção pontual.
 ATENÇÃO — IDADE MÍNIMA PARA ULTRASSOM DE PÉS: só é feito a partir de 7 anos de idade. Se o paciente pedir ultrassom de pés para uma criança menor de 7 anos, informe claramente que não é possível nessa idade.
 ATENÇÃO — NÃO REALIZAMOS: Ultrassom Obstétrico com Doppler, e Morfológica para gestação gemelar/múltipla. Se o paciente pedir algum desses, informe CLARAMENTE que a clínica não realiza esse exame específico e que ele precisa procurar outro local — não ofereça alternativa nem diga "vou verificar".
-ATENÇÃO — EXCEÇÃO PONTUAL 22/09 (terça): nesse dia específico (só esse dia), o horário de ultrassom é ESTENDIDO — 07h30 às 11h00 (em vez do horário normal de terça, que é 14h00–16h00). O bloco AGENDA ATUAL já reflete isso automaticamente.
+ATENÇÃO — EXCEÇÃO PONTUAL 01/10 (quinta): essa semana, além dos dias normais (terça e sexta), também tem ultrassom na QUINTA 01/10, das 13h30 às 17h30 — só essa data. O bloco AGENDA ATUAL já reflete isso automaticamente.
 MORFOLÓGICO: 1ºTri=11–13sem6d(R$230) | 2ºTri=20–23sem6d(R$280) | 3ºTri=32–34sem6d.
 REGRA CRÍTICA MORFOLÓGICO: se o paciente responder diretamente "1º trimestre", "1 trimestre", "primeiro trimestre", "2º trimestre", "segundo trimestre" (sem informar semanas exatas), ACEITE essa resposta como suficiente para identificar qual exame ele quer. NÃO peça semanas exatas de novo — isso já responde qual dos dois exames é. Prossiga direto para confirmar e pedir nome+nascimento. Só peça semanas exatas se o paciente não souber dizer o trimestre.
+ATENÇÃO — MORFOLÓGICA 1º OU 2º TRIMESTRE: ao confirmar o agendamento desse exame, sempre avise a paciente que ela precisa trazer os ultrassons anteriores (exames de ultrassom obstétrico já feitos) no dia da realização.
 
 REGRA DE COMUNICAÇÃO — RESTRIÇÕES DE AGENDA: ao informar que um exame não está disponível em determinado dia/horário (restrição de exceção pontual, restrição de horário, restrição de idade etc.), seja DIRETO e SIMPLES. NÃO explique o motivo interno da restrição, NÃO liste as exceções da agenda ou por que outro dia/horário não funciona. Vá direto à informação útil: qual dia e horário ESTÁ disponível para esse exame.
 REGRA GERAL — NÃO JUSTIFIQUE REGRAS INTERNAS AO PACIENTE: isso vale pra qualquer situação, não só agenda — preços especiais, exceções de desconto, regras de cálculo etc. são informações internas do sistema pra você usar no cálculo, NUNCA algo pra explicar ou justificar na resposta. Informe só o resultado final (valor, data, disponibilidade) de forma direta e natural, como faria qualquer atendente experiente — sem "porque", sem citar regra, sem soar como se estivesse lendo um manual interno.
@@ -1049,7 +1049,7 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
       formatarLinhaAgenda('Ginecologia', AGENDA_ESPECIALIDADES['Ginecologia']),
       (function() {
         // Agenda recorrente semanal (permanente): segunda tarde, terça/quinta/sexta manhã — sem atendimento na quarta
-        const horariosClinico = { 1: 'tarde 16h00–17h00 (sem manhã)', 2: 'manhã 09h00–11h00 (sem tarde)', 4: 'tarde 14h30–17h00 (sem manhã)', 5: 'manhã 09h00–11h00 (sem tarde)' };
+        const horariosClinico = { 1: 'manhã 09h00–10h30 (sem tarde)', 4: 'manhã 10h30–11h30 (sem tarde)', 5: 'manhã 09h00–11h00 e tarde 14h30–17h00' };
         const disponiveisClinico = [];
         for (let i = 0; i <= 14; i++) {
           const d = new Date(nowBR);
@@ -1065,16 +1065,22 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
         return '• Clínico Geral/Pediatria (agenda recorrente semanal, próximas datas): ' + (disponiveisClinico.length ? disponiveisClinico.join(' | ') : 'sem agenda no momento');
       })(),
       (function() {
-        const horariosUSG = { 2: 'Terça: 14h00–16h00', 5: 'Sexta: 13h30–17h30' };
+        const horariosUSG = { 2: 'Terça: 14h00–16h00', 5: 'Sexta: 16h00–17h30' };
         // Datas específicas canceladas (ex: feriado, imprevisto) — adicione aqui quando precisar
-        const DATAS_BLOQUEADAS_USG = [{ dia: 18, mes: 8 }, { dia: 25, mes: 8 }]; // Terças canceladas — volta normal a partir de 01/09
+        const DATAS_BLOQUEADAS_USG = []; // nenhuma cancelada no momento
         const bloqueada = function(d) { return DATAS_BLOQUEADAS_USG.some(function(b){ return b.dia === d.getDate() && b.mes === d.getMonth()+1; }); };
-        // Datas com horário/exames excepcionais (só nesse dia específico) — adicione aqui quando precisar
-        const HORARIOS_ESPECIAIS_USG = [
-          { dia: 22, mes: 9, texto: 'Terça: 07h30–11h00' }, // 22/09 — exceção pontual, horário estendido só nesse dia
-        ];
+        // Datas com horário excepcional num dia que JÁ é de ultrassom (ex: terça com horário estendido) — adicione aqui quando precisar
+        const HORARIOS_ESPECIAIS_USG = [];
         const horarioEspecial = function(d) {
           const e = HORARIOS_ESPECIAIS_USG.find(function(h){ return h.dia === d.getDate() && h.mes === d.getMonth()+1; });
+          return e ? e.texto : null;
+        };
+        // Datas EXTRAS pontuais — dias que normalmente NÃO têm ultrassom, mas essa semana têm um atendimento a mais
+        const DATAS_EXTRAS_USG = [
+          { dia: 1, mes: 10, texto: 'Quinta: 13h30–17h30' }, // extra pontual essa semana
+        ];
+        const extraNoDia = function(d) {
+          const e = DATAS_EXTRAS_USG.find(function(x){ return x.dia === d.getDate() && x.mes === d.getMonth()+1; });
           return e ? e.texto : null;
         };
         const disponiveisUSG = [];
@@ -1082,13 +1088,16 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
           const d = new Date(nowBR);
           d.setDate(d.getDate() + i);
           const dow = d.getDay();
-          if (horariosUSG[dow] && !bloqueada(d)) {
-            const dd = String(d.getDate()).padStart(2,'0');
-            const mm = String(d.getMonth()+1).padStart(2,'0');
+          const dd = String(d.getDate()).padStart(2,'0');
+          const mm = String(d.getMonth()+1).padStart(2,'0');
+          const extra = extraNoDia(d);
+          if (extra) {
+            disponiveisUSG.push(dd + '/' + mm + ' (' + extra + ')');
+          } else if (horariosUSG[dow] && !bloqueada(d)) {
             const especial = horarioEspecial(d);
             disponiveisUSG.push(dd + '/' + mm + ' (' + (especial || horariosUSG[dow]) + ')');
           }
-          if (disponiveisUSG.length >= 2) break;
+          if (disponiveisUSG.length >= 3) break;
         }
         return '• Ultrassom (próximos dias): ' + (disponiveisUSG.length ? disponiveisUSG.join(' | ') : 'sem agenda no momento');
       })(),
