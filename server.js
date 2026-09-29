@@ -91,6 +91,7 @@ AGENDA MÉDICOS
   - Quinta-feira: manhã 10h30–11h30 (sem tarde)
   - Sexta-feira: manhã 09h00–11h00 e tarde 14h30–17h00
   - Terça-feira e Quarta-feira: sem atendimento
+  - EXCEÇÃO PONTUAL 05/10 (segunda): agenda cancelada só nesse dia. O bloco AGENDA ATUAL já reflete isso automaticamente (não vai aparecer 05/10 na lista).
 • Cardiologia: sem agenda disponível no momento
 • Dermatologia: sem agenda disponível no momento
 
@@ -1048,14 +1049,17 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
       formatarLinhaAgenda('Endocrinologia', AGENDA_ESPECIALIDADES['Endocrinologia']),
       formatarLinhaAgenda('Ginecologia', AGENDA_ESPECIALIDADES['Ginecologia']),
       (function() {
-        // Agenda recorrente semanal (permanente): segunda tarde, terça/quinta/sexta manhã — sem atendimento na quarta
+        // Agenda recorrente semanal (permanente): segunda manhã, quinta manhã, sexta manhã+tarde — sem atendimento na terça/quarta
         const horariosClinico = { 1: 'manhã 09h00–10h30 (sem tarde)', 4: 'manhã 10h30–11h30 (sem tarde)', 5: 'manhã 09h00–11h00 e tarde 14h30–17h00' };
+        // Datas específicas canceladas (ex: feriado, imprevisto) — adicione aqui quando precisar
+        const DATAS_BLOQUEADAS_CLINICO = [{ dia: 5, mes: 10 }]; // 05/10 — cancelada
+        const clinicoBloqueado = function(d) { return DATAS_BLOQUEADAS_CLINICO.some(function(b){ return b.dia === d.getDate() && b.mes === d.getMonth()+1; }); };
         const disponiveisClinico = [];
         for (let i = 0; i <= 14; i++) {
           const d = new Date(nowBR);
           d.setDate(d.getDate() + i);
           const dow = d.getDay();
-          if (horariosClinico[dow]) {
+          if (horariosClinico[dow] && !clinicoBloqueado(d)) {
             const dd = String(d.getDate()).padStart(2, '0');
             const mm = String(d.getMonth() + 1).padStart(2, '0');
             disponiveisClinico.push(dd + '/' + mm + ' (' + horariosClinico[dow] + ')');
