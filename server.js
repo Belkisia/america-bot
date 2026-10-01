@@ -112,7 +112,7 @@ Dias disponíveis: TERÇA, 14h00–16h00 (tarde), e SEXTA, 16h00–17h30 (tarde)
 ATENÇÃO — RESTRIÇÃO PERMANENTE DE TERÇA-FEIRA: na TERÇA, SOMENTE estes exames são feitos: Tireoide (sem Doppler), Mamas, Axilas, Abdome Total, Abdome Superior, Vias Urinárias, Próstata, Transvaginal/Endovaginal, Obstétrica. Se o paciente pedir um exame de ultrassom que NÃO está nessa lista para terça-feira, informe que nesse dia não é possível fazer esse exame específico e ofereça a sexta-feira como alternativa (que faz todos os exames). Essa restrição vale pra TODA terça, permanentemente — não é uma exceção pontual.
 ATENÇÃO — IDADE MÍNIMA PARA ULTRASSOM DE PÉS: só é feito a partir de 7 anos de idade. Se o paciente pedir ultrassom de pés para uma criança menor de 7 anos, informe claramente que não é possível nessa idade.
 ATENÇÃO — NÃO REALIZAMOS: Ultrassom Obstétrico com Doppler, e Morfológica para gestação gemelar/múltipla. Se o paciente pedir algum desses, informe CLARAMENTE que a clínica não realiza esse exame específico e que ele precisa procurar outro local — não ofereça alternativa nem diga "vou verificar".
-ATENÇÃO — EXCEÇÃO PONTUAL 01/10 (quinta): essa semana, além dos dias normais (terça e sexta), também tem ultrassom na QUINTA 01/10, das 13h30 às 17h30 — só essa data. O bloco AGENDA ATUAL já reflete isso automaticamente.
+ATENÇÃO — EXCEÇÃO PONTUAL 06/10 (terça): nesse dia específico (só esse dia), o horário de ultrassom é DIFERENTE do normal de terça — 13h30 às 15h30 (em vez do horário normal, que é 14h00–16h00). O bloco AGENDA ATUAL já reflete isso automaticamente.
 MORFOLÓGICO: 1ºTri=11–13sem6d(R$230) | 2ºTri=20–23sem6d(R$280) | 3ºTri=32–34sem6d.
 REGRA CRÍTICA MORFOLÓGICO: se o paciente responder diretamente "1º trimestre", "1 trimestre", "primeiro trimestre", "2º trimestre", "segundo trimestre" (sem informar semanas exatas), ACEITE essa resposta como suficiente para identificar qual exame ele quer. NÃO peça semanas exatas de novo — isso já responde qual dos dois exames é. Prossiga direto para confirmar e pedir nome+nascimento. Só peça semanas exatas se o paciente não souber dizer o trimestre.
 ATENÇÃO — MORFOLÓGICA 1º OU 2º TRIMESTRE: ao confirmar o agendamento desse exame, sempre avise a paciente que ela precisa trazer os ultrassons anteriores (exames de ultrassom obstétrico já feitos) no dia da realização.
@@ -1074,7 +1074,9 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
         const DATAS_BLOQUEADAS_USG = []; // nenhuma cancelada no momento
         const bloqueada = function(d) { return DATAS_BLOQUEADAS_USG.some(function(b){ return b.dia === d.getDate() && b.mes === d.getMonth()+1; }); };
         // Datas com horário excepcional num dia que JÁ é de ultrassom (ex: terça com horário estendido) — adicione aqui quando precisar
-        const HORARIOS_ESPECIAIS_USG = [];
+        const HORARIOS_ESPECIAIS_USG = [
+          { dia: 6, mes: 10, texto: 'Terça: 13h30–15h30' }, // 06/10 — exceção pontual, horário diferente do normal de terça só nesse dia
+        ];
         const horarioEspecial = function(d) {
           const e = HORARIOS_ESPECIAIS_USG.find(function(h){ return h.dia === d.getDate() && h.mes === d.getMonth()+1; });
           return e ? e.texto : null;
