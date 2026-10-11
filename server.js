@@ -92,12 +92,12 @@ AGENDA MÉDICOS
   - Quinta-feira: manhã 10h30–11h30 (sem tarde)
   - Sexta-feira: manhã 09h00–11h00 e tarde 14h30–17h00
   - Terça-feira e Quarta-feira: sem atendimento
-  - EXCEÇÃO PONTUAL — semana de 05/10 a 09/10 (só essa semana, depois volta ao padrão normal acima):
-    • Segunda 05/10: cancelada (sem atendimento)
-    • Terça 06/10: atendimento extra, manhã 09h00–11h30
-    • Quarta 07/10: atendimento extra, manhã 10h00–11h00
-    • Quinta 08/10: cancelada (sem atendimento)
-    • Sexta 09/10: somente manhã 09h00–11h00 (sem tarde essa data)
+  - EXCEÇÃO PONTUAL — semana de 12/10 a 16/10 (só essa semana, depois volta ao padrão normal acima):
+    • Segunda 12/10: feriado, sem atendimento
+    • Terça 13/10: atendimento extra, manhã 09h00–11h00
+    • Quarta 14/10: sem atendimento
+    • Quinta 15/10: SOMENTE TARDE 14h30–17h00 (sem manhã essa data)
+    • Sexta 16/10: manhã 09h00–11h00 e tarde 14h30–17h00
     O bloco AGENDA ATUAL já reflete tudo isso automaticamente.
 • Cardiologia: sem agenda disponível no momento
 • Dermatologia: sem agenda disponível no momento
@@ -109,7 +109,7 @@ Ambos seguem a mesma agenda (toda quinta a partir de 17/09, tarde). Colete nome+
 
 REGRA DE DATAS: Compare cada data com a DATA ATUAL do prompt. Mostre SOMENTE datas futuras. Cada data tem horário diferente — informe corretamente conforme a agenda acima. Se TODAS passaram: informe que não há agenda disponível no momento.
 
-PERÍODO: Para Clínico Geral/Pediatria, segunda e quinta só têm manhã (não precisa perguntar período nesses dias). Sexta-feira tem manhã (09h00–11h00) E tarde (14h30–17h00) — nesse dia pergunte qual período o paciente prefere. Mostre as próximas datas disponíveis (do bloco AGENDA ATUAL) com o horário de cada uma e pergunte qual data o paciente prefere. Para demais especialidades use o período fixo sem perguntar.
+PERÍODO: Para Clínico Geral/Pediatria, segunda e quinta normalmente só têm manhã (não precisa perguntar período nesses dias). ATENÇÃO: sempre siga o horário que aparece no bloco AGENDA ATUAL para cada data — se a data indicar só tarde ou só manhã, use esse período sem perguntar (ex: quinta 15/10 é SOMENTE TARDE). Sexta-feira tem manhã (09h00–11h00) E tarde (14h30–17h00) — nesse dia pergunte qual período o paciente prefere. Mostre as próximas datas disponíveis (do bloco AGENDA ATUAL) com o horário de cada uma e pergunte qual data o paciente prefere. Para demais especialidades use o período fixo sem perguntar.
 REGRA — PEDIDO DE 2 OU MAIS AGENDAMENTOS JUNTOS: se o paciente pedir mais de uma especialidade/exame na mesma mensagem (ex: "pediatra e ginecologista"), NÃO liste todas as datas disponíveis de cada uma — isso sobrecarrega a mensagem. Mostre apenas a data mais próxima de cada especialidade/exame, e avise brevemente que há outras opções caso essa não sirva (ex: "tenho essa data disponível, mas se não servir me avisa que te passo outras opções"). Só mostre a lista completa de datas se o paciente pedir explicitamente outras opções, ou se estiver pedindo só UMA especialidade por vez.
 
 ULTRASSOM
@@ -1059,17 +1059,16 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
         // Agenda recorrente semanal (permanente): segunda manhã, quinta manhã, sexta manhã+tarde — sem atendimento na terça/quarta
         const horariosClinico = { 1: 'manhã 09h00–10h30 (sem tarde)', 4: 'manhã 10h30–11h30 (sem tarde)', 5: 'manhã 09h00–11h00 e tarde 14h30–17h00' };
         // Datas específicas canceladas (ex: feriado, imprevisto) — adicione aqui quando precisar
-        const DATAS_BLOQUEADAS_CLINICO = [{ dia: 5, mes: 10 }, { dia: 8, mes: 10 }]; // 05/10 e 08/10 — canceladas
+        const DATAS_BLOQUEADAS_CLINICO = [{ dia: 12, mes: 10 }]; // 12/10 — feriado
         const clinicoBloqueado = function(d) { return DATAS_BLOQUEADAS_CLINICO.some(function(b){ return b.dia === d.getDate() && b.mes === d.getMonth()+1; }); };
         // Datas com horário especial (substitui o horário normal só naquela data) — adicione aqui quando precisar
         const HORARIOS_ESPECIAIS_CLINICO = [
-          { dia: 9, mes: 10, texto: 'manhã 09h00–11h00 (sem tarde essa data)' },
+          { dia: 15, mes: 10, texto: 'tarde 14h30–17h00 (sem manhã essa data)' },
         ];
         const horarioEspecialClinico = function(d) { const e = HORARIOS_ESPECIAIS_CLINICO.find(function(h){ return h.dia === d.getDate() && h.mes === d.getMonth()+1; }); return e ? e.texto : null; };
         // Datas extras (atendimento em dia que normalmente não tem) — adicione aqui quando precisar
         const DATAS_EXTRAS_CLINICO = [
-          { dia: 6, mes: 10, texto: 'manhã 09h00–11h30' },
-          { dia: 7, mes: 10, texto: 'manhã 10h00–11h00' },
+          { dia: 13, mes: 10, texto: 'manhã 09h00–11h00' },
         ];
         const extraNoDiaClinico = function(d) { const e = DATAS_EXTRAS_CLINICO.find(function(x){ return x.dia === d.getDate() && x.mes === d.getMonth()+1; }); return e ? e.texto : null; };
         const disponiveisClinico = [];
