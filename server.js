@@ -131,7 +131,7 @@ Exemplo: se uma data que já foi oferecida antes some da agenda (porque lotou, f
 Exemplo CORRETO: "Esse exame temos disponível na sexta-feira, 07/08, pela manhã (07h30–09h45). Posso já reservar para você?"
 Exemplo a EVITAR (não faça isso): "Para esse exame, no dia X infelizmente não é possível, pois esse dia tem uma lista restrita de exames que não inclui esse. E no horário Y também não atende esse exame, mas no horário Z funciona perfeitamente..."
 
-PREÇOS ULTRASSOM: Abdome Inf R$70|c/Dop R$160 | Abdome Sup R$80|c/Dop R$160 | Abdome Total R$100|c/Dop R$350 | Articulação R$80 | Bolsa Escrotal R$80|c/Dop R$150 | Mamas R$90 | Morfológica 1ºTri R$230|2ºTri R$280 | Obstétrica>14sem R$100|Endovaginal R$100|Múltipla R$180 | Partes Moles R$70 | Próstata R$90 | Quadril Ped R$80 | Quadril Ad R$80 | Pé (cada lado, a partir de 7 anos) R$80 | Tireoide R$90|c/Dop R$150 | Transvaginal R$90|c/Dop R$160 | Vias Urinárias R$80 | Transfontanela R$130 | Pélvica R$80 | Punho R$80 | Parede Abd R$80 | Parótidas R$70|c/Dop R$160 | Orelha R$70 | Cervical R$80 | Ombro R$90 | Inguinal R$80 | Axilas (cada lado) R$70 | Doppler Isolado R$140 | Doppler Carótidas R$150.
+PREÇOS ULTRASSOM: Abdome Inf R$70|c/Dop R$160 | Abdome Sup R$80|c/Dop R$160 | Abdome Total R$100|c/Dop R$350 | Articulação R$80 | Bolsa Escrotal R$80|c/Dop R$150 | Mamas R$90 | Morfológica 1ºTri R$230|2ºTri R$280 | Obstétrica>14sem R$100|Endovaginal R$100|Múltipla R$180 | Partes Moles R$70 | Próstata R$90 | Quadril Ped R$80 | Quadril Ad R$80 | Pé (cada lado, a partir de 7 anos) R$80 | Tireoide R$90|c/Dop R$150 | Transvaginal/Endovaginal comum (ginecológico) R$90|c/Dop R$160 — ATENÇÃO: se o paciente pedir endovaginal/transvaginal OBSTÉTRICO(A) (gravidez), o valor é R$100, não R$90 | Vias Urinárias R$80 | Transfontanela R$130 | Pélvica R$80 | Punho R$80 | Parede Abd R$80 | Parótidas R$70|c/Dop R$160 | Orelha R$70 | Cervical R$80 | Ombro R$90 | Inguinal R$80 | Axilas (cada lado) R$70 | Doppler Isolado R$140 | Doppler Carótidas R$150.
 
 CONSULTAS: Clínico Geral R$80 | Ginecologia R$120 | Endocrinologia R$120 | Psiquiatria R$120 | Pediatria R$100 | Otorrino R$140.
 PROCEDIMENTOS: Limpeza ouvido R$50 | DIU inserir R$400 | DIU retirar R$300 | Prevenção R$80 | Retirada pontos R$50.
@@ -1383,6 +1383,10 @@ const TABELA_SERVICOS = {
   'morfologica 2 trimestre': 280, 'morfologica 2º trimestre': 280,
   'usg endovaginal com contagem de foliculos': 150,
   'obstetrica endovaginal': 100,
+  'endovaginal obstetrico': 100, 'endovaginal obstetrica': 100, 'obstetrico endovaginal': 100,
+  'usg endovaginal obstetrico': 100, 'usg endovaginal obstetrica': 100, 'usg obstetrica endovaginal': 100,
+  'transvaginal obstetrico': 100, 'transvaginal obstetrica': 100, 'obstetrica transvaginal': 100, 'obstetrico transvaginal': 100,
+  'usg obstetrico': 100, 'usg obstetrica': 100, 'obstetrico': 100,
   'obstetrica gestacao multipla': 180, 'obstetrica': 100,
   'usg partes moles': 70,
   'usg prostata transretal': 200,
@@ -1393,7 +1397,8 @@ const TABELA_SERVICOS = {
   'usg cotovelo': 120,
   'usg tornozelo': 120,
   'tireoide com doppler': 150, 'usg tireoide': 90,
-  'transvaginal com doppler': 160, 'usg transvaginal': 90,
+  'transvaginal com doppler': 160, 'usg transvaginal': 90, 'transvaginal': 90,
+  'usg endovaginal': 90, 'endovaginal': 90,
   'vias urinarias': 80,
   'usg transfontanela': 130,
   'usg translucencia nucal': 90,
@@ -1561,7 +1566,8 @@ function categorizarServico(chave) {
   if (!chave) return 'procedimento';
   if (CHAVES_CONSULTA.includes(chave)) return 'consulta';
   if (chave.startsWith('usg ') || chave.includes('doppler') || chave.startsWith('morfologica') ||
-      chave.startsWith('obstetrica') || chave.startsWith('abdome') || chave.startsWith('transvaginal') ||
+      chave.startsWith('obstetrica') || chave.startsWith('obstetrico') || chave.startsWith('abdome') || chave.startsWith('transvaginal') ||
+      chave.startsWith('endovaginal') ||
       chave === 'bolsa escrotal' || chave === 'quadril pediatrico' || chave === 'quadril adulto' ||
       chave === 'tireoide com doppler' || chave === 'vias urinarias' || chave === 'parede abdominal' ||
       chave === 'parotidas com doppler' || chave === 'axilas') {
@@ -2217,6 +2223,13 @@ async function processarFila(num) {
     console.log('OK [' + num + ']');
   } catch(e) {
     console.error('ERRO [' + num + ']:', e.message);
+    // Falha ao processar (ex: IA indisponível, sem crédito): avisa o paciente e passa pra secretaria
+    // em vez de deixar a mensagem sem nenhuma resposta.
+    try {
+      await ativarHumano(num, 60);
+      await enviar(num, 'Olá! 😊 Estamos com uma instabilidade rápida no atendimento automático.\n\nJá avisei nossa *secretaria*, que vai te atender em instantes! 🏥\n\n📞 (62) 3636-3536 | 📱 (62) 99504-9138');
+      console.log('FALLBACK_SECRETARIA [' + num + ']: paciente avisado e transferido após erro');
+    } catch(e2) { console.error('ERRO fallback [' + num + ']:', e2.message); }
   }
 
   filas[num].rodando = false;
