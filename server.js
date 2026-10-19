@@ -84,9 +84,10 @@ AGENDA MÉDICOS
 • Psiquiatria: 28/08, 03/09, 17/09, 24/09, 01/10, 07/10, 15/10 e 21/10 das 13h30–18h00 — SOMENTE TARDE — LIMITE DE 16 PACIENTES POR DIA (equipe médica só atende essa quantidade)
 • Otorrinolaringologia: sem agenda disponível no momento
 • Endocrinologia: 18/08 das 13h30–16h00 — SOMENTE TARDE
-• Ginecologia: 19/10 das 13h30–15h30 — SOMENTE TARDE
-• Psicologia e Neuropsicologia: toda quinta-feira, a partir de 17/09, das 13h30–17h30 — SOMENTE TARDE (agenda recorrente semanal — use as datas do bloco AGENDA ATUAL, calculadas automaticamente)
-  - EXCEÇÃO PONTUAL 06/10 (terça): além da agenda normal, essa semana também tem atendimento na TERÇA 06/10, das 08h30 às 10h00 — só essa data.
+• Ginecologia: 09/11 das 13h30–15h00 — SOMENTE TARDE
+• Psicologia e Neuropsicologia: agenda recorrente semanal (use as datas do bloco AGENDA ATUAL, calculadas automaticamente):
+  - Toda TERÇA-feira, das 08h30 às 10h00 — SOMENTE MANHÃ
+  - Toda QUINTA-feira, das 13h30 às 17h30 — SOMENTE TARDE
 • Clínico Geral/Pediatria — agenda recorrente semanal (use as datas do bloco AGENDA ATUAL, calculadas automaticamente):
   - Segunda-feira: manhã 09h00–10h30 (sem tarde)
   - Quinta-feira: manhã 10h30–11h30 (sem tarde)
@@ -105,7 +106,7 @@ AGENDA MÉDICOS
 PSICOLOGIA E NEUROPSICOLOGIA — DETALHES: existem 2 tipos de atendimento com valores diferentes — pergunte qual o paciente quer, se não estiver claro:
 - Sessão de psicologia/neuropsicologia (30 minutos): R$80,00
 - Avaliação neuropsicológica completa: R$1.500,00
-Ambos seguem a mesma agenda (toda quinta a partir de 17/09, tarde). Colete nome+nascimento normalmente e gere a tag com especialidade=Psicologia e Neuropsicologia.
+Ambos seguem a mesma agenda (terça 08h30–10h00 de manhã e quinta 13h30–17h30 à tarde — use o horário que aparece no bloco AGENDA ATUAL para cada data). Colete nome+nascimento normalmente e gere a tag com especialidade=Psicologia e Neuropsicologia.
 
 REGRA DE DATAS: Compare cada data com a DATA ATUAL do prompt. Mostre SOMENTE datas futuras. Cada data tem horário diferente — informe corretamente conforme a agenda acima. Se TODAS passaram: informe que não há agenda disponível no momento.
 
@@ -119,7 +120,7 @@ Dias disponíveis: TERÇA, 14h00–16h00 (tarde), e SEXTA, 16h00–17h30 (tarde)
 ATENÇÃO — RESTRIÇÃO PERMANENTE DE TERÇA-FEIRA: na TERÇA, SOMENTE estes exames são feitos: Tireoide (sem Doppler), Mamas, Axilas, Abdome Total, Abdome Superior, Vias Urinárias, Próstata, Transvaginal/Endovaginal, Obstétrica. Se o paciente pedir um exame de ultrassom que NÃO está nessa lista para terça-feira, informe que nesse dia não é possível fazer esse exame específico e ofereça a sexta-feira como alternativa (que faz todos os exames). Essa restrição vale pra TODA terça, permanentemente — não é uma exceção pontual.
 ATENÇÃO — IDADE MÍNIMA PARA ULTRASSOM DE PÉS: só é feito a partir de 7 anos de idade. Se o paciente pedir ultrassom de pés para uma criança menor de 7 anos, informe claramente que não é possível nessa idade.
 ATENÇÃO — NÃO REALIZAMOS: Ultrassom Obstétrico com Doppler, e Morfológica para gestação gemelar/múltipla. Se o paciente pedir algum desses, informe CLARAMENTE que a clínica não realiza esse exame específico e que ele precisa procurar outro local — não ofereça alternativa nem diga "vou verificar".
-ATENÇÃO — EXCEÇÃO PONTUAL 06/10 (terça): nesse dia específico (só esse dia), o horário de ultrassom é DIFERENTE do normal de terça — 13h30 às 16h00 (em vez do horário normal, que é 14h00–16h00). O bloco AGENDA ATUAL já reflete isso automaticamente.
+ATENÇÃO — SEM ULTRASSOM em 30/10 (sexta) e 06/11 (sexta): nessas duas datas não haverá ultrassom. NÃO ofereça essas datas. O bloco AGENDA ATUAL já reflete isso automaticamente.
 MORFOLÓGICO: 1ºTri=11–13sem6d(R$230) | 2ºTri=20–23sem6d(R$280) | 3ºTri=32–34sem6d.
 REGRA CRÍTICA MORFOLÓGICO: se o paciente responder diretamente "1º trimestre", "1 trimestre", "primeiro trimestre", "2º trimestre", "segundo trimestre" (sem informar semanas exatas), ACEITE essa resposta como suficiente para identificar qual exame ele quer. NÃO peça semanas exatas de novo — isso já responde qual dos dois exames é. Prossiga direto para confirmar e pedir nome+nascimento. Só peça semanas exatas se o paciente não souber dizer o trimestre.
 ATENÇÃO — MORFOLÓGICA 1º OU 2º TRIMESTRE: ao confirmar o agendamento desse exame, sempre avise a paciente que ela precisa trazer os ultrassons anteriores (exames de ultrassom obstétrico já feitos) no dia da realização.
@@ -997,7 +998,7 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
       'Psiquiatria': { horario: '13h30–18h00', periodo: 'SOMENTE TARDE', datas: [{dia:28,mes:8},{dia:3,mes:9},{dia:17,mes:9},{dia:24,mes:9},{dia:1,mes:10},{dia:7,mes:10},{dia:15,mes:10},{dia:21,mes:10}] },
       'Otorrinolaringologia': { horario: '08h00–11h30', periodo: 'SOMENTE MANHÃ', datas: [] },
       'Endocrinologia': { horario: '13h30–16h00', periodo: 'SOMENTE TARDE', datas: [{dia:18,mes:8}] },
-      'Ginecologia': { horario: '13h30–15h30', periodo: 'SOMENTE TARDE', datas: [{dia:19,mes:10}] },
+      'Ginecologia': { horario: '13h30–15h00', periodo: 'SOMENTE TARDE', datas: [{dia:9,mes:11}] },
     };
     function formatarListaDatas(lista) {
       if (lista.length === 1) return lista[0];
@@ -1094,7 +1095,7 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
       (function() {
         const horariosUSG = { 2: 'Terça: 14h00–16h00', 5: 'Sexta: 16h00–17h30' };
         // Datas específicas canceladas (ex: feriado, imprevisto) — adicione aqui quando precisar
-        const DATAS_BLOQUEADAS_USG = []; // nenhuma cancelada no momento
+        const DATAS_BLOQUEADAS_USG = [{ dia: 30, mes: 10 }, { dia: 6, mes: 11 }]; // sextas 30/10 e 06/11 — sem ultrassom
         const bloqueada = function(d) { return DATAS_BLOQUEADAS_USG.some(function(b){ return b.dia === d.getDate() && b.mes === d.getMonth()+1; }); };
         // Datas com horário excepcional num dia que JÁ é de ultrassom (ex: terça com horário estendido) — adicione aqui quando precisar
         const HORARIOS_ESPECIAIS_USG = [
@@ -1147,29 +1148,26 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
       })(),
       (function() {
         const inicioVigencia = new Date(2026, 8, 17); // 17/09/2026 — início da agenda recorrente
-        // Datas EXTRAS pontuais — dia fora do padrão (normalmente só quinta) com um atendimento a mais
-        const DATAS_EXTRAS_PSICO = [
-          { dia: 6, mes: 10, texto: '08h30–10h00' }, // terça 06/10 — extra pontual, horário diferente do normal
-        ];
-        const extraNoDia = function(d) {
-          const e = DATAS_EXTRAS_PSICO.find(function(x){ return x.dia === d.getDate() && x.mes === d.getMonth()+1; });
-          return e ? e.texto : null;
-        };
+        // Agenda recorrente: toda terça 08h30–10h00 (manhã) e toda quinta 13h30–17h30 (tarde)
+        // Datas canceladas pontuais — adicione aqui quando precisar
+        const DATAS_BLOQUEADAS_PSICO = [];
+        const psicoBloqueada = function(d) { return DATAS_BLOQUEADAS_PSICO.some(function(b){ return b.dia === d.getDate() && b.mes === d.getMonth()+1; }); };
         const disponiveisPsico = [];
         for (let i = 0; i <= 30; i++) {
           const d = new Date(nowBR);
           d.setDate(d.getDate() + i);
           const dd = String(d.getDate()).padStart(2, '0');
           const mm = String(d.getMonth() + 1).padStart(2, '0');
-          const extra = extraNoDia(d);
-          if (extra) {
-            disponiveisPsico.push(dd + '/' + mm + ' (' + extra + ')');
-          } else if (d.getDay() === 4 && d >= inicioVigencia) { // 4 = quinta-feira
-            disponiveisPsico.push(dd + '/' + mm + ' (13h30–17h30)');
+          if (!psicoBloqueada(d)) {
+            if (d.getDay() === 2) { // 2 = terça-feira
+              disponiveisPsico.push(dd + '/' + mm + ' (terça 08h30–10h00, manhã)');
+            } else if (d.getDay() === 4 && d >= inicioVigencia) { // 4 = quinta-feira
+              disponiveisPsico.push(dd + '/' + mm + ' (quinta 13h30–17h30, tarde)');
+            }
           }
-          if (disponiveisPsico.length >= 3) break;
+          if (disponiveisPsico.length >= 4) break;
         }
-        return '• Psicologia e Neuropsicologia (toda quinta 13h30–17h30, próximas datas): ' + (disponiveisPsico.length ? disponiveisPsico.join(' | ') : 'sem agenda no momento');
+        return '• Psicologia e Neuropsicologia (toda terça 08h30–10h00 e toda quinta 13h30–17h30, próximas datas): ' + (disponiveisPsico.length ? disponiveisPsico.join(' | ') : 'sem agenda no momento');
       })(),
       (function() {
         const disponiveisHolterMapa = [];
@@ -1723,6 +1721,7 @@ const HORARIO_INICIO_ESTIMADO = {
   'Psiquiatria': { tarde: '13:30' },
   'Endocrinologia': { tarde: '13:30' },
   'Ginecologia': { tarde: '13:30' },
+  'Psicologia e Neuropsicologia': { manha: '08:30', tarde: '13:30' },
   'Otorrinolaringologia': { manha: '08:30' },
   'Clínico Geral': { manha: '09:00', tarde: '14:00' },
   'Pediatria': { manha: '09:00', tarde: '14:00' },
@@ -1831,7 +1830,15 @@ function inferirPeriodo(especialidade, dataEscolhida) {
   const esp = especialidade.toLowerCase();
   const data = (dataEscolhida || '').toLowerCase();
   if (esp.includes('psiquiatria')) return 'tarde';
-  if (esp.includes('psicologia') || esp.includes('neuropsicologia')) return 'tarde';
+  if (esp.includes('psicologia') || esp.includes('neuropsicologia')) {
+    // terça = manhã (08h30–10h00); quinta = tarde (13h30–17h30)
+    const m = data.match(/(\d{1,2})\/(\d{1,2})/);
+    if (m) {
+      const dow = new Date(new Date().getFullYear(), parseInt(m[2], 10) - 1, parseInt(m[1], 10)).getDay();
+      if (dow === 2) return 'manha';
+    }
+    return 'tarde';
+  }
   if (esp.includes('endocrinolog')) return 'tarde';
   if (esp.includes('otorrino')) return 'manha';
   if (esp.includes('ginecolog')) return 'tarde';
