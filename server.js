@@ -120,6 +120,7 @@ Dias disponíveis: TERÇA, 14h00–16h00 (tarde), e SEXTA, 16h00–17h30 (tarde)
 ATENÇÃO — RESTRIÇÃO PERMANENTE DE TERÇA-FEIRA: na TERÇA, SOMENTE estes exames são feitos: Tireoide (sem Doppler), Mamas, Axilas, Abdome Total, Abdome Superior, Vias Urinárias, Próstata, Transvaginal/Endovaginal, Obstétrica. Se o paciente pedir um exame de ultrassom que NÃO está nessa lista para terça-feira, informe que nesse dia não é possível fazer esse exame específico e ofereça a sexta-feira como alternativa (que faz todos os exames). Essa restrição vale pra TODA terça, permanentemente — não é uma exceção pontual.
 ATENÇÃO — IDADE MÍNIMA PARA ULTRASSOM DE PÉS: só é feito a partir de 7 anos de idade. Se o paciente pedir ultrassom de pés para uma criança menor de 7 anos, informe claramente que não é possível nessa idade.
 ATENÇÃO — NÃO REALIZAMOS: Ultrassom Obstétrico com Doppler, e Morfológica para gestação gemelar/múltipla. Se o paciente pedir algum desses, informe CLARAMENTE que a clínica não realiza esse exame específico e que ele precisa procurar outro local — não ofereça alternativa nem diga "vou verificar".
+ATENÇÃO — EXCEÇÃO PONTUAL QUARTA 28/10: nessa data específica (só essa, não é toda quarta) tem ultrassom das 13h30 às 15h30 (tarde). Nesse dia são feitos todos os exames, EXCETO Morfológica (1º e 2º trimestre) — se a paciente pedir morfológica, informe que nesse dia não é possível e ofereça outra data (terça ou sexta, conforme o bloco AGENDA ATUAL). O bloco AGENDA ATUAL já reflete isso automaticamente.
 ATENÇÃO — SEM ULTRASSOM em 30/10 (sexta) e 06/11 (sexta): nessas duas datas não haverá ultrassom. NÃO ofereça essas datas. O bloco AGENDA ATUAL já reflete isso automaticamente.
 MORFOLÓGICO: 1ºTri=11–13sem6d(R$230) | 2ºTri=20–23sem6d(R$280) | 3ºTri=32–34sem6d.
 REGRA CRÍTICA MORFOLÓGICO: se o paciente responder diretamente "1º trimestre", "1 trimestre", "primeiro trimestre", "2º trimestre", "segundo trimestre" (sem informar semanas exatas), ACEITE essa resposta como suficiente para identificar qual exame ele quer. NÃO peça semanas exatas de novo — isso já responde qual dos dois exames é. Prossiga direto para confirmar e pedir nome+nascimento. Só peça semanas exatas se o paciente não souber dizer o trimestre.
@@ -1107,7 +1108,7 @@ async function chamarIA(msgs, instrucaoExtra, tentativa) {
         };
         // Datas EXTRAS pontuais — dias que normalmente NÃO têm ultrassom, mas essa semana têm um atendimento a mais
         const DATAS_EXTRAS_USG = [
-          { dia: 1, mes: 10, texto: 'Quinta: 13h30–17h30' }, // extra pontual essa semana
+          { dia: 28, mes: 10, texto: 'Quarta: 13h30–15h30 — SEM morfológica nesse dia' }, // extra pontual: quarta 28/10
         ];
         const extraNoDia = function(d) {
           const e = DATAS_EXTRAS_USG.find(function(x){ return x.dia === d.getDate() && x.mes === d.getMonth()+1; });
@@ -1266,6 +1267,9 @@ async function enviar(numero, texto) {
   } catch(e) { console.error('Erro enviar:', e.message); }
 }
 
+// Instrução usada para ler pedido médico, tanto em foto quanto em PDF
+const PROMPT_LEITURA_PEDIDO = 'Analise esta imagem. Se for receita/pedido médico: extraia nome do médico, CRM e a lista de exames solicitados. REGRA CRÍTICA: liste CADA exame individualmente, numerado, com o nome EXATO/LITERAL como está escrito ou impresso no documento (ex: "Dosagem de Creatinina", "Transaminase Glutâmico-Oxalacética (TGO)", "Hemograma Completo"). NUNCA agrupe, resuma ou generalize exames em categorias como "função renal", "função hepática", "perfil lipídico" ou "entre outros" — mesmo que a lista seja longa (10, 20, 30+ itens), liste TODOS sem exceção e sem abreviar a lista. ATENÇÃO A FORMULÁRIOS COM CAIXINHAS/CHECKBOXES: se o documento for um formulário de múltipla escolha com quadradinhos (□) ao lado de cada exame, observe CUIDADOSAMENTE quais quadradinhos estão MARCADOS (preenchidos, com X, com ✓, ou rabiscados) e liste APENAS esses — ignore os desmarcados. Esses formulários costumam ter dezenas de opções organizadas em categorias (Hematologia, Bioquímica, Sorologia, Hormônios, etc.) mas só uma fração é marcada; releia a imagem com atenção antes de responder, verificando cada seção do formulário, pois é comum haver itens marcados em categorias diferentes (ex: alguns em Bioquímica, outros em Hormônios, outros em Urinálise) — não pare na primeira seção. Se for resultado de exame (não pedido): identifique o tipo. Responda simples e direto, sem markdown.';
+
 async function lerImagem(imageUrl) {
   try {
     const imgResp = await axios.get(imageUrl, { responseType: 'arraybuffer', timeout: 15000 });
@@ -1282,13 +1286,36 @@ async function lerImagem(imageUrl) {
     const r = await axios.post('https://api.anthropic.com/v1/messages',
       { model: 'claude-sonnet-5', max_tokens: 2500, messages: [{ role: 'user', content: [
         { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-        { type: 'text', text: 'Analise esta imagem. Se for receita/pedido médico: extraia nome do médico, CRM e a lista de exames solicitados. REGRA CRÍTICA: liste CADA exame individualmente, numerado, com o nome EXATO/LITERAL como está escrito ou impresso no documento (ex: "Dosagem de Creatinina", "Transaminase Glutâmico-Oxalacética (TGO)", "Hemograma Completo"). NUNCA agrupe, resuma ou generalize exames em categorias como "função renal", "função hepática", "perfil lipídico" ou "entre outros" — mesmo que a lista seja longa (10, 20, 30+ itens), liste TODOS sem exceção e sem abreviar a lista. ATENÇÃO A FORMULÁRIOS COM CAIXINHAS/CHECKBOXES: se o documento for um formulário de múltipla escolha com quadradinhos (□) ao lado de cada exame, observe CUIDADOSAMENTE quais quadradinhos estão MARCADOS (preenchidos, com X, com ✓, ou rabiscados) e liste APENAS esses — ignore os desmarcados. Esses formulários costumam ter dezenas de opções organizadas em categorias (Hematologia, Bioquímica, Sorologia, Hormônios, etc.) mas só uma fração é marcada; releia a imagem com atenção antes de responder, verificando cada seção do formulário, pois é comum haver itens marcados em categorias diferentes (ex: alguns em Bioquímica, outros em Hormônios, outros em Urinálise) — não pare na primeira seção. Se for resultado de exame (não pedido): identifique o tipo. Responda simples e direto, sem markdown.' }
+        { type: 'text', text: PROMPT_LEITURA_PEDIDO }
       ]}]},
       { headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' }, timeout: 30000 }
     );
     const blocoTexto = (r.data.content || []).find(function(b) { return b.type === 'text'; });
     return blocoTexto ? blocoTexto.text : null;
   } catch(e) { console.error('Erro lerImagem:', e.message); return null; }
+}
+
+// Lê um PDF (pedido médico/receita) com a própria API da Anthropic — mesma instrução usada nas fotos.
+// Limite de 10MB pra controlar custo; se falhar ou for grande demais, retorna null e o fluxo
+// transfere pra secretaria como antes.
+const PDF_TAMANHO_MAX_BYTES = 10 * 1024 * 1024;
+async function lerPDF(pdfUrl) {
+  try {
+    const resp = await axios.get(pdfUrl, { responseType: 'arraybuffer', timeout: 20000, maxContentLength: PDF_TAMANHO_MAX_BYTES });
+    const buf = Buffer.from(resp.data);
+    if (buf.length > PDF_TAMANHO_MAX_BYTES) { console.error('lerPDF: PDF grande demais (' + buf.length + ' bytes)'); return null; }
+    if (buf.slice(0, 4).toString() !== '%PDF') { console.error('lerPDF: arquivo não parece ser PDF'); return null; }
+    const prompt = PROMPT_LEITURA_PEDIDO.replace(/esta imagem/g, 'este documento').replace(/a imagem/g, 'o documento');
+    const r = await axios.post('https://api.anthropic.com/v1/messages',
+      { model: 'claude-sonnet-5', max_tokens: 2500, messages: [{ role: 'user', content: [
+        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: buf.toString('base64') } },
+        { type: 'text', text: prompt }
+      ]}]},
+      { headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' }, timeout: 45000 }
+    );
+    const blocoTexto = (r.data.content || []).find(function(b) { return b.type === 'text'; });
+    return blocoTexto ? blocoTexto.text : null;
+  } catch(e) { console.error('Erro lerPDF:', e.message); return null; }
 }
 
 function detectarAudio(b) {
@@ -1922,9 +1949,9 @@ function enfileirarImagem(num, url) {
   filas[num].msgs.push('__IMAGEM__:' + (url||''));
   if (!filas[num].rodando) processarFila(num);
 }
-function enfileirarPDF(num) {
+function enfileirarPDF(num, url) {
   if (!filas[num]) filas[num] = { msgs: [], rodando: false };
-  filas[num].msgs.push('__PDF__');
+  filas[num].msgs.push('__PDF__:' + (url||''));
   if (!filas[num].rodando) processarFila(num);
 }
 
@@ -1961,14 +1988,6 @@ async function processarFila(num) {
   try {
     console.log('PROC [' + num + ']:', txtCompleto.slice(0, 80));
 
-    // PDF
-    if (msgs.includes('__PDF__')) {
-      if (await emAtendimentoHumano(num)) { filas[num].rodando = false; processarFila(num); return; }
-      await ativarHumano(num, 60);
-      await enviar(num, 'Olá! 😊 Recebi seu arquivo PDF.\n\nO envio de documentos PDF é feito pela nossa secretaria. Vou transferir seu atendimento agora! 📋\n\n🔹 *Nossa secretaria assumirá em instantes!*');
-      filas[num].rodando = false; processarFila(num); return;
-    }
-
     // Áudio
     if (msgs.includes('__AUDIO__')) {
       if (await emAtendimentoHumano(num)) { filas[num].rodando = false; processarFila(num); return; }
@@ -1978,14 +1997,16 @@ async function processarFila(num) {
     }
 
     // Imagem
-    const imagemMsg = msgs.find(function(m) { return m && m.startsWith('__IMAGEM__'); });
-    if (imagemMsg) {
+    const imagemOuPdfMsg = msgs.find(function(m) { return m && m.startsWith('__IMAGEM__'); }) ||
+      msgs.find(function(m) { return m && m.startsWith('__PDF__'); });
+    if (imagemOuPdfMsg) {
       if (await emAtendimentoHumano(num)) { filas[num].rodando = false; processarFila(num); return; }
-      const imageUrl = imagemMsg.replace('__IMAGEM__:', '').trim();
-      const leitura = imageUrl ? await lerImagem(imageUrl) : null;
+      const ehPdf = imagemOuPdfMsg.startsWith('__PDF__');
+      const imageUrl = imagemOuPdfMsg.replace(/^__(IMAGEM|PDF)__:?/, '').trim();
+      const leitura = imageUrl ? (ehPdf ? await lerPDF(imageUrl) : await lerImagem(imageUrl)) : null;
       if (leitura) {
-        console.log('LEITURA_IMAGEM [' + num + ']: ' + leitura);
-        await db.salvarMensagem(num, 'user', '[imagem enviada]');
+        console.log((ehPdf ? 'LEITURA_PDF [' : 'LEITURA_IMAGEM [') + num + ']: ' + leitura);
+        await db.salvarMensagem(num, 'user', ehPdf ? '[PDF enviado]' : '[imagem enviada]');
         let hist = await db.buscarHistorico(num, 12);
         hist = hist.filter(function(m){return m.content && m.content.trim();});
         // Calcula orçamento no código usando a leitura da imagem
@@ -2010,13 +2031,23 @@ async function processarFila(num) {
             instrucoesExtraImg.push(montarInstrucaoServicos(servicosImg));
           }
         }
+        if (ehPdf) {
+          instrucoesExtraImg.push('O arquivo enviado foi um PDF. Se a análise indicar que NÃO é um pedido médico de exames ou consulta (ex: boleto, contrato, documento pessoal, resultado de exame já feito), NÃO calcule nenhum valor: diga com gentileza que vai encaminhar para a secretaria e adicione [SECRETARIA] no final da resposta.');
+        }
         instrucoesExtraImg.push('O paciente enviou uma imagem/receita médica nesta mensagem. Instruções para responder:\n1. Confirme o nome do paciente e LISTE cada exame identificado individualmente pelo nome, NUMERADO (1. 2. 3. ...) para o paciente ver de forma clara quantos exames são (NUNCA agrupe em categorias como "função renal", "perfil hormonal" etc.)\n2. Informe os valores calculados acima (use exatamente esses valores)\n3. Avise de forma natural que é uma prévia e que a secretaria vai confirmar o valor final e os exames identificados\n4. Se houver Tomografia (TC/TAC), Ressonância (RM/RNM) ou Ecocardiograma na lista, avise CLARAMENTE que a clínica não realiza esse exame específico e que o paciente precisa procurar outro local — não diga apenas "será tratado à parte"\n5. Convide para agendar os exames que a clínica faz\nSe algum exame não tiver valor calculado pelo sistema, NUNCA invente ou estime um valor por conta própria — apenas mencione que a secretaria vai confirmar o valor desse item específico, sem dar nenhum número.');
-        hist.push({ role: 'user', content: 'Análise da imagem/receita enviada pelo paciente: ' + leitura });
+        hist.push({ role: 'user', content: (ehPdf ? 'Análise do PDF enviado pelo paciente: ' : 'Análise da imagem/receita enviada pelo paciente: ') + leitura });
         const resp = await chamarIA(hist, instrucoesExtraImg.join('\n\n'));
         const final = limpar(resp).replace('[SECRETARIA]', '').trim();
         await db.salvarMensagem(num, 'assistant', final);
         await enviar(num, final);
-        console.log('IMAGEM [' + num + ']: orçamento enviado');
+        if (ehPdf && resp.includes('[SECRETARIA]')) {
+          await ativarHumano(num, 60);
+          await enviar(num, '🔹 *Nossa secretaria já recebeu seu atendimento e entrará em contato em instantes!*');
+        }
+        console.log((ehPdf ? 'PDF [' : 'IMAGEM [') + num + ']: orçamento enviado');
+      } else if (ehPdf) {
+        await ativarHumano(num, 60);
+        await enviar(num, 'Olá! 😊 Recebi seu arquivo PDF.\n\nO envio de documentos PDF é feito pela nossa secretaria. Vou transferir seu atendimento agora! 📋\n\n🔹 *Nossa secretaria assumirá em instantes!*');
       } else {
         await ativarHumano(num, 60);
         await enviar(num, 'Olá! 😊 Recebemos seu documento.\n\nVou encaminhar para nossa *secretaria* que te orientará! 🏥\n\n📞 (62) 3636-3536 | 📱 (62) 99504-9138\n\n🔹 *Transferindo para a secretaria...*');
@@ -2278,7 +2309,7 @@ app.post('/webhook', function(req, res) {
   if (b.fromApi) return;
 
   if (detectarAudio(b)) { enfileirarAudio(num); return; }
-  if (detectarPDF(b)) { enfileirarPDF(num); return; }
+  if (detectarPDF(b)) { enfileirarPDF(num, (b.document && b.document.documentUrl) || ''); return; }
   if (detectarImagem(b)) {
     const url = (b.image && b.image.imageUrl) || (b.document && b.document.documentUrl) || '';
     enfileirarImagem(num, url); return;
