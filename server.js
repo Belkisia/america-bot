@@ -229,6 +229,12 @@ PROIBIDO:
 ❌ Encerrar sem convite para agendar
 ❌ Responder orçamento só com números
 
+PAGAMENTO ANTECIPADO PARA AGENDAR — PSIQUIATRIA E GINECOLOGIA (regra nova; vale para toda consulta de Psiquiatria e de Ginecologia, inclusive DIU e Prevenção, que são feitos na consulta de Ginecologia):
+- Para agendar, o paciente precisa pagar R$20,00 antecipado via Pix. Chave Pix (CNPJ): 47141628000170. Esse valor é ABATIDO do valor da consulta — no dia o paciente paga só o restante (R$100,00).
+- Avise isso JÁ, de forma natural e acolhedora, assim que informar o preço da consulta ou quando o paciente quiser agendar — não deixe pro final.
+- Quando já tiver nome+nascimento e a data/período escolhidos, NÃO gere a tag [AGENDAR] e NÃO escreva "Seu atendimento foi confirmado!" ainda. Repita a data e o horário escolhidos, informe o Pix de R$20,00 (chave CNPJ 47141628000170) e peça para o paciente enviar o comprovante aqui na conversa. Diga que a secretaria confirma o agendamento assim que conferir o pagamento.
+- Só depois que o paciente enviar o comprovante (o sistema avisa com a mensagem "[comprovante do pix de 20 reais enviado pelo paciente]"): gere a tag [AGENDAR:...] com a data escolhida e responda que recebeu o comprovante e que a secretaria vai conferir o pagamento e confirmar o agendamento em instantes. NÃO escreva "Seu atendimento foi confirmado!" e adicione [SECRETARIA] no final. Esta regra tem prioridade sobre a "REGRA CRÍTICA — NUNCA CONFIRME SEM GERAR A TAG" para essas duas especialidades.
+
 TRANSFERÊNCIA: Quando transferir explique brevemente e adicione [SECRETARIA] no final. NÃO coloque telefones — só quando paciente pedir ou na confirmação do agendamento.
 Contatos: 📞 (62) 3636-3536 | 📱 (62) 99504-9138
 
@@ -1955,6 +1961,13 @@ function enfileirarPDF(num, url) {
   if (!filas[num].rodando) processarFila(num);
 }
 
+// PAGAMENTO ANTECIPADO — Psiquiatria e Ginecologia exigem R$20 via Pix (abatido da consulta) pra agendar.
+// O paciente envia o comprovante (imagem ou PDF); a CMA registra o agendamento e passa pra secretaria conferir.
+const ESPECIALIDADES_PAGAMENTO_ANTECIPADO = ['Psiquiatria', 'Ginecologia'];
+const PIX_AGENDAMENTO_CHAVE = '47141628000170'; // CNPJ
+const PIX_AGENDAMENTO_VALOR = 20;
+const TEXTO_COMPROVANTE_PIX = '[comprovante do pix de 20 reais enviado pelo paciente]';
+
 async function processarFila(num) {
   if (!filas[num] || filas[num].msgs.length === 0) {
     if (filas[num]) filas[num].rodando = false;
@@ -1983,7 +1996,7 @@ async function processarFila(num) {
   }
 
   const msgs = filas[num].msgs.splice(0);
-  const txtCompleto = msgs.join(' ').trim();
+  let txtCompleto = msgs.join(' ').trim();
 
   try {
     console.log('PROC [' + num + ']:', txtCompleto.slice(0, 80));
@@ -1999,7 +2012,19 @@ async function processarFila(num) {
     // Imagem
     const imagemOuPdfMsg = msgs.find(function(m) { return m && m.startsWith('__IMAGEM__'); }) ||
       msgs.find(function(m) { return m && m.startsWith('__PDF__'); });
+    // Se o paciente está agendando Psiquiatria/Ginecologia e já foi avisado do Pix de R$20, a imagem/PDF
+    // é tratada como COMPROVANTE (não como pedido médico): segue o fluxo normal de texto com uma mensagem sintética.
+    let comprovanteDetectado = false;
     if (imagemOuPdfMsg) {
+      const estadoPag = await getEstado(num);
+      if (ESPECIALIDADES_PAGAMENTO_ANTECIPADO.includes(estadoPag.especialidade) && estadoPag.pagamentoSolicitado) {
+        comprovanteDetectado = true;
+        txtCompleto = TEXTO_COMPROVANTE_PIX;
+        await atualizarEstado(num, { comprovanteRecebido: true });
+        console.log('COMPROVANTE_PIX [' + num + ']: ' + estadoPag.especialidade);
+      }
+    }
+    if (imagemOuPdfMsg && !comprovanteDetectado) {
       if (await emAtendimentoHumano(num)) { filas[num].rodando = false; processarFila(num); return; }
       const ehPdf = imagemOuPdfMsg.startsWith('__PDF__');
       const imageUrl = imagemOuPdfMsg.replace(/^__(IMAGEM|PDF)__:?/, '').trim();
@@ -2204,7 +2229,24 @@ async function processarFila(num) {
       }
     }
 
-    if (temTudo && !jaAgendadoAnteriormente) {
+    // Pagamento antecipado (Psiquiatria/Ginecologia): marca que o paciente já foi avisado do Pix, pra que
+    // uma imagem/PDF enviada a seguir seja tratada como comprovante
+    const exigePagamento = ESPECIALIDADES_PAGAMENTO_ANTECIPADO.includes(estadoAtual.especialidade) && !jaAgendadoAnteriormente;
+    const aguardandoComprovante = exigePagamento && !estadoAtual.comprovanteRecebido;
+    if (exigePagamento) {
+      if (!estadoAtual.pagamentoSolicitado) { await atualizarEstado(num, { pagamentoSolicitado: true }); }
+      instrucoesExtra.push('PAGAMENTO ANTECIPADO OBRIGATÓRIO (' + estadoAtual.especialidade + '): para agendar, o paciente paga R$' + PIX_AGENDAMENTO_VALOR + ',00 via Pix (chave CNPJ: ' + PIX_AGENDAMENTO_CHAVE + '), valor ABATIDO da consulta (no dia paga só o restante, R$100,00). Informe isso de forma natural se ainda não informou. ' +
+        (estadoAtual.comprovanteRecebido ? 'O comprovante JÁ foi enviado pelo paciente.' : 'O comprovante ainda NÃO foi enviado: NÃO gere a tag [AGENDAR] e NÃO diga "Seu atendimento foi confirmado!" até o paciente enviar o comprovante.'));
+      console.log('PAGAMENTO_ANTECIPADO [' + num + ']: ' + estadoAtual.especialidade + (estadoAtual.comprovanteRecebido ? ' (comprovante recebido)' : ' (aguardando comprovante)'));
+    }
+
+    if (temTudo && !jaAgendadoAnteriormente && aguardandoComprovante) {
+      instrucoesExtra.push('DADOS COLETADOS — FALTA O PAGAMENTO: nome=' + estadoAtual.nome + ' | nascimento=' + estadoAtual.nascimento + ' | especialidade=' + estadoAtual.especialidade + ' | periodo=' + estadoAtual.periodo + '. NÃO gere a tag [AGENDAR] ainda e NÃO escreva "Seu atendimento foi confirmado!". Repita a data e o horário escolhidos, informe o Pix de R$' + PIX_AGENDAMENTO_VALOR + ',00 (chave CNPJ ' + PIX_AGENDAMENTO_CHAVE + '), diga que o valor é abatido da consulta, peça para enviar o comprovante aqui e avise que a secretaria confirma o agendamento após conferir o pagamento.');
+      console.log('AGUARDANDO_COMPROVANTE [' + num + ']:', estadoAtual.especialidade, estadoAtual.nome);
+    } else if (temTudo && !jaAgendadoAnteriormente && exigePagamento && estadoAtual.comprovanteRecebido) {
+      instrucoesExtra.push('COMPROVANTE RECEBIDO — REGISTRE O AGENDAMENTO: nome=' + estadoAtual.nome + ' | nascimento=' + estadoAtual.nascimento + ' | especialidade=' + estadoAtual.especialidade + ' | periodo=' + estadoAtual.periodo + '. Gere a tag [AGENDAR:nome=' + estadoAtual.nome + '|nascimento=' + estadoAtual.nascimento + '|especialidade=' + estadoAtual.especialidade + '|convenio=particular|periodo=' + estadoAtual.periodo + '|data=DD/MM/AAAA] com a data exata que o paciente escolheu (do histórico). Responda agradecendo, dizendo que recebeu o comprovante e que a secretaria vai conferir o pagamento e confirmar o agendamento em instantes. NÃO escreva "Seu atendimento foi confirmado!". Adicione [SECRETARIA] no final.');
+      console.log('AUTO-AGENDAR COM COMPROVANTE [' + num + ']:', estadoAtual.especialidade, estadoAtual.nome, estadoAtual.nascimento, estadoAtual.periodo);
+    } else if (temTudo && !jaAgendadoAnteriormente) {
       instrucoesExtra.push('DADOS COLETADOS - FINALIZE O AGENDAMENTO: nome=' + estadoAtual.nome + ' | nascimento=' + estadoAtual.nascimento + ' | especialidade=' + estadoAtual.especialidade + ' | periodo=' + estadoAtual.periodo + '. Gere a tag [AGENDAR:nome=' + estadoAtual.nome + '|nascimento=' + estadoAtual.nascimento + '|especialidade=' + estadoAtual.especialidade + '|convenio=particular|periodo=' + estadoAtual.periodo + '] e confirme com a mensagem de sucesso.');
       console.log('AUTO-AGENDAR [' + num + ']:', estadoAtual.especialidade, estadoAtual.nome, estadoAtual.nascimento, estadoAtual.periodo);
     } else if (!jaAgendadoAnteriormente && estadoAtual.especialidade && estadoAtual.periodo) {
